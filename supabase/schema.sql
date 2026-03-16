@@ -94,3 +94,14 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
+
+-- Wishlist table (community-driven build requests)
+CREATE TABLE public.wishlist (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  email TEXT NOT NULL,
+  request TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE public.wishlist ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Anyone can insert wishlist" ON public.wishlist FOR INSERT WITH CHECK (true);
+CREATE POLICY "Service role can read wishlist" ON public.wishlist FOR SELECT USING (auth.role() = 'service_role');

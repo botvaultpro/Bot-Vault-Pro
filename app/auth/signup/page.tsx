@@ -35,6 +35,13 @@ function SignupForm() {
       setError(error.message);
       setLoading(false);
     } else {
+      // Fire welcome email — best-effort, don't block the flow
+      fetch("/api/auth/welcome", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, name: fullName }),
+      }).catch(() => {});
+
       if (plan && plan !== "free") {
         router.push(`/dashboard/billing?plan=${plan}`);
       } else {
