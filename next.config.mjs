@@ -1,9 +1,6 @@
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
-  experimental: {
-    serverComponentsExternalPackages: ["@anthropic-ai/sdk"],
-  },
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  serverExternalPackages: ["@anthropic-ai/sdk"],
 };
 
 export default nextConfig;
