@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowRight, Zap, Target, MessageSquare, Globe, Check, ChevronRight, Clock, Lightbulb } from "lucide-react";
 import WishlistForm from "@/app/components/WishlistForm";
 
@@ -125,35 +126,52 @@ export default function LandingPage() {
       </nav>
 
       {/* Hero */}
-      <section className="relative pt-32 pb-24 px-4 sm:px-6 text-center overflow-hidden">
+      <section className="relative pt-32 pb-24 px-4 sm:px-6 overflow-hidden">
         <div className="absolute inset-0 bg-grid-pattern bg-grid-size opacity-100 pointer-events-none" />
-        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-glow-cyan pointer-events-none" />
-        <div className="relative max-w-4xl mx-auto">
-          <div className="inline-flex items-center gap-2 bg-vault-surface border border-vault-border rounded-full px-4 py-1.5 text-sm text-vault-text-dim mb-8">
-            <span className="w-2 h-2 rounded-full bg-vault-green animate-pulse-slow" />
-            Always building — new automations every quarter
-          </div>
-          <h1 className="font-display text-5xl sm:text-6xl md:text-7xl font-extrabold leading-tight mb-6">
-            Your unfair advantage.
-            <br />
-            <span className="text-gradient-cyan">AI automation</span>
-            <br />
-            for people who wear every hat.
-          </h1>
-          <p className="text-vault-text-dim text-lg sm:text-xl max-w-2xl mx-auto mb-6">
-            You&apos;re running leads, writing content, handling support, and chasing clients — all at once.
-            Bot Vault Pro automates the grind so you can focus on growth.
-          </p>
-          <p className="text-vault-text-dim text-base max-w-xl mx-auto mb-10">
-            4 production-ready AI bots today. More launching every quarter. One subscription. No agency. No code.
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link href="/auth/signup" className="w-full sm:w-auto flex items-center justify-center gap-2 bg-vault-accent text-vault-bg font-display font-bold px-8 py-4 rounded-xl text-lg hover:bg-vault-accent-dim transition-all hover:scale-105">
-              Start for free <ArrowRight className="w-5 h-5" />
-            </Link>
-            <a href="#bots" className="w-full sm:w-auto flex items-center justify-center gap-2 border border-vault-border text-vault-text-dim px-8 py-4 rounded-xl text-lg hover:border-vault-accent hover:text-vault-accent transition-all">
-              See what&apos;s in the vault <ChevronRight className="w-5 h-5" />
-            </a>
+        <div className="absolute top-1/3 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[500px] bg-glow-cyan pointer-events-none" />
+        <div className="relative max-w-7xl mx-auto">
+          <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
+            {/* Left: copy */}
+            <div className="flex-1 text-center lg:text-left">
+              <div className="inline-flex items-center gap-2 bg-vault-surface border border-vault-border rounded-full px-4 py-1.5 text-sm text-vault-text-dim mb-8">
+                <span className="w-2 h-2 rounded-full bg-vault-green animate-pulse-slow" />
+                Always building — new automations every quarter
+              </div>
+              <h1 className="font-display text-5xl sm:text-6xl md:text-7xl font-extrabold leading-tight mb-4">
+                Your Unfair
+                <br />
+                <span className="text-gradient-cyan">Advantage.</span>
+              </h1>
+              <h2 className="font-display text-2xl sm:text-3xl font-bold text-vault-text-dim mb-6">
+                AI Automation for the Everyday Person.
+              </h2>
+              <p className="text-vault-text-dim text-lg sm:text-xl max-w-xl mb-10 mx-auto lg:mx-0">
+                The same AI tools big companies pay agencies thousands for — built for small businesses,
+                freelancers, and side hustlers. No code. No complexity. Just results.
+              </p>
+              <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
+                <Link href="/auth/signup" className="w-full sm:w-auto flex items-center justify-center gap-2 bg-vault-accent text-vault-bg font-display font-bold px-8 py-4 rounded-xl text-lg hover:bg-vault-accent-dim transition-all hover:scale-105">
+                  Start for free <ArrowRight className="w-5 h-5" />
+                </Link>
+                <a href="#bots" className="w-full sm:w-auto flex items-center justify-center gap-2 border border-vault-border text-vault-text-dim px-8 py-4 rounded-xl text-lg hover:border-vault-accent hover:text-vault-accent transition-all">
+                  See what&apos;s in the vault <ChevronRight className="w-5 h-5" />
+                </a>
+              </div>
+            </div>
+            {/* Right: mascot */}
+            <div className="flex-shrink-0 flex items-center justify-center">
+              <div className="relative w-48 sm:w-64 lg:w-80 xl:w-96">
+                <div className="absolute inset-0 rounded-full bg-vault-accent/10 blur-3xl scale-110 pointer-events-none" />
+                <Image
+                  src="/mascot.png"
+                  alt="Bot Vault Pro mascot"
+                  width={400}
+                  height={600}
+                  priority
+                  className="relative drop-shadow-2xl w-full h-auto"
+                />
+              </div>
+            </div>
           </div>
         </div>
       </section>
