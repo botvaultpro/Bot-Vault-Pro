@@ -55,12 +55,13 @@ Task: ${sequenceStep.instruction}`;
 }
 
 /**
- * Send the full 3-email drip sequence to a qualified lead.
+ * Send the drip sequence to a qualified lead.
  * Tracks sent state so leads are never emailed twice per step.
  * @param {object} lead
- * @param {boolean} dryRun  - if true, log but don't send
+ * @param {boolean} dryRun     - if true, log but don't send
+ * @param {number}  maxSteps   - tier limit (1 = intro only, 3 = full sequence)
  */
-async function sendSequence(lead, dryRun = false) {
+async function sendSequence(lead, dryRun = false, maxSteps = 3) {
   const sent = loadSentLeads();
   const key = lead.email;
   if (!sent[key]) sent[key] = {};
@@ -68,7 +69,7 @@ async function sendSequence(lead, dryRun = false) {
   const fromName = process.env.FROM_NAME || 'Bot Vault Pro';
   const fromCompany = process.env.FROM_COMPANY || 'Bot Vault Pro';
 
-  for (const step of EMAIL_SEQUENCES) {
+  for (const step of EMAIL_SEQUENCES.slice(0, maxSteps)) {
     if (sent[key][step.type]) {
       logger.info(`  Skipping ${step.type} email to ${lead.email} (already sent)`);
       continue;
@@ -99,12 +100,15 @@ async function sendSequence(lead, dryRun = false) {
 
 /**
  * Send sequences to all qualified leads.
+ * @param {Array}   leads
+ * @param {boolean} dryRun
+ * @param {number}  maxSteps  - tier limit passed from index.js
  */
-async function sendToAllQualified(leads, dryRun = false) {
+async function sendToAllQualified(leads, dryRun = false, maxSteps = 3) {
   const qualified = leads.filter((l) => l.isQualified);
   logger.step(`Sending sequences to ${qualified.length} qualified lead(s)...`);
   for (const lead of qualified) {
-    await sendSequence(lead, dryRun);
+    await sendSequence(lead, dryRun, maxSteps);
   }
 }
 
