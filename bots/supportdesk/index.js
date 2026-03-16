@@ -7,6 +7,7 @@ const fs = require('fs');
 const path = require('path');
 const logger = require('../lib/logger');
 const { sendEmail } = require('../lib/emailer');
+const { getTier, printTierBanner, checkMonthlyQuota, requireFeature, incrementUsage } = require('../lib/tiers');
 const { loadKnowledgeBase, generateReply } = require('./responder');
 const { pollInbox } = require('./imap-listener');
 
@@ -17,7 +18,10 @@ function logTicket(from, subject, status, confidence) {
   fs.appendFileSync(TICKETS_LOG, line, 'utf8');
 }
 
-async function handleEmail(email, knowledgeBase, companyName, dryRun, minConfidence) {
+async function handleEmail(email, knowledgeBase, companyName, dryRun, minConfidence, tierLimits) {
+  // Enforce monthly ticket quota
+  checkMonthlyQuota('supportdesk', tierLimits.maxTicketsPerMonth, 'tickets');
+
   logger.step(`Processing email from ${email.from}: "${email.subject}"`);
 
   const { subject, body, confidence } = await generateReply(email.text, knowledgeBase, companyName);
@@ -28,8 +32,8 @@ async function handleEmail(email, knowledgeBase, companyName, dryRun, minConfide
     logger.warn(`  Low confidence — escalating to human agent`);
     logTicket(email.from, email.subject, 'escalated', confidence);
 
-    if (!dryRun) {
-      // Notify the human support inbox about the escalation
+    // Escalation email is a Growth+ feature
+    if (tierLimits.escalationEmail && !dryRun) {
       const supportInbox = process.env.ESCALATION_EMAIL || process.env.SMTP_USER;
       if (supportInbox) {
         await sendEmail({
@@ -38,11 +42,12 @@ async function handleEmail(email, knowledgeBase, companyName, dryRun, minConfide
           text: `This ticket requires human review.\n\nFrom: ${email.from}\nSubject: ${email.subject}\n\nOriginal message:\n${email.text}\n\n---\nAI draft (confidence ${(confidence * 100).toFixed(0)}%):\n${body}`,
         });
       }
+    } else if (!tierLimits.escalationEmail) {
+      logger.warn('  Escalation email requires Growth or Enterprise plan.');
     }
     return;
   }
 
-  // Extract sender email address
   const toMatch = email.from.match(/<(.+?)>/) || [null, email.from.trim()];
   const toEmail = toMatch[1];
 
@@ -58,9 +63,12 @@ async function handleEmail(email, knowledgeBase, companyName, dryRun, minConfide
   }
 
   logTicket(email.from, email.subject, dryRun ? 'dry-run' : 'replied', confidence);
+
+  // Track usage
+  incrementUsage('supportdesk');
 }
 
-// ─── Commands ────────────────────────────────────────────────────────────────
+// ─── Commands ─────────────────────────────────────────────────────────────────
 
 program
   .name('supportdesk')
@@ -69,23 +77,35 @@ program
 
 program
   .command('reply')
-  .description('Answer a one-off customer message (pipe or --message flag)')
+  .description('Answer a one-off customer message (available on all plans)')
   .option('-m, --message <text>', 'Customer message text')
   .option('--dry-run', 'Print reply to console, do not send', true)
   .action(async (opts) => {
+    printTierBanner('SupportDesk Bot');
+
     const message = opts.message || '';
     if (!message) {
       logger.error('Please provide a message with --message "..."');
       process.exit(1);
     }
 
-    logger.divider();
-    logger.step('SupportDesk Bot — One-shot reply mode');
-    logger.divider();
+    const tier = getTier();
+    const limits = tier.supportdesk;
+
+    // Enforce monthly quota even in reply mode
+    checkMonthlyQuota('supportdesk', limits.maxTicketsPerMonth, 'tickets');
 
     logger.step('Loading knowledge base...');
-    const knowledgeBase = loadKnowledgeBase();
+    const knowledgeBase = loadKnowledgeBase(limits.maxKnowledgeFiles);
     const companyName = process.env.COMPANY_NAME || 'Bot Vault Pro';
+
+    // On Starter, min confidence is fixed; on Growth+ it's configurable
+    const minConfidence = limits.minConfidenceFixed !== null
+      ? limits.minConfidenceFixed
+      : parseFloat(process.env.AUTO_REPLY_MIN_CONFIDENCE || '0.7');
+
+    logger.info(`Tier: ${tier.label} | Knowledge files cap: ${limits.maxKnowledgeFiles === Infinity ? 'Unlimited' : limits.maxKnowledgeFiles} | Min confidence: ${(minConfidence * 100).toFixed(0)}%`);
+    logger.blank();
 
     logger.step('Generating AI reply...');
     const { subject, body, confidence } = await generateReply(message, knowledgeBase, companyName);
@@ -95,26 +115,37 @@ program
     logger.data(`Confidence: ${(confidence * 100).toFixed(0)}%`);
     logger.data('Reply:');
     console.log('\n' + body + '\n');
+
+    incrementUsage('supportdesk');
     logger.divider();
   });
 
 program
   .command('start')
-  .description('Start polling inbox for new emails and auto-reply')
+  .description('Start polling inbox for new emails and auto-reply (Growth/Enterprise only)')
   .option('-i, --interval <seconds>', 'Poll interval in seconds', '60')
   .option('--dry-run', 'Generate replies but do not send them', false)
   .action(async (opts) => {
+    printTierBanner('SupportDesk Bot');
+
+    const tier = getTier();
+    const limits = tier.supportdesk;
+
+    // Gate: IMAP polling is a Growth+ feature
+    requireFeature(limits.imapPolling, 'Inbox polling (IMAP)');
+
     const intervalMs = parseInt(opts.interval, 10) * 1000;
-    const minConfidence = parseFloat(process.env.AUTO_REPLY_MIN_CONFIDENCE || '0.7');
+    const minConfidence = limits.minConfidenceFixed !== null
+      ? limits.minConfidenceFixed
+      : parseFloat(process.env.AUTO_REPLY_MIN_CONFIDENCE || '0.7');
     const companyName = process.env.COMPANY_NAME || 'Bot Vault Pro';
 
-    logger.divider();
     logger.step('SupportDesk Bot — Starting inbox polling');
-    logger.step(`Poll interval: ${opts.interval}s | Dry run: ${opts.dryRun} | Min confidence: ${(minConfidence * 100).toFixed(0)}%`);
+    logger.step(`Tier: ${tier.label} | Poll interval: ${opts.interval}s | Dry run: ${opts.dryRun} | Min confidence: ${(minConfidence * 100).toFixed(0)}% | Ticket quota: ${limits.maxTicketsPerMonth === Infinity ? 'Unlimited' : limits.maxTicketsPerMonth}/mo`);
     logger.divider();
 
     logger.step('Loading knowledge base...');
-    const knowledgeBase = loadKnowledgeBase();
+    const knowledgeBase = loadKnowledgeBase(limits.maxKnowledgeFiles);
 
     if (!knowledgeBase) {
       logger.warn('Knowledge base is empty. Add .md files to supportdesk/knowledge/');
@@ -124,17 +155,15 @@ program
       logger.step('Polling inbox...');
       try {
         await pollInbox((email) =>
-          handleEmail(email, knowledgeBase, companyName, opts.dryRun, minConfidence)
+          handleEmail(email, knowledgeBase, companyName, opts.dryRun, minConfidence, limits)
         );
       } catch (err) {
         logger.error(`Inbox poll failed: ${err.message}`);
       }
     };
 
-    // Run immediately, then on interval
     await tick();
     setInterval(tick, intervalMs);
-
     logger.info(`Next poll in ${opts.interval}s... (Press Ctrl+C to stop)`);
   });
 

@@ -10,10 +10,39 @@ Three production-ready automation bots built with Node.js and the Claude AI API.
 cd bots
 npm install
 cp .env.example .env
-# Edit .env and add your ANTHROPIC_API_KEY (required for all bots)
+# Edit .env: set ANTHROPIC_API_KEY and SUBSCRIPTION_TIER
 ```
 
 The only required credential is `ANTHROPIC_API_KEY`. All other integrations (email, Twitter, LinkedIn) are optional — the bots degrade gracefully and log output locally if credentials are missing.
+
+---
+
+## Subscription Tiers
+
+Set `SUBSCRIPTION_TIER` in your `.env` file to `starter`, `growth`, or `enterprise`.
+
+| Feature | Starter ($49/mo) | Growth ($149/mo) | Enterprise (Custom) |
+|---------|:---:|:---:|:---:|
+| **LeadGen — Leads per run** | 25 | 250 | Unlimited |
+| **LeadGen — AI qualification** | — | ✓ | ✓ |
+| **LeadGen — Email sequence steps** | 1 (intro) | 3 (full drip) | 3 (full drip) |
+| **ContentBlast — Platforms** | Blog only | Twitter, LinkedIn, Blog | All |
+| **ContentBlast — Blasts per month** | 10 | 100 | Unlimited |
+| **ContentBlast — Cron scheduling** | — | ✓ | ✓ |
+| **SupportDesk — IMAP inbox polling** | — | ✓ | ✓ |
+| **SupportDesk — Tickets per month** | 50 | 500 | Unlimited |
+| **SupportDesk — Knowledge base files** | 1 | 10 | Unlimited |
+| **SupportDesk — Escalation emails** | — | ✓ | ✓ |
+
+### View your current tier and usage
+
+```bash
+node leadgen/index.js tier
+```
+
+This shows your active plan, all feature limits, and how many leads/blasts/tickets you've used this month.
+
+### Monthly usage resets automatically at the start of each calendar month.
 
 ---
 

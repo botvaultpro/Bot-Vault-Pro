@@ -7,20 +7,26 @@ const logger = require('../lib/logger');
 const KNOWLEDGE_DIR = path.join(__dirname, 'knowledge');
 
 /**
- * Load all .md and .txt files from the knowledge/ directory.
+ * Load .md and .txt files from the knowledge/ directory.
+ * @param {number} maxFiles  Tier cap on number of files (Infinity = unlimited)
  * @returns {string}
  */
-function loadKnowledgeBase() {
+function loadKnowledgeBase(maxFiles = Infinity) {
   if (!fs.existsSync(KNOWLEDGE_DIR)) {
     logger.warn(`Knowledge directory not found: ${KNOWLEDGE_DIR}`);
     return '';
   }
 
-  const files = fs.readdirSync(KNOWLEDGE_DIR).filter((f) => f.endsWith('.md') || f.endsWith('.txt'));
+  let files = fs.readdirSync(KNOWLEDGE_DIR).filter((f) => f.endsWith('.md') || f.endsWith('.txt'));
 
   if (files.length === 0) {
     logger.warn('No knowledge base files found. Add .md or .txt files to supportdesk/knowledge/');
     return '';
+  }
+
+  if (files.length > maxFiles) {
+    logger.warn(`Knowledge base cap: loading ${maxFiles} of ${files.length} files (upgrade to load more)`);
+    files = files.slice(0, maxFiles);
   }
 
   const parts = files.map((file) => {
