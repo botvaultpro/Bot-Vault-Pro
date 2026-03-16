@@ -26,6 +26,13 @@ const TIERS = {
       escalationEmail: false,
       minConfidenceFixed: 0.8,    // not configurable
     },
+    sitebuilder: {
+      maxProspectsPerMonth: 10,
+      aiAnalysis: false,          // heuristic scoring only
+      demoGeneration: true,       // basic demo
+      emailSequenceSteps: 1,      // intro email only
+      pipelineTracking: false,    // no CRM
+    },
   },
 
   growth: {
@@ -47,6 +54,13 @@ const TIERS = {
       maxKnowledgeFiles: 10,
       escalationEmail: true,
       minConfidenceFixed: null,   // user-configurable
+    },
+    sitebuilder: {
+      maxProspectsPerMonth: 100,
+      aiAnalysis: true,           // full Claude site scoring
+      demoGeneration: true,
+      emailSequenceSteps: 3,      // full drip sequence
+      pipelineTracking: true,     // CRM dashboard
     },
   },
 
@@ -70,6 +84,13 @@ const TIERS = {
       escalationEmail: true,
       minConfidenceFixed: null,
     },
+    sitebuilder: {
+      maxProspectsPerMonth: Infinity,
+      aiAnalysis: true,
+      demoGeneration: true,
+      emailSequenceSteps: 3,
+      pipelineTracking: true,
+    },
   },
 };
 
@@ -84,7 +105,7 @@ function loadUsage() {
     if (data.month === monthKey) return data;
   }
   // New month or first run — reset counters
-  return { month: monthKey, leadgen: 0, contentblast: 0, supportdesk: 0 };
+  return { month: monthKey, leadgen: 0, contentblast: 0, supportdesk: 0, sitebuilder: 0 };
 }
 
 function saveUsage(usage) {
@@ -184,6 +205,7 @@ function printUpgradeTable(currentTierName, bot, unitLabel) {
       const botLimits = tier[bot];
       const limit = bot === 'leadgen' ? botLimits.maxLeadsPerRun
         : bot === 'contentblast' ? botLimits.maxBlastsPerMonth
+        : bot === 'sitebuilder' ? botLimits.maxProspectsPerMonth
         : botLimits.maxTicketsPerMonth;
       return {
         Plan: tier.label,

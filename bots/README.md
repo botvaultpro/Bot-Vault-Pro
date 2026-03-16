@@ -33,6 +33,11 @@ Set `SUBSCRIPTION_TIER` in your `.env` file to `starter`, `growth`, or `enterpri
 | **SupportDesk — Tickets per month** | 50 | 500 | Unlimited |
 | **SupportDesk — Knowledge base files** | 1 | 10 | Unlimited |
 | **SupportDesk — Escalation emails** | — | ✓ | ✓ |
+| **SiteBuilder — Prospects/month** | 10 | 100 | Unlimited |
+| **SiteBuilder — AI site scoring** | — | ✓ | ✓ |
+| **SiteBuilder — Demo generation** | ✓ | ✓ | ✓ |
+| **SiteBuilder — Proposal email steps** | 1 (intro) | 3 (full drip) | 3 |
+| **SiteBuilder — Pipeline CRM** | — | ✓ | ✓ |
 
 ### View your current tier and usage
 
@@ -185,6 +190,86 @@ bots/
     ├── responder.js   — AI reply generation + knowledge base loader
     └── imap-listener.js — IMAP inbox polling
 ```
+
+---
+
+## Bot 4: SiteBuilder Pro Bot
+
+Finds local businesses with weak or missing websites, generates a custom demo site for each one using AI, then sends personalized proposals with a 3-email follow-up sequence. Includes a built-in pipeline CRM to track every prospect from discovery to close.
+
+### Full Pipeline
+
+```
+Discover → Analyze → Generate Demo → Propose → Track in Pipeline
+```
+
+1. **Discover** — Reads a CSV of target businesses. Probes their website (or finds one). Flags businesses with no site as highest priority.
+2. **Analyze** — Scores site quality 1-10. Identifies specific weaknesses (no SSL, not mobile, outdated design, etc.). AI-powered on Growth/Enterprise.
+3. **Demo** — Generates a complete, modern single-page HTML website tailored to the business type and location using Claude AI.
+4. **Propose** — Sends an AI-written email referencing their site's specific weaknesses and your demo. Growth/Enterprise get a 3-email drip.
+5. **Pipeline** — Tracks every prospect through stages: `new → analyzed → demo_ready → contacted → followed_up → replied → closed_won / closed_lost`.
+
+### Usage
+
+```bash
+# Full pipeline (discover → analyze → demo → propose)
+node sitebuilder/index.js run
+
+# Dry run (no emails sent)
+node sitebuilder/index.js run --dry-run
+
+# Step by step
+node sitebuilder/index.js discover           # Find + classify sites
+node sitebuilder/index.js analyze            # Score all 'new' prospects
+node sitebuilder/index.js demo joe@acme.com  # Generate demo for one prospect
+node sitebuilder/index.js propose joe@acme.com --dry-run
+
+# Pipeline CRM
+node sitebuilder/index.js pipeline                         # Dashboard
+node sitebuilder/index.js stage joe@acme.com replied       # Update stage
+node sitebuilder/index.js note joe@acme.com "Called, interested in $2k package"
+
+# View tier limits
+node sitebuilder/index.js tier
+```
+
+### Setup
+
+1. Edit `sitebuilder/knowledge/sample-prospects.csv` with your target businesses
+   - Required columns: `name, location, email, website, business_type`
+   - Leave `website` blank — bot will find it automatically
+2. Set `FREELANCER_NAME` in `.env` (appears in demo banner and proposal emails)
+3. Set SMTP credentials in `.env` to send proposals
+4. Run: `node sitebuilder/index.js run --dry-run` to preview
+
+### Prospect CSV Format
+
+```csv
+name,location,email,website,business_type
+Joe's Plumbing,Austin TX,joe@joesplumbing.com,,plumbing
+Maria's Bakery,Chicago IL,maria@mariasbakery.com,http://mariasbakery.com,bakery
+```
+
+- Leave `website` blank to let the bot find it
+- `business_type` helps the AI generate relevant demo content and site copy
+
+### Pipeline Stages
+
+| Stage | Meaning |
+|-------|---------|
+| `new` | Just discovered |
+| `analyzed` | Site scored |
+| `demo_ready` | Demo HTML generated |
+| `contacted` | Intro email sent |
+| `followed_up` | Follow-up email(s) sent |
+| `replied` | Prospect responded (set manually) |
+| `closed_won` | Converted to paying client |
+| `closed_lost` | No longer pursuing |
+
+### Output
+
+- `sitebuilder/output/{business-slug}/index.html` — generated demo websites
+- `sitebuilder/pipeline.json` — full CRM data for all prospects
 
 ---
 
