@@ -1,0 +1,25 @@
+{
+  "name": "bot-vault-pro-bots",
+  "version": "1.0.0",
+  "description": "Bot Vault Pro — LeadGen, ContentBlast, and SupportDesk automation bots",
+  "main": "index.js",
+  "scripts": {
+    "leadgen": "node leadgen/index.js",
+    "contentblast": "node contentblast/index.js",
+    "supportdesk": "node supportdesk/index.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
+    "axios": "^1.6.0",
+    "cheerio": "^1.0.0",
+    "nodemailer": "^6.9.0",
+    "imap": "^0.8.19",
+    "mailparser": "^3.6.0",
+    "twitter-api-v2": "^1.17.0",
+    "csv-writer": "^1.6.0",
+    "commander": "^12.0.0",
+    "chalk": "^4.1.2",
+    "dotenv": "^16.0.0",
+    "node-cron": "^3.0.0"
+  }
+}

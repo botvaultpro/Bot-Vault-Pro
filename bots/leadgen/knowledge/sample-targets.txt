@@ -1,0 +1,7 @@
+# Sample target domains for LeadGen Pro Bot
+# One domain per line. Lines starting with # are ignored.
+# Replace these with real target company domains.
+
+example.com
+shopify.com
+hubspot.com
