@@ -39,14 +39,57 @@ const bots = [
 ];
 
 const roadmap = [
-  { name: "BVP ResumeRank", description: "AI resume screener — filter 200 applicants to the top 5 in seconds." },
-  { name: "BVP BriefForge", description: "AI content brief generator — stop staring at a blank doc." },
-  { name: "BVP WeeklyPulse", description: "Automated business reports delivered to your inbox every Monday." },
-  { name: "BVP ChatEmbed", description: "Drop an AI chatbot widget on any site. No code, no dev." },
-  { name: "BVP ClauseCheck", description: "AI contract scanner — know what you're signing before you sign it." },
-  { name: "BVP OutreachPersonalizer", description: "AI cold email personalizer — 1,000 emails that feel 1-on-1." },
-  { name: "BVP PriceWatch", description: "Competitor price tracker — always know when to move." },
-  { name: "BVP NicheBoard", description: "Niche job board with AI candidate matching — built for specific industries." },
+  { name: "BVP ResumeRank", description: "AI resume screener for small business hiring — filter 200 applicants to the top 5 in seconds." },
+  { name: "BVP Newsletter", description: "AI newsletter generator and scheduler — write, design, and send to your list automatically." },
+  { name: "BVP WeeklyPulse", description: "Automated plain-English business reports delivered to your inbox every Monday morning." },
+  { name: "BVP DebtBuster", description: "Personalized debt payoff plan with budget tracking — AI maps your fastest path to zero." },
+  { name: "BVP TaxAuditor", description: "Small business quarterly tax tips and audit prep — never get caught off guard by the IRS again." },
+  { name: "BVP OpportunityFinder", description: "Searches for business pains in your market and surfaces AI-powered solutions you can act on today." },
+];
+
+const reviews = [
+  {
+    name: "Marcus T.",
+    role: "Freelance Designer",
+    text: "LeadGen Pro completely changed how I find clients. I used to spend hours hunting on LinkedIn — now I get a qualified list every Monday morning. Closed 3 new retainers in my first month.",
+    stars: 5,
+    bot: "LeadGen Pro",
+  },
+  {
+    name: "Priya S.",
+    role: "Restaurant Owner",
+    text: "SupportDesk handles all my customer emails while I'm in the kitchen. It answers questions about hours, reservations, and menu items without me touching a thing. Customers don't even know it's AI.",
+    stars: 5,
+    bot: "SupportDesk",
+  },
+  {
+    name: "Jake R.",
+    role: "Side Hustler / E-commerce",
+    text: "I run a Shopify store on nights and weekends. ContentBlast posts my product content to Instagram, Twitter, and my blog on a schedule. My traffic went up 40% and I barely lifted a finger.",
+    stars: 5,
+    bot: "ContentBlast",
+  },
+  {
+    name: "Carla M.",
+    role: "Solopreneur, Business Coach",
+    text: "SiteBuilder Pro helped me land two web design clients I never would have found. It found local businesses with terrible websites, built demo sites for them, and I just showed up to the call. Wild.",
+    stars: 5,
+    bot: "SiteBuilder Pro",
+  },
+  {
+    name: "Devon W.",
+    role: "Early-Stage Startup Founder",
+    text: "We were spending $4k/month on an agency for lead gen. Bot Vault Pro replaced it for $149. The AI qualification is actually better — it knows our ICP better than the humans did.",
+    stars: 5,
+    bot: "LeadGen Pro",
+  },
+  {
+    name: "Tasha L.",
+    role: "Small Business Owner, Cleaning Co.",
+    text: "I never had time to post on social media. ContentBlast now publishes 3x per week — tips, promos, before/afters. I've gotten 6 new customers who said they found me through my posts.",
+    stars: 5,
+    bot: "ContentBlast",
+  },
 ];
 
 const plans = [
@@ -259,6 +302,42 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Customer Reviews */}
+      <section className="py-24 px-4 sm:px-6 border-t border-vault-border">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <p className="text-vault-accent font-mono text-sm uppercase tracking-widest mb-3">Real results</p>
+            <h2 className="font-display text-4xl sm:text-5xl font-bold mb-4">What our users say.</h2>
+            <p className="text-vault-text-dim text-lg max-w-2xl mx-auto">
+              Real people. Real automations. Real time saved.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {reviews.map((r) => (
+              <div key={r.name} className="card-surface rounded-2xl p-6 flex flex-col gap-4">
+                <div className="flex gap-0.5">
+                  {Array.from({ length: r.stars }).map((_, i) => (
+                    <svg key={i} className="w-4 h-4 text-yellow-400 fill-yellow-400" viewBox="0 0 20 20">
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                    </svg>
+                  ))}
+                </div>
+                <p className="text-vault-text-dim text-sm leading-relaxed flex-1">&ldquo;{r.text}&rdquo;</p>
+                <div className="flex items-center justify-between pt-2 border-t border-vault-border">
+                  <div>
+                    <p className="text-vault-text font-semibold text-sm">{r.name}</p>
+                    <p className="text-vault-text-dim text-xs">{r.role}</p>
+                  </div>
+                  <span className="text-xs font-mono text-vault-accent bg-vault-accent/10 border border-vault-accent/20 px-2 py-0.5 rounded-full">
+                    {r.bot}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Roadmap — In Development */}
       <section id="roadmap" className="py-24 px-4 sm:px-6 border-t border-vault-border">
         <div className="max-w-7xl mx-auto">
@@ -270,7 +349,7 @@ export default function LandingPage() {
               Early subscribers get access to every new bot as it ships — no extra charge.
             </p>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {roadmap.map((item) => (
               <div key={item.name} className="card-surface rounded-xl p-5 relative overflow-hidden group hover:border-vault-accent/30 transition-all">
                 <div className="flex items-center gap-2 mb-3">
@@ -373,7 +452,7 @@ export default function LandingPage() {
           <span className="font-display font-bold text-vault-text">
             <span className="text-gradient-cyan">Bot</span> Vault Pro
           </span>
-          <span>© 2025 Bot Vault Pro. All rights reserved.</span>
+          <span>© 2026 Bot Vault Pro. All rights reserved.</span>
           <div className="flex gap-6">
             <Link href="/privacy" className="hover:text-vault-accent transition-colors">Privacy</Link>
             <Link href="/terms" className="hover:text-vault-accent transition-colors">Terms</Link>

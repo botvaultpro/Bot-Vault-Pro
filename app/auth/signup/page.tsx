@@ -58,7 +58,8 @@ function SignupForm() {
             <Check className="w-8 h-8 text-vault-green" />
           </div>
           <h2 className="font-display text-3xl font-bold mb-3">Check your email</h2>
-          <p className="text-vault-text-dim">We sent a confirmation link to <span className="text-vault-text">{email}</span>. Click it to activate your account.</p>
+          <p className="text-vault-text-dim mb-2">We sent a confirmation link to <span className="text-vault-text">{email}</span>.</p>
+          <p className="text-vault-text-dim text-sm">Click the link in that email to activate your account before logging in.</p>
         </div>
       </div>
     );
