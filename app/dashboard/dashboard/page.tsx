@@ -1,9 +1,10 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { TIER_LIMITS, type Tier } from "@/lib/tier-limits";
-import { Target, Zap, MessageSquare, Globe, ArrowRight, TrendingUp } from "lucide-react";
+import { Target, Zap, MessageSquare, Globe, ArrowRight, TrendingUp, CheckCircle2 } from "lucide-react";
 
 const bots = [
   { slug: "leadgen", name: "LeadGen Pro", icon: Target, color: "cyan", key: "leadgen" },
@@ -13,9 +14,33 @@ const bots = [
 ];
 
 export default function DashboardPage() {
+  return (
+    <Suspense>
+      <DashboardInner />
+    </Suspense>
+  );
+}
+
+function DashboardInner() {
   const [tier, setTier] = useState<Tier>("free");
   const [usage, setUsage] = useState<Record<string, number>>({ leadgen: 0, contentblast: 0, supportdesk: 0, sitebuilder: 0 });
   const [name, setName] = useState("");
+  const [successBanner, setSuccessBanner] = useState(false);
+  const searchParams = useSearchParams();
+
+  const fetchSubscription = useCallback(async () => {
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
+    const { data: sub } = await supabase
+      .from("subscriptions")
+      .select("tier")
+      .eq("user_id", user.id)
+      .eq("status", "active")
+      .single();
+    if (sub?.tier) setTier(sub.tier as Tier);
+    return sub?.tier ?? "free";
+  }, []);
 
   useEffect(() => {
     async function load() {
@@ -24,8 +49,7 @@ export default function DashboardPage() {
       if (!user) return;
       const { data: profile } = await supabase.from("profiles").select("full_name").eq("id", user.id).single();
       if (profile?.full_name) setName(profile.full_name.split(" ")[0]);
-      const { data: sub } = await supabase.from("subscriptions").select("tier").eq("user_id", user.id).eq("status", "active").single();
-      if (sub?.tier) setTier(sub.tier as Tier);
+      await fetchSubscription();
       const now = new Date();
       const monthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
       const { data: usageData } = await supabase.from("usage_tracking").select("bot, count").eq("user_id", user.id).eq("month_key", monthKey);
@@ -34,7 +58,25 @@ export default function DashboardPage() {
       setUsage(u);
     }
     load();
-  }, []);
+  }, [fetchSubscription]);
+
+  // After Stripe redirect with ?success=true, poll until the webhook updates the plan
+  useEffect(() => {
+    if (searchParams.get("success") !== "true") return;
+    setSuccessBanner(true);
+
+    let attempts = 0;
+    const interval = setInterval(async () => {
+      attempts++;
+      const currentTier = await fetchSubscription();
+      if (currentTier && currentTier !== "free") {
+        clearInterval(interval);
+      }
+      if (attempts >= 8) clearInterval(interval); // stop after ~16s
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [searchParams, fetchSubscription]);
 
   const limits = TIER_LIMITS[tier];
   function getLimit(key: string): number {
@@ -47,6 +89,16 @@ export default function DashboardPage() {
 
   return (
     <div className="max-w-6xl mx-auto space-y-8 animate-fade-in">
+      {successBanner && (
+        <div className="flex items-center gap-3 rounded-xl border border-vault-green/30 bg-vault-green/10 px-5 py-4 text-vault-green">
+          <CheckCircle2 className="w-5 h-5 shrink-0" />
+          <div>
+            <p className="font-semibold">Payment successful!</p>
+            <p className="text-sm opacity-80">Your plan is being activated — this page will update automatically.</p>
+          </div>
+        </div>
+      )}
+
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="font-display text-3xl font-bold">{name ? `Hey, ${name} 👋` : "Dashboard"}</h1>

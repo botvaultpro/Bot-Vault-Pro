@@ -65,9 +65,9 @@ export const TIER_LIMITS: Record<Tier, TierLimits> = {
 
 export function getTierFromPriceId(priceId: string): Tier {
   const map: Record<string, Tier> = {
-    [process.env.STRIPE_STARTER_PRICE_ID!]: "starter",
-    [process.env.STRIPE_GROWTH_PRICE_ID!]: "growth",
-    [process.env.STRIPE_ENTERPRISE_PRICE_ID!]: "enterprise",
+    "price_1TBb4MEXeLLfaSZwYsdSKkAi": "starter",
+    "price_1TBb4cEXeLLfaSZwqE6EwbYx": "growth",
+    "price_1TBb59EXeLLfaSZwSCYLcBVa": "enterprise",
   };
   return map[priceId] ?? "free";
 }
