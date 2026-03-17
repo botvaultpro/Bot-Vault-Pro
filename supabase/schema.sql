@@ -105,3 +105,62 @@ CREATE TABLE public.wishlist (
 ALTER TABLE public.wishlist ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Anyone can insert wishlist" ON public.wishlist FOR INSERT WITH CHECK (true);
 CREATE POLICY "Service role can read wishlist" ON public.wishlist FOR SELECT USING (auth.role() = 'service_role');
+
+-- ============================================================
+-- SiteBuilder Pro tables
+-- ============================================================
+
+-- Site previews: AI-generated HTML websites
+CREATE TABLE public.site_previews (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  business_name TEXT NOT NULL,
+  business_type TEXT NOT NULL,
+  location TEXT NOT NULL,
+  current_website TEXT,
+  html_content TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE public.site_previews ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Users can view own site_previews" ON public.site_previews FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can insert own site_previews" ON public.site_previews FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Service role full access site_previews" ON public.site_previews FOR ALL USING (auth.role() = 'service_role');
+
+-- Proposals: AI-generated sales proposals
+CREATE TABLE public.proposals (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  site_preview_id UUID REFERENCES public.site_previews(id) ON DELETE SET NULL,
+  business_name TEXT NOT NULL,
+  proposal_content TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE public.proposals ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Users can view own proposals" ON public.proposals FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can insert own proposals" ON public.proposals FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Service role full access proposals" ON public.proposals FOR ALL USING (auth.role() = 'service_role');
+
+-- Pipeline leads: CRM Kanban for web design prospects
+CREATE TABLE public.pipeline_leads (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  business_name TEXT NOT NULL,
+  business_type TEXT,
+  location TEXT,
+  current_website TEXT,
+  contact_name TEXT,
+  contact_email TEXT,
+  contact_phone TEXT,
+  stage TEXT NOT NULL DEFAULT 'new_lead' CHECK (stage IN ('new_lead','site_generated','proposal_sent','follow_up','closed_won','closed_lost')),
+  notes TEXT,
+  site_preview_id UUID REFERENCES public.site_previews(id) ON DELETE SET NULL,
+  proposal_id UUID REFERENCES public.proposals(id) ON DELETE SET NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE public.pipeline_leads ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Users can view own pipeline_leads" ON public.pipeline_leads FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can insert own pipeline_leads" ON public.pipeline_leads FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can update own pipeline_leads" ON public.pipeline_leads FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "Users can delete own pipeline_leads" ON public.pipeline_leads FOR DELETE USING (auth.uid() = user_id);
+CREATE POLICY "Service role full access pipeline_leads" ON public.pipeline_leads FOR ALL USING (auth.role() = 'service_role');
