@@ -1,14 +1,17 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Sidebar from "@/components/dashboard/Sidebar";
 import { Menu } from "lucide-react";
-import { type Tier } from "@/lib/tier-limits";
-import { useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
+
+interface BotSub {
+  bot_slug: string;
+  status: string;
+}
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [tier, setTier] = useState<Tier>("free");
+  const [subscriptions, setSubscriptions] = useState<BotSub[]>([]);
   const [email, setEmail] = useState("");
 
   useEffect(() => {
@@ -17,8 +20,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
       setEmail(user.email ?? "");
-      const { data } = await supabase.from("subscriptions").select("tier").eq("user_id", user.id).eq("status", "active").single();
-      if (data?.tier) setTier(data.tier as Tier);
+      const { data } = await supabase
+        .from("bot_subscriptions")
+        .select("bot_slug, status")
+        .eq("user_id", user.id);
+      setSubscriptions(data ?? []);
     }
     loadUser();
   }, []);
@@ -32,12 +38,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       {/* Sidebar - desktop */}
       <div className="hidden md:flex shrink-0">
-        <Sidebar tier={tier} email={email} />
+        <Sidebar subscriptions={subscriptions} email={email} />
       </div>
 
       {/* Sidebar - mobile */}
       <div className={`fixed inset-y-0 left-0 z-50 transform transition-transform duration-300 md:hidden ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}>
-        <Sidebar tier={tier} email={email} onClose={() => setSidebarOpen(false)} />
+        <Sidebar subscriptions={subscriptions} email={email} onClose={() => setSidebarOpen(false)} />
       </div>
 
       {/* Main content */}
