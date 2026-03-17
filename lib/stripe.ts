@@ -9,7 +9,7 @@ export const PLANS = [
     id: "starter",
     name: "Starter",
     price: 49,
-    priceId: process.env.STRIPE_STARTER_PRICE_ID!,
+    priceId: "price_1TBb4MEXeLLfaSZwYsdSKkAi",
     description: "Perfect for getting started",
     features: [
       "25 leads per run",
@@ -24,7 +24,7 @@ export const PLANS = [
     id: "growth",
     name: "Growth",
     price: 149,
-    priceId: process.env.STRIPE_GROWTH_PRICE_ID!,
+    priceId: "price_1TBb4cEXeLLfaSZwqE6EwbYx",
     description: "For growing businesses",
     popular: true,
     features: [
@@ -43,7 +43,7 @@ export const PLANS = [
     id: "enterprise",
     name: "Enterprise",
     price: null,
-    priceId: process.env.STRIPE_ENTERPRISE_PRICE_ID!,
+    priceId: "price_1TBb59EXeLLfaSZwSCYLcBVa",
     description: "Unlimited scale",
     features: [
       "Unlimited everything",

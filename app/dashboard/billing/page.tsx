@@ -10,6 +10,7 @@ export default function BillingPage() {
   const [loading, setLoading] = useState<string | null>(null);
   const [portalLoading, setPortalLoading] = useState(false);
   const [subscriptionId, setSubscriptionId] = useState<string | null>(null);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -25,15 +26,22 @@ export default function BillingPage() {
 
   async function handleSubscribe(priceId: string, planId: string) {
     setLoading(planId);
+    setCheckoutError(null);
     try {
       const res = await fetch("/api/stripe/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ priceId }),
       });
-      const { url } = await res.json();
-      if (url) window.location.href = url;
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        setCheckoutError(data.error ?? "Something went wrong. Please try again.");
+        setLoading(null);
+      }
     } catch {
+      setCheckoutError("Network error. Please try again.");
       setLoading(null);
     }
   }
@@ -73,6 +81,12 @@ export default function BillingPage() {
             {portalLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />}
             Manage Billing
           </button>
+        </div>
+      )}
+
+      {checkoutError && (
+        <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+          {checkoutError}
         </div>
       )}
 
