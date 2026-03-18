@@ -1,7 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
+import { Resend } from "resend";
 import Stripe from "stripe";
+import {
+  buildReviewBotPurchaseEmail,
+  buildInvoiceForgeEmail,
+  buildEmailCoachEmail,
+  buildClauseCheckEmail,
+  buildWeeklyPulseEmail,
+  buildSiteBuilderEmail,
+} from "@/lib/emails";
+import { validateEnv } from "@/lib/env";
+
+validateEnv();
 
 function getSupabase() {
   return createServiceClient(
@@ -39,6 +51,47 @@ function getTierFromPriceId(priceId: string): "starter" | "pro" {
     process.env.STRIPE_EMAILCOACH_PRO_PRICE_ID,
   ];
   return proIds.includes(priceId) ? "pro" : "starter";
+}
+
+async function sendPurchaseEmail(
+  botSlug: string,
+  tier: string,
+  userId: string,
+  supabase: ReturnType<typeof getSupabase>
+): Promise<void> {
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("email, full_name")
+    .eq("id", userId)
+    .single();
+
+  if (!profile?.email) {
+    console.error(`sendPurchaseEmail: no profile found for user ${userId}`);
+    return;
+  }
+
+  const firstName = profile.full_name?.split(" ")[0] ?? "there";
+  const toEmail = profile.email;
+
+  const builders: Record<string, () => ReturnType<typeof buildReviewBotPurchaseEmail>> = {
+    reviewbot: () => buildReviewBotPurchaseEmail(firstName, toEmail, tier),
+    invoiceforge: () => buildInvoiceForgeEmail(firstName, toEmail, tier),
+    emailcoach: () => buildEmailCoachEmail(firstName, toEmail, tier),
+    clausecheck: () => buildClauseCheckEmail(firstName, toEmail, tier),
+    weeklypulse: () => buildWeeklyPulseEmail(firstName, toEmail, tier),
+    sitebuilder: () => buildSiteBuilderEmail(firstName, toEmail, tier),
+  };
+
+  const builder = builders[botSlug];
+  if (!builder) {
+    console.error(`sendPurchaseEmail: no email template for bot_slug "${botSlug}"`);
+    return;
+  }
+
+  const payload = builder();
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  await resend.emails.send(payload);
+  console.log(`Purchase email sent: ${botSlug} (${tier}) → ${toEmail}`);
 }
 
 export async function POST(req: NextRequest) {
@@ -86,7 +139,7 @@ export async function POST(req: NextRequest) {
           break;
         }
 
-        await supabase.from("bot_subscriptions").upsert({
+        const { error: upsertError } = await supabase.from("bot_subscriptions").upsert({
           user_id: userId,
           bot_slug: resolvedBotSlug,
           stripe_subscription_id: subscriptionId,
@@ -98,7 +151,17 @@ export async function POST(req: NextRequest) {
           updated_at: new Date().toISOString(),
         }, { onConflict: "user_id,bot_slug" });
 
-        console.log(`checkout.session.completed: activated ${resolvedBotSlug} (${tier}) for user ${userId}`);
+        if (upsertError) {
+          console.error("checkout.session.completed: upsert error", upsertError);
+        } else {
+          console.log(`checkout.session.completed: activated ${resolvedBotSlug} (${tier}) for user ${userId}`);
+        }
+
+        // Send purchase confirmation email — never block webhook on email failure
+        sendPurchaseEmail(resolvedBotSlug, tier, userId, supabase).catch((err) =>
+          console.error("Purchase email failed (non-fatal):", err)
+        );
+
         break;
       }
 
@@ -173,7 +236,8 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ received: true });
   } catch (err) {
+    // Always return 200 to prevent Stripe retries for non-signature errors
     console.error(`Webhook processing error for ${event.type}:`, err);
-    return NextResponse.json({ error: "Processing error" }, { status: 500 });
+    return NextResponse.json({ received: true, warning: "Processing error — check logs" });
   }
 }

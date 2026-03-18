@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
+import { validateEnv } from "@/lib/env";
+
+validateEnv();
 
 export async function POST(req: NextRequest) {
   const supabase = await createClient();
@@ -68,6 +71,12 @@ export async function POST(req: NextRequest) {
     sessionParams.discounts = [{ coupon: "BUNDLE20" }];
   }
 
-  const session = await stripe.checkout.sessions.create(sessionParams);
-  return NextResponse.json({ url: session.url });
+  try {
+    const session = await stripe.checkout.sessions.create(sessionParams);
+    console.log(`Checkout session created: ${session.id} for user ${user.id} bot=${botSlug} tier=${tier ?? "starter"} bundle=${applyBundle}`);
+    return NextResponse.json({ url: session.url });
+  } catch (err) {
+    console.error("Stripe checkout session creation failed:", err);
+    return NextResponse.json({ error: "Failed to create checkout session" }, { status: 500 });
+  }
 }
