@@ -39,6 +39,8 @@ function getServiceSupabase() {
  * On first access for a trial-eligible bot, creates the free_trials row.
  */
 export async function hasAccess(userId: string, botSlug: BotSlug): Promise<boolean> {
+  if (!userId) return false;
+
   const supabase = getServiceSupabase();
 
   // Check 1: active paid subscription
