@@ -63,6 +63,7 @@ export async function POST(req: NextRequest) {
       user_id: user.id,
       bot_slug: botSlug,
       tier: tier ?? "starter",
+      price_id: priceId,
     },
   };
 

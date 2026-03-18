@@ -112,7 +112,7 @@ export default function Sidebar({ subscriptions = [], email, onClose }: SidebarP
       {/* Logo */}
       <div className="p-5 border-b border-vault-border flex items-center justify-between">
         <Link href="/dashboard" className="flex items-center gap-2 font-display text-lg font-bold">
-          <Image src="/BVP_Bot_Tranparent.png" alt="Bot Vault Pro mascot" width={36} height={36} className="h-9 w-auto object-contain shrink-0" />
+          <Image src="/BVP_Bot_Tranparent.png" alt="Bot Vault Pro mascot" width={50} height={50} className="h-12 w-auto object-contain shrink-0" />
           <span className="text-gradient-cyan">Bot</span>
           <span className="text-vault-text"> Vault Pro</span>
         </Link>
