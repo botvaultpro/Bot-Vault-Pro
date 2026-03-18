@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { anthropic } from "@/lib/anthropic";
-import { hasAccess, incrementTrialUse, getTrialRemaining } from "@/lib/entitlements";
+import { hasAccess, incrementIfTrial } from "@/lib/entitlements";
 
 export async function POST(req: NextRequest) {
   const supabase = await createClient();
@@ -89,10 +89,7 @@ Generate the JSON report.`,
       report_content: reportContent,
     }).select("id").single();
 
-    const trialRemaining = await getTrialRemaining(user.id, "weeklypulse");
-    if (trialRemaining > 0) {
-      await incrementTrialUse(user.id, "weeklypulse");
-    }
+    await incrementIfTrial(user.id, "weeklypulse");
 
     return NextResponse.json({ report, id: saved?.id });
   } catch (e) {

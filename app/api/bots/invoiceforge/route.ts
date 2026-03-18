@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { anthropic } from "@/lib/anthropic";
-import { hasAccess, getBotTier, incrementTrialUse, getTrialRemaining } from "@/lib/entitlements";
+import { hasAccess, getBotTier, incrementIfTrial } from "@/lib/entitlements";
 
 export async function POST(req: NextRequest) {
   const supabase = await createClient();
@@ -76,10 +76,7 @@ Include: What's included, what's NOT included, timeline estimate, and payment te
     ai_scope: invoiceData.aiScope || null,
   }).select("id, invoice_number").single();
 
-  const trialRemaining = await getTrialRemaining(user.id, "invoiceforge");
-  if (trialRemaining > 0) {
-    await incrementTrialUse(user.id, "invoiceforge");
-  }
+  await incrementIfTrial(user.id, "invoiceforge");
 
   return NextResponse.json({ id: saved?.id, invoiceNumber: saved?.invoice_number, total });
 }

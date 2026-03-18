@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { anthropic } from "@/lib/anthropic";
-import { hasAccess, incrementTrialUse, getTrialRemaining } from "@/lib/entitlements";
+import { hasAccess, incrementIfTrial } from "@/lib/entitlements";
 
 export async function POST(req: NextRequest) {
   const supabase = await createClient();
@@ -79,11 +79,7 @@ All three must directly address the goal (${goal}) and be ready to send.`,
       reply_diplomatic: replies.diplomatic?.body ?? "",
     });
 
-    // Decrement trial if not subscribed
-    const trialRemaining = await getTrialRemaining(user.id, "emailcoach");
-    if (trialRemaining > 0) {
-      await incrementTrialUse(user.id, "emailcoach");
-    }
+    await incrementIfTrial(user.id, "emailcoach");
 
     return NextResponse.json({ replies });
   } catch (e) {

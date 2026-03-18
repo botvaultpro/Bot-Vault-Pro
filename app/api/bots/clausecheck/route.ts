@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { anthropic } from "@/lib/anthropic";
-import { hasAccess, incrementTrialUse, getTrialRemaining } from "@/lib/entitlements";
+import { hasAccess, incrementIfTrial } from "@/lib/entitlements";
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const pdfParse = require("pdf-parse");
 
@@ -92,10 +92,7 @@ Return the JSON analysis.`,
       questions_to_ask: analysis.questions_to_ask,
     }).select("id").single();
 
-    const trialRemaining = await getTrialRemaining(user.id, "clausecheck");
-    if (trialRemaining > 0) {
-      await incrementTrialUse(user.id, "clausecheck");
-    }
+    await incrementIfTrial(user.id, "clausecheck");
 
     return NextResponse.json({ analysis, id: saved?.id });
   } catch (e) {

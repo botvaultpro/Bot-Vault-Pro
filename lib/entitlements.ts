@@ -54,6 +54,12 @@ export async function hasAccess(userId: string, botSlug: BotSlug): Promise<boole
   const limit = FREE_TRIAL_LIMITS[botSlug];
   if (limit === 0) return false;
 
+  // Ensure the row exists so downstream increment calls always have a row to update
+  await supabase.from("free_trials").upsert(
+    { user_id: userId, bot_slug: botSlug, uses: 0 },
+    { onConflict: "user_id,bot_slug", ignoreDuplicates: true }
+  );
+
   const { data: trial } = await supabase
     .from("free_trials")
     .select("uses")
@@ -123,6 +129,24 @@ export async function getBotTier(userId: string, botSlug: BotSlug): Promise<"pro
     return data.tier as "pro" | "starter";
   }
   return null;
+}
+
+/**
+ * Increment trial use only if the user is NOT actively subscribed.
+ * Call this after every successful bot action instead of incrementTrialUse directly.
+ */
+export async function incrementIfTrial(userId: string, botSlug: BotSlug): Promise<void> {
+  const supabase = getServiceSupabase();
+  const { data: sub } = await supabase
+    .from("bot_subscriptions")
+    .select("status")
+    .eq("user_id", userId)
+    .eq("bot_slug", botSlug)
+    .single();
+
+  if (sub?.status === "active" || sub?.status === "trialing") return;
+
+  await incrementTrialUse(userId, botSlug);
 }
 
 /**
