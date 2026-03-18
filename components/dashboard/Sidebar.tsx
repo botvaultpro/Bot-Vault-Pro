@@ -1,10 +1,11 @@
 "use client";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, Globe, Star, FileText, Scale,
   BarChart2, Mail, CreditCard, Settings, LogOut, X,
-  GitBranch, ChevronDown, ChevronRight, Lock,
+  GitBranch, ChevronDown, ChevronRight, Lock, Tag,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
@@ -77,6 +78,7 @@ const BOT_SECTIONS = [
 ];
 
 const bottomItems = [
+  { href: "/pricing", icon: Tag, label: "Pricing" },
   { href: "/dashboard/billing", icon: CreditCard, label: "Billing" },
   { href: "/dashboard/settings", icon: Settings, label: "Settings" },
 ];
@@ -109,7 +111,8 @@ export default function Sidebar({ subscriptions = [], email, onClose }: SidebarP
     <aside className="flex flex-col h-full bg-vault-surface border-r border-vault-border w-64">
       {/* Logo */}
       <div className="p-5 border-b border-vault-border flex items-center justify-between">
-        <Link href="/dashboard" className="font-display text-lg font-bold">
+        <Link href="/dashboard" className="flex items-center gap-2 font-display text-lg font-bold">
+          <Image src="/BVP_Bot_Tranparent.png" alt="Bot Vault Pro mascot" width={36} height={36} className="h-9 w-auto object-contain shrink-0" />
           <span className="text-gradient-cyan">Bot</span>
           <span className="text-vault-text"> Vault Pro</span>
         </Link>

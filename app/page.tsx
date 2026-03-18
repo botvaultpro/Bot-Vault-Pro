@@ -1,135 +1,100 @@
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, Zap, Target, MessageSquare, Globe, Check, ChevronRight, Clock, Lightbulb } from "lucide-react";
+import { ArrowRight, Globe, Check, ChevronRight, Clock, Lightbulb, Star, BarChart2, Mail, Scale, FileText } from "lucide-react";
 import WishlistForm from "@/app/components/WishlistForm";
 
 const bots = [
   {
-    icon: Target,
-    name: "LeadGen Pro",
-    slug: "leadgen",
-    tagline: "Find & close leads on autopilot",
-    description: "Scrapes verified contact emails, AI-qualifies against your ICP, and sends personalized 3-email drip sequences automatically. Stop hunting — start closing.",
-    color: "cyan",
-  },
-  {
-    icon: Zap,
-    name: "ContentBlast",
-    slug: "contentblast",
-    tagline: "Publish everywhere, instantly",
-    description: "Generates AI-written content for Twitter/X, LinkedIn, and blog — then posts it automatically. Schedule entire campaigns with cron. Show up online without showing up.",
-    color: "green",
-  },
-  {
-    icon: MessageSquare,
-    name: "SupportDesk",
-    slug: "supportdesk",
-    tagline: "24/7 AI support inbox",
-    description: "Monitors your inbox via IMAP, generates grounded AI replies from your knowledge base, and escalates low-confidence tickets to you. Sleep. It's covered.",
-    color: "cyan",
-  },
-  {
     icon: Globe,
     name: "SiteBuilder Pro",
     slug: "sitebuilder",
-    tagline: "Find clients, build demos, close deals",
-    description: "Discovers local businesses with weak sites, generates custom demo sites with AI, sends proposals, and tracks deals in a built-in CRM. A full sales pipeline on autopilot.",
+    price: "$49/mo",
     color: "green",
+    description: "Generate a live website sample for any local business in 30 seconds. Auto-create a professional sales proposal. Track every prospect from first contact to closed deal.",
+    tagline: "Your pipeline, your proposals, your clients — all in one place.",
   },
+  {
+    icon: Star,
+    name: "ReviewBot",
+    slug: "reviewbot",
+    price: "$29/mo",
+    color: "yellow",
+    description: "Connects to your Google Business Profile and auto-drafts a personalized reply for every new review. Approve with one click or let it publish automatically. Monitors competitors too.",
+    tagline: "Replies to reviews while you sleep.",
+  },
+  {
+    icon: BarChart2,
+    name: "WeeklyPulse",
+    slug: "weeklypulse",
+    price: "$19/mo",
+    color: "purple",
+    description: "Enter your numbers once a week. Get a plain-English business health report delivered to your inbox every Monday — with trend analysis comparing this week to the last four.",
+    tagline: "Shows up in your inbox Monday morning. You didn't ask for it.",
+  },
+  {
+    icon: Mail,
+    name: "EmailCoach",
+    slug: "emailcoach",
+    price: "$19/mo",
+    color: "cyan",
+    description: "Paste any difficult email and get three ready-to-send replies. Over time it learns your tone and writes more like you. Connect Gmail and it reads your inbox directly.",
+    tagline: "Gets smarter every time you use it.",
+  },
+  {
+    icon: Scale,
+    name: "ClauseCheck",
+    slug: "clausecheck",
+    price: "$29/mo",
+    color: "orange",
+    description: "Upload any contract. Get flagged risk clauses, plain-English explanations, and missing protections. Builds a personal risk profile across every contract you review.",
+    tagline: "Every contract makes the next analysis smarter.",
+  },
+  {
+    icon: FileText,
+    name: "InvoiceForge",
+    slug: "invoiceforge",
+    price: "$29/mo",
+    color: "blue",
+    description: "Build professional invoices, send directly from the app, track when clients open them, and trigger automatic overdue reminders — without lifting a finger.",
+    tagline: "Sends. Tracks. Follows up. Automatically.",
+  },
+];
+
+const botColorMap: Record<string, { text: string; border: string; bg: string }> = {
+  green:  { text: "text-vault-green",  border: "border-vault-green/20",  bg: "bg-vault-green/5"  },
+  yellow: { text: "text-yellow-400",   border: "border-yellow-400/20",   bg: "bg-yellow-400/5"   },
+  purple: { text: "text-purple-400",   border: "border-purple-400/20",   bg: "bg-purple-400/5"   },
+  cyan:   { text: "text-vault-accent", border: "border-vault-accent/20", bg: "bg-vault-accent/5" },
+  orange: { text: "text-orange-400",   border: "border-orange-400/20",   bg: "bg-orange-400/5"   },
+  blue:   { text: "text-blue-400",     border: "border-blue-400/20",     bg: "bg-blue-400/5"     },
+};
+
+const comparison = [
+  { feature: "Remembers your clients and history",    free: "Forgets everything",           pro: "Builds over time" },
+  { feature: "Works while you're offline",            free: "Only when you ask",            pro: "Runs 24/7 automatically" },
+  { feature: "Connects to your real systems",         free: "No integrations",              pro: "Gmail, Google Business, more" },
+  { feature: "Sends emails and invoices for you",     free: "Just generates text",          pro: "Takes real action" },
+  { feature: "Gets smarter the more you use it",      free: "Starts fresh every time",      pro: "Learns your voice and patterns" },
+  { feature: "Tracks your leads and pipeline",        free: "No memory",                    pro: "Full CRM built in" },
+  { feature: "Delivers reports on a schedule",        free: "You have to ask every time",   pro: "Automated weekly delivery" },
+  { feature: "Monitors your reviews 24/7",            free: "Not possible",                 pro: "Replies while you sleep" },
+];
+
+const outcomes = [
+  { quote: "I used to spend 45 minutes writing a client proposal. Now I generate it in 60 seconds and close deals in the first meeting.", bot: "SiteBuilder Pro" },
+  { quote: "ReviewBot replied to 34 Google reviews last month. I didn't write a single one.", bot: "ReviewBot" },
+  { quote: "WeeklyPulse showed me my new customer count had been dropping for 3 weeks before I noticed. I fixed it before it became a real problem.", bot: "WeeklyPulse" },
+  { quote: "I sent 12 invoices this month and followed up on every overdue one automatically. I collected $4,200 I would have forgotten to chase.", bot: "InvoiceForge" },
+  { quote: "I uploaded our vendor contract and ClauseCheck flagged a clause my lawyer later confirmed was a serious risk. Worth every dollar.", bot: "ClauseCheck" },
 ];
 
 const roadmap = [
   { name: "BVP ResumeRank", description: "AI resume screener for small business hiring — filter 200 applicants to the top 5 in seconds." },
   { name: "BVP Newsletter", description: "AI newsletter generator and scheduler — write, design, and send to your list automatically." },
-  { name: "BVP WeeklyPulse", description: "Automated plain-English business reports delivered to your inbox every Monday morning." },
+  { name: "BVP LeadGen Pro", description: "Find and qualify local business leads automatically — full prospect pipeline with email outreach." },
   { name: "BVP DebtBuster", description: "Personalized debt payoff plan with budget tracking — AI maps your fastest path to zero." },
   { name: "BVP TaxAuditor", description: "Small business quarterly tax tips and audit prep — never get caught off guard by the IRS again." },
   { name: "BVP OpportunityFinder", description: "Searches for business pains in your market and surfaces AI-powered solutions you can act on today." },
-];
-
-const reviews = [
-  {
-    name: "Marcus T.",
-    role: "Freelance Designer",
-    text: "LeadGen Pro completely changed how I find clients. I used to spend hours hunting on LinkedIn — now I get a qualified list every Monday morning. Closed 3 new retainers in my first month.",
-    stars: 5,
-    bot: "LeadGen Pro",
-  },
-  {
-    name: "Priya S.",
-    role: "Restaurant Owner",
-    text: "SupportDesk handles all my customer emails while I'm in the kitchen. It answers questions about hours, reservations, and menu items without me touching a thing. Customers don't even know it's AI.",
-    stars: 5,
-    bot: "SupportDesk",
-  },
-  {
-    name: "Jake R.",
-    role: "Side Hustler / E-commerce",
-    text: "I run a Shopify store on nights and weekends. ContentBlast posts my product content to Instagram, Twitter, and my blog on a schedule. My traffic went up 40% and I barely lifted a finger.",
-    stars: 5,
-    bot: "ContentBlast",
-  },
-  {
-    name: "Carla M.",
-    role: "Solopreneur, Business Coach",
-    text: "SiteBuilder Pro helped me land two web design clients I never would have found. It found local businesses with terrible websites, built demo sites for them, and I just showed up to the call. Wild.",
-    stars: 5,
-    bot: "SiteBuilder Pro",
-  },
-  {
-    name: "Devon W.",
-    role: "Early-Stage Startup Founder",
-    text: "We were spending $4k/month on an agency for lead gen. Bot Vault Pro replaced it for $149. The AI qualification is actually better — it knows our ICP better than the humans did.",
-    stars: 5,
-    bot: "LeadGen Pro",
-  },
-  {
-    name: "Tasha L.",
-    role: "Small Business Owner, Cleaning Co.",
-    text: "I never had time to post on social media. ContentBlast now publishes 3x per week — tips, promos, before/afters. I've gotten 6 new customers who said they found me through my posts.",
-    stars: 5,
-    bot: "ContentBlast",
-  },
-];
-
-const plans = [
-  {
-    name: "Free",
-    price: "0",
-    description: "Try it out — no card needed",
-    features: ["Access to dashboard", "1 bot run to test the waters", "All 4 bots included"],
-    cta: "Start Free",
-    href: "/auth/signup",
-    highlight: false,
-  },
-  {
-    name: "Starter",
-    price: "49",
-    description: "Perfect for solopreneurs",
-    features: ["25 leads/run", "10 content blasts/mo", "50 support tickets/mo", "10 site prospects/mo", "Blog content", "Demo site generation", "All 4 bots included"],
-    cta: "Get Started",
-    href: "/auth/signup?plan=starter",
-    highlight: false,
-  },
-  {
-    name: "Growth",
-    price: "149",
-    description: "For growing businesses",
-    badge: "Most Popular",
-    features: ["250 leads/run + AI qualification", "100 blasts/mo — all platforms", "500 tickets/mo + IMAP", "100 prospects/mo + Pipeline CRM", "Full 3-email drip sequences", "Cron scheduling", "All 4 bots included"],
-    cta: "Get Growth",
-    href: "/auth/signup?plan=growth",
-    highlight: true,
-  },
-  {
-    name: "Enterprise",
-    price: "Custom",
-    description: "Unlimited scale",
-    features: ["Everything in Growth", "Unlimited usage", "Priority support", "Custom integrations", "Dedicated onboarding", "All current + future bots"],
-    cta: "Contact Us",
-    href: "mailto:hello@botvaultpro.com",
-    highlight: false,
-  },
 ];
 
 const targetCustomers = [
@@ -153,8 +118,8 @@ export default function LandingPage() {
           </span>
           <div className="hidden md:flex items-center gap-8 text-sm text-vault-text-dim">
             <a href="#bots" className="hover:text-vault-accent transition-colors">Bots</a>
+            <Link href="/pricing" className="hover:text-vault-accent transition-colors">Pricing</Link>
             <a href="#roadmap" className="hover:text-vault-accent transition-colors">Roadmap</a>
-            <a href="#pricing" className="hover:text-vault-accent transition-colors">Pricing</a>
             <a href="#build" className="hover:text-vault-accent transition-colors">Request a Bot</a>
           </div>
           <div className="flex items-center gap-3">
@@ -181,25 +146,24 @@ export default function LandingPage() {
                 Always building — new automations every quarter
               </div>
               <h1 className="font-display text-5xl sm:text-6xl md:text-7xl font-extrabold leading-tight mb-4">
-                Your Unfair
+                Stop Prompting.
                 <br />
-                <span className="text-gradient-cyan">Advantage.</span>
+                <span className="text-gradient-cyan">Start Automating.</span>
               </h1>
-              <h2 className="font-display text-2xl sm:text-3xl font-bold text-vault-text-dim mb-6">
-                AI Automation for the Everyday Person.
-              </h2>
-              <p className="text-vault-text-dim text-lg sm:text-xl max-w-xl mb-10 mx-auto lg:mx-0">
-                The same AI tools big companies pay agencies thousands for — built for small businesses,
-                freelancers, and side hustlers. No code. No complexity. Just results.
+              <p className="text-vault-text-dim text-lg sm:text-xl max-w-xl mb-8 mx-auto lg:mx-0">
+                Bot Vault Pro is a suite of AI-powered business tools that work for you around the clock — not just when you ask them to.
               </p>
-              <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
+              <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 mb-6">
                 <Link href="/auth/signup" className="w-full sm:w-auto flex items-center justify-center gap-2 bg-vault-accent text-vault-bg font-display font-bold px-8 py-4 rounded-xl text-lg hover:bg-vault-accent-dim transition-all hover:scale-105">
-                  Start for free <ArrowRight className="w-5 h-5" />
+                  Start Free — No Credit Card <ArrowRight className="w-5 h-5" />
                 </Link>
                 <a href="#bots" className="w-full sm:w-auto flex items-center justify-center gap-2 border border-vault-border text-vault-text-dim px-8 py-4 rounded-xl text-lg hover:border-vault-accent hover:text-vault-accent transition-all">
-                  See what&apos;s in the vault <ChevronRight className="w-5 h-5" />
+                  See How It Works <ChevronRight className="w-5 h-5" />
                 </a>
               </div>
+              <p className="text-vault-text-dim text-sm max-w-md mx-auto lg:mx-0">
+                6 AI bots. Every one replaces a task you do manually every week. Your business keeps running — even when you&apos;re not.
+              </p>
             </div>
             {/* Right: mascot */}
             <div className="flex-shrink-0 flex items-center justify-center">
@@ -215,6 +179,68 @@ export default function LandingPage() {
                 />
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Challenge Section */}
+      <section className="py-20 px-4 sm:px-6 border-t border-vault-border">
+        <div className="max-w-3xl mx-auto">
+          <h2 className="font-display text-3xl sm:text-4xl font-bold mb-4">
+            You&apos;ve tried ChatGPT. So has everyone else.
+          </h2>
+          <p className="text-vault-text-dim text-lg mb-6">Here&apos;s the problem with prompting a free AI:</p>
+          <ul className="space-y-3 mb-8">
+            {[
+              "It forgets everything the moment you close the tab",
+              "You have to do the work to get the output — every single time",
+              "It doesn't connect to your clients, your inbox, or your business",
+              "It can't send an invoice, reply to a review, or email you a report on Monday morning",
+              "It's a tool. You still have to do the job.",
+            ].map((item) => (
+              <li key={item} className="flex items-start gap-3 text-vault-text-dim">
+                <span className="text-red-400 font-bold mt-0.5 shrink-0">✗</span>
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
+          <div className="bg-vault-accent/5 border border-vault-accent/20 rounded-xl px-6 py-5">
+            <p className="text-vault-text leading-relaxed">
+              Bot Vault Pro is different. Our bots remember your business, learn your preferences, connect to your real systems, and take action — automatically.{" "}
+              <strong className="text-vault-accent">You set them up once. They run forever.</strong>
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Comparison Table */}
+      <section className="py-20 px-4 sm:px-6 border-t border-vault-border">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-10">
+            <h2 className="font-display text-3xl sm:text-4xl font-bold mb-3">Free AI Prompts vs. Bot Vault Pro</h2>
+          </div>
+          <div className="rounded-2xl border border-vault-border overflow-hidden">
+            {/* Table header */}
+            <div className="grid grid-cols-3 bg-vault-surface border-b border-vault-border">
+              <div className="px-4 sm:px-6 py-4 text-sm font-semibold text-vault-text">Feature</div>
+              <div className="px-4 sm:px-6 py-4 text-sm font-semibold text-vault-text-dim text-center border-l border-vault-border">Free AI (ChatGPT, etc.)</div>
+              <div className="px-4 sm:px-6 py-4 text-sm font-semibold text-vault-accent text-center border-l border-vault-border">Bot Vault Pro</div>
+            </div>
+            {comparison.map((row, i) => (
+              <div key={i} className={`grid grid-cols-3 border-b border-vault-border last:border-0 ${i % 2 === 0 ? "" : "bg-vault-surface/30"}`}>
+                <div className="px-4 sm:px-6 py-4 text-sm font-semibold text-vault-text">{row.feature}</div>
+                <div className="px-4 sm:px-6 py-4 text-sm text-center border-l border-vault-border">
+                  <span className="inline-flex items-center gap-1.5 bg-red-400/10 text-red-400 rounded-lg px-2.5 py-1">
+                    <span className="font-bold shrink-0">✗</span> {row.free}
+                  </span>
+                </div>
+                <div className="px-4 sm:px-6 py-4 text-sm text-center border-l border-vault-border">
+                  <span className="inline-flex items-center gap-1.5 bg-vault-green/10 text-vault-green rounded-lg px-2.5 py-1">
+                    <span className="font-bold shrink-0">✓</span> {row.pro}
+                  </span>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -251,7 +277,7 @@ export default function LandingPage() {
                 Bot Vault Pro is an AI automation company. We identify the most painful, time-consuming tasks that small businesses and independent operators face — and we build AI systems that replace them entirely.
               </p>
               <p className="text-vault-text-dim leading-relaxed mb-4">
-                Our 4 founding bots target lead generation, content publishing, customer support, and client acquisition. But we&apos;re not stopping there. Every quarter we ship new automations. Our goal is simple: give small operators the same leverage as a 10-person team.
+                Our 6 AI bots target client acquisition, review management, business analytics, email drafting, contract review, and invoicing. But we&apos;re not stopping there. Every quarter we ship new automations. Our goal is simple: give small operators the same leverage as a 10-person team.
               </p>
               <p className="text-vault-text-dim leading-relaxed">
                 No agency markups. No developers needed. No six-month implementation projects. Just plug in, configure, and let the bots run.
@@ -273,12 +299,12 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Current Bots */}
+      {/* 6 Bots */}
       <section id="bots" className="py-24 px-4 sm:px-6 border-t border-vault-border">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <p className="text-vault-accent font-mono text-sm uppercase tracking-widest mb-3">Available now</p>
-            <h2 className="font-display text-4xl sm:text-5xl font-bold mb-4">4 founding bots. One vault.</h2>
+            <h2 className="font-display text-4xl sm:text-5xl font-bold mb-4">Six bots. Six business problems solved — permanently.</h2>
             <p className="text-vault-text-dim text-lg max-w-2xl mx-auto">
               Each bot owns a critical business function and runs on autopilot — so you don&apos;t have to.
             </p>
@@ -286,15 +312,18 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {bots.map((bot) => {
               const Icon = bot.icon;
-              const accentClass = bot.color === "cyan" ? "text-vault-accent border-vault-accent/20 bg-vault-accent/5" : "text-vault-green border-vault-green/20 bg-vault-green/5";
+              const colors = botColorMap[bot.color];
               return (
                 <div key={bot.slug} className="card-surface rounded-2xl p-8 hover:border-vault-accent/30 transition-all group">
-                  <div className={`inline-flex items-center justify-center w-12 h-12 rounded-xl border ${accentClass} mb-6`}>
-                    <Icon className="w-6 h-6" />
+                  <div className={`inline-flex items-center justify-center w-12 h-12 rounded-xl border ${colors.bg} ${colors.border} mb-4`}>
+                    <Icon className={`w-6 h-6 ${colors.text}`} />
                   </div>
-                  <h3 className="font-display text-2xl font-bold mb-2">{bot.name}</h3>
-                  <p className={`text-sm font-mono mb-4 ${bot.color === "cyan" ? "text-vault-accent" : "text-vault-green"}`}>{bot.tagline}</p>
-                  <p className="text-vault-text-dim leading-relaxed">{bot.description}</p>
+                  <div className="flex items-baseline gap-3 mb-2">
+                    <h3 className="font-display text-2xl font-bold">{bot.name}</h3>
+                    <span className={`text-sm font-mono font-semibold ${colors.text}`}>{bot.price}</span>
+                  </div>
+                  <p className="text-vault-text-dim leading-relaxed mb-3">{bot.description}</p>
+                  <p className={`text-sm italic ${colors.text}`}>{bot.tagline}</p>
                 </div>
               );
             })}
@@ -302,36 +331,27 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Customer Reviews */}
+      {/* Outcome / Social Proof */}
       <section className="py-24 px-4 sm:px-6 border-t border-vault-border">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <p className="text-vault-accent font-mono text-sm uppercase tracking-widest mb-3">Real results</p>
-            <h2 className="font-display text-4xl sm:text-5xl font-bold mb-4">What our users say.</h2>
-            <p className="text-vault-text-dim text-lg max-w-2xl mx-auto">
-              Real people. Real automations. Real time saved.
-            </p>
+            <h2 className="font-display text-4xl sm:text-5xl font-bold mb-4">What changes when you stop prompting and start automating.</h2>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {reviews.map((r) => (
-              <div key={r.name} className="card-surface rounded-2xl p-6 flex flex-col gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {outcomes.map((o, i) => (
+              <div key={i} className="card-surface rounded-2xl p-6 flex flex-col gap-4">
                 <div className="flex gap-0.5">
-                  {Array.from({ length: r.stars }).map((_, i) => (
-                    <svg key={i} className="w-4 h-4 text-yellow-400 fill-yellow-400" viewBox="0 0 20 20">
+                  {Array.from({ length: 5 }).map((_, j) => (
+                    <svg key={j} className="w-4 h-4 text-yellow-400 fill-yellow-400" viewBox="0 0 20 20">
                       <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                     </svg>
                   ))}
                 </div>
-                <p className="text-vault-text-dim text-sm leading-relaxed flex-1">&ldquo;{r.text}&rdquo;</p>
-                <div className="flex items-center justify-between pt-2 border-t border-vault-border">
-                  <div>
-                    <p className="text-vault-text font-semibold text-sm">{r.name}</p>
-                    <p className="text-vault-text-dim text-xs">{r.role}</p>
-                  </div>
-                  <span className="text-xs font-mono text-vault-accent bg-vault-accent/10 border border-vault-accent/20 px-2 py-0.5 rounded-full">
-                    {r.bot}
-                  </span>
-                </div>
+                <p className="text-vault-text-dim text-sm leading-relaxed flex-1">&ldquo;{o.quote}&rdquo;</p>
+                <span className="text-xs font-mono text-vault-accent bg-vault-accent/10 border border-vault-accent/20 px-2 py-0.5 rounded-full self-start">
+                  {o.bot}
+                </span>
               </div>
             ))}
           </div>
@@ -369,63 +389,25 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Pricing */}
-      <section id="pricing" className="py-24 px-4 sm:px-6 border-t border-vault-border">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-10">
-            <p className="text-vault-accent font-mono text-sm uppercase tracking-widest mb-3">Pricing</p>
-            <h2 className="font-display text-4xl sm:text-5xl font-bold mb-4">Simple, honest pricing.</h2>
-            <p className="text-vault-text-dim text-lg max-w-xl mx-auto">
-              No hidden fees. No surprise overages. All bots included in every paid plan.
-            </p>
+      {/* Bottom CTA */}
+      <section className="py-24 px-4 sm:px-6 border-t border-vault-border">
+        <div className="max-w-3xl mx-auto text-center">
+          <div className="inline-flex items-center gap-2 bg-vault-surface border border-vault-border rounded-full px-4 py-1.5 text-sm text-vault-text-dim mb-8">
+            <Lightbulb className="w-4 h-4 text-vault-accent" />
+            Subscribe to 3 or more bots and save 20% automatically.
           </div>
-
-          {/* Pricing transparency notice */}
-          <div className="max-w-3xl mx-auto mb-10">
-            <div className="flex items-start gap-4 bg-vault-accent/5 border border-vault-accent/20 rounded-xl px-6 py-5">
-              <Lightbulb className="w-5 h-5 text-vault-accent mt-0.5 shrink-0" />
-              <div>
-                <p className="font-semibold text-vault-text mb-1">Lock in all-inclusive pricing now.</p>
-                <p className="text-vault-text-dim text-sm leading-relaxed">
-                  Our current plans give you access to <strong className="text-vault-text">every bot in the vault</strong> — all 4 today, and every new bot we ship. As the product grows,
-                  we&apos;ll introduce per-bot plans to give customers more flexibility. But{" "}
-                  <strong className="text-vault-text">early subscribers keep their all-inclusive rate for life</strong>. If you&apos;re here now, this is the best deal you&apos;ll ever get.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {plans.map((plan) => (
-              <div key={plan.name} className={`relative rounded-2xl p-6 flex flex-col ${plan.highlight ? "bg-vault-accent/5 border-2 border-vault-accent/50" : "card-surface"}`}>
-                {plan.badge && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-vault-accent text-vault-bg text-xs font-display font-bold px-3 py-1 rounded-full">
-                    {plan.badge}
-                  </div>
-                )}
-                <div className="mb-6">
-                  <h3 className="font-display text-xl font-bold mb-1">{plan.name}</h3>
-                  <p className="text-vault-text-dim text-sm mb-4">{plan.description}</p>
-                  <div className="flex items-end gap-1">
-                    {plan.price !== "Custom" && <span className="text-vault-text-dim text-lg">$</span>}
-                    <span className="font-display text-4xl font-extrabold">{plan.price}</span>
-                    {plan.price !== "Custom" && <span className="text-vault-text-dim text-sm mb-1">/mo</span>}
-                  </div>
-                </div>
-                <ul className="space-y-3 mb-8 flex-1">
-                  {plan.features.map((f) => (
-                    <li key={f} className="flex items-start gap-2 text-sm text-vault-text-dim">
-                      <Check className="w-4 h-4 text-vault-green mt-0.5 shrink-0" />
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-                <Link href={plan.href} className={`w-full text-center py-3 rounded-xl font-display font-semibold text-sm transition-all ${plan.highlight ? "bg-vault-accent text-vault-bg hover:bg-vault-accent-dim" : "border border-vault-border text-vault-text hover:border-vault-accent hover:text-vault-accent"}`}>
-                  {plan.cta}
-                </Link>
-              </div>
-            ))}
-          </div>
+          <h2 className="font-display text-4xl sm:text-5xl font-bold mb-6">
+            Your business shouldn&apos;t stop when you do.
+          </h2>
+          <p className="text-vault-text-dim text-lg max-w-xl mx-auto mb-10">
+            Subscribe to the bots you need. Start with one. Add more as your business grows. Every bot has a free trial — no credit card required.
+          </p>
+          <Link href="/pricing" className="inline-flex items-center gap-2 bg-vault-accent text-vault-bg font-display font-bold px-8 py-4 rounded-xl text-lg hover:bg-vault-accent-dim transition-all hover:scale-105">
+            Explore the Bots <ArrowRight className="w-5 h-5" />
+          </Link>
+          <p className="text-vault-text-dim text-sm mt-4">
+            Subscribe to 3 or more bots and save 20% automatically.
+          </p>
         </div>
       </section>
 
@@ -454,6 +436,7 @@ export default function LandingPage() {
           </span>
           <span>© 2026 Bot Vault Pro. All rights reserved.</span>
           <div className="flex gap-6">
+            <Link href="/pricing" className="hover:text-vault-accent transition-colors">Pricing</Link>
             <Link href="/privacy" className="hover:text-vault-accent transition-colors">Privacy</Link>
             <Link href="/terms" className="hover:text-vault-accent transition-colors">Terms</Link>
             <a href="mailto:hello@botvaultpro.com" className="hover:text-vault-accent transition-colors">Contact</a>

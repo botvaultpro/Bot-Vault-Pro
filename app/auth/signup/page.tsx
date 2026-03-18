@@ -1,6 +1,7 @@
 "use client";
 import { Suspense, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Eye, EyeOff, ArrowRight, Check } from "lucide-react";
@@ -71,10 +72,12 @@ function SignupForm() {
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[400px] bg-glow-green pointer-events-none" />
       <div className="relative w-full max-w-md">
         <div className="text-center mb-8">
-          <Link href="/" className="font-display text-2xl font-bold">
+          <Link href="/" className="inline-flex items-center justify-center gap-2 font-display text-2xl font-bold">
+            <Image src="/BVP_Bot_Tranparent.png" alt="Bot Vault Pro mascot" width={36} height={36} className="h-9 w-auto object-contain" />
             <span className="text-gradient-cyan">Bot</span>
             <span className="text-vault-text"> Vault Pro</span>
           </Link>
+          <p className="text-vault-text-dim text-sm italic mt-2">ChatGPT gives you an answer. Bot Vault Pro runs your business.</p>
           <h1 className="font-display text-3xl font-bold mt-6 mb-2">Create your account</h1>
           <p className="text-vault-text-dim">
             {plan && plan !== "free" ? `Starting with the ${plan} plan` : "Start free — upgrade anytime"}

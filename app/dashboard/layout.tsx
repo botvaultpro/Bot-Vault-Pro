@@ -3,6 +3,8 @@ import { useState, useEffect } from "react";
 import Sidebar from "@/components/dashboard/Sidebar";
 import { Menu } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import Image from "next/image";
+import Link from "next/link";
 
 interface BotSub {
   bot_slug: string;
@@ -53,9 +55,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <button onClick={() => setSidebarOpen(true)} className="text-vault-text-dim hover:text-vault-text">
             <Menu className="w-6 h-6" />
           </button>
-          <span className="font-display font-bold">
-            <span className="text-gradient-cyan">Bot</span> Vault Pro
-          </span>
+          <Link href="/dashboard" className="flex items-center gap-2 font-display font-bold">
+            <Image src="/BVP_Bot_Tranparent.png" alt="Bot Vault Pro mascot" width={36} height={36} className="h-9 w-auto object-contain" />
+            <span className="text-gradient-cyan">Bot</span><span className="text-vault-text"> Vault Pro</span>
+          </Link>
         </header>
 
         <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
