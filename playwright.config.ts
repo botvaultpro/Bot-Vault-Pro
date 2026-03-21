@@ -1,7 +1,7 @@
 import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
-  testDir: './bvp-tests',
+  testDir: './',
   timeout: 60000,
   use: {
     baseURL: 'https://botvaultpro.com',
