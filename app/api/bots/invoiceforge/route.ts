@@ -58,7 +58,7 @@ Include: What's included, what's NOT included, timeline estimate, and payment te
   const taxAmount = subtotal * ((invoiceData.taxRate ?? 0) / 100);
   const total = subtotal + taxAmount;
 
-  const { data: saved } = await supabase.from("invoices").insert({
+  const { data: saved, error: insertError } = await supabase.from("invoices").insert({
     user_id: user.id,
     invoice_number: invoiceNumber,
     client_name: invoiceData.clientName,
@@ -75,6 +75,9 @@ Include: What's included, what's NOT included, timeline estimate, and payment te
     total_amount: total,
     ai_scope: invoiceData.aiScope || null,
   }).select("id, invoice_number").single();
+  if (insertError) {
+    console.error("InvoiceForge: invoices insert error:", insertError);
+  }
 
   await incrementIfTrial(user.id, "invoiceforge");
 

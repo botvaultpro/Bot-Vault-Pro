@@ -69,7 +69,7 @@ All three must directly address the goal (${goal}) and be ready to send.`,
     }
 
     // Save to database
-    await supabase.from("email_replies").insert({
+    const { error: insertError } = await supabase.from("email_replies").insert({
       user_id: user.id,
       original_email: originalEmail,
       goal,
@@ -78,6 +78,9 @@ All three must directly address the goal (${goal}) and be ready to send.`,
       reply_direct: replies.direct?.body ?? "",
       reply_diplomatic: replies.diplomatic?.body ?? "",
     });
+    if (insertError) {
+      console.error("EmailCoach: email_replies insert error:", insertError);
+    }
 
     await incrementIfTrial(user.id, "emailcoach");
 

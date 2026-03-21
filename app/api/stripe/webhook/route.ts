@@ -176,7 +176,7 @@ export async function POST(req: NextRequest) {
           break;
         }
 
-        await supabase.from("bot_subscriptions")
+        const { error: updateErr } = await supabase.from("bot_subscriptions")
           .update({
             price_id: priceId,
             tier,
@@ -186,21 +186,29 @@ export async function POST(req: NextRequest) {
           })
           .eq("stripe_subscription_id", subscription.id);
 
-        console.log(`customer.subscription.updated: ${botSlug} status=${subscription.status}`);
+        if (updateErr) {
+          console.error("customer.subscription.updated: DB update error", updateErr);
+        } else {
+          console.log(`customer.subscription.updated: ${botSlug} status=${subscription.status}`);
+        }
         break;
       }
 
       case "customer.subscription.deleted": {
         const subscription = event.data.object as Stripe.Subscription;
 
-        await supabase.from("bot_subscriptions")
+        const { error: deleteErr } = await supabase.from("bot_subscriptions")
           .update({
             status: "canceled",
             updated_at: new Date().toISOString(),
           })
           .eq("stripe_subscription_id", subscription.id);
 
-        console.log(`customer.subscription.deleted: ${subscription.id}`);
+        if (deleteErr) {
+          console.error("customer.subscription.deleted: DB update error", deleteErr);
+        } else {
+          console.log(`customer.subscription.deleted: ${subscription.id}`);
+        }
         break;
       }
 
