@@ -81,7 +81,7 @@ Return the JSON analysis.`,
       return NextResponse.json({ error: "Failed to parse AI response" }, { status: 500 });
     }
 
-    const { data: saved } = await supabase.from("contract_analyses").insert({
+    const { data: saved, error: insertError } = await supabase.from("contract_analyses").insert({
       user_id: user.id,
       document_name: documentName,
       document_text: documentText,
@@ -91,6 +91,9 @@ Return the JSON analysis.`,
       missing_protections: analysis.missing_protections,
       questions_to_ask: analysis.questions_to_ask,
     }).select("id").single();
+    if (insertError) {
+      console.error("ClauseCheck: contract_analyses insert error:", insertError);
+    }
 
     await incrementIfTrial(user.id, "clausecheck");
 

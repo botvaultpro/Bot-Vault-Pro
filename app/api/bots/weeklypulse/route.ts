@@ -74,7 +74,7 @@ Generate the JSON report.`,
 
     const reportContent = JSON.stringify(report);
 
-    const { data: saved } = await supabase.from("pulse_reports").insert({
+    const { data: saved, error: insertError } = await supabase.from("pulse_reports").insert({
       user_id: user.id,
       week_ending: weekEnding,
       revenue: revenue || 0,
@@ -88,6 +88,9 @@ Generate the JSON report.`,
       industry: industry || null,
       report_content: reportContent,
     }).select("id").single();
+    if (insertError) {
+      console.error("WeeklyPulse: pulse_reports insert error:", insertError);
+    }
 
     await incrementIfTrial(user.id, "weeklypulse");
 

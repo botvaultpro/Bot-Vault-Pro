@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { getUserTier, checkAndIncrementUsage } from "@/lib/usage";
+import { hasAccess, incrementIfTrial } from "@/lib/entitlements";
 import { anthropic } from "@/lib/anthropic";
 
 export async function POST(req: NextRequest) {
@@ -8,9 +8,13 @@ export async function POST(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const tier = await getUserTier(user.id);
-  const check = await checkAndIncrementUsage(user.id, "sitebuilder", tier);
-  if (!check.allowed) return NextResponse.json({ error: check.reason }, { status: 403 });
+  const access = await hasAccess(user.id, "sitebuilder");
+  if (!access) {
+    return NextResponse.json({
+      error: "trial_exhausted",
+      message: "You've used your free SiteBuilder trials. Subscribe to continue.",
+    }, { status: 403 });
+  }
 
   const { businessName, location, businessType, currentSite, freelancerName } = await req.json();
   if (!businessName || !location || !businessType || !freelancerName) {
@@ -56,7 +60,7 @@ Return ONLY the complete HTML. Start immediately with <!DOCTYPE html>`,
     const html = message.content[0].type === "text" ? message.content[0].text : "";
 
     // Save to site_previews
-    const { data: savedSite } = await supabase
+    const { data: savedSite, error: siteInsertError } = await supabase
       .from("site_previews")
       .insert({
         user_id: user.id,
@@ -69,9 +73,13 @@ Return ONLY the complete HTML. Start immediately with <!DOCTYPE html>`,
       .select("id")
       .single();
 
+    if (siteInsertError) {
+      console.error("SiteBuilder generate-site: site_previews insert error:", siteInsertError);
+    }
+
     // Auto-create pipeline lead in "site_generated" stage
     if (savedSite?.id) {
-      await supabase.from("pipeline_leads").insert({
+      const { error: pipelineErr } = await supabase.from("pipeline_leads").insert({
         user_id: user.id,
         business_name: businessName,
         business_type: businessType,
@@ -80,7 +88,12 @@ Return ONLY the complete HTML. Start immediately with <!DOCTYPE html>`,
         stage: "site_generated",
         site_preview_id: savedSite.id,
       });
+      if (pipelineErr) {
+        console.error("SiteBuilder generate-site: pipeline_leads insert error:", pipelineErr);
+      }
     }
+
+    await incrementIfTrial(user.id, "sitebuilder");
 
     return NextResponse.json({ html, sitePreviewId: savedSite?.id ?? null });
   } catch (e) {

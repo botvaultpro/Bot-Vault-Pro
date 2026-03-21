@@ -8,7 +8,7 @@ export type BotSlug =
   | "weeklypulse"
   | "emailcoach";
 
-// Free trial allowances per bot (0 = no free trial)
+// Free trial allowances per bot (0 = no free trial, requires subscription)
 export const FREE_TRIAL_LIMITS: Record<BotSlug, number> = {
   sitebuilder: 2,
   emailcoach: 3,
@@ -37,6 +37,8 @@ function getServiceSupabase() {
 /**
  * Returns true if the user has an active subscription OR remaining free trial uses.
  * On first access for a trial-eligible bot, creates the free_trials row.
+ *
+ * Table schema: free_trials (user_id, bot_slug, uses_remaining, uses_total)
  */
 export async function hasAccess(userId: string, botSlug: BotSlug): Promise<boolean> {
   if (!userId) return false;
@@ -58,36 +60,64 @@ export async function hasAccess(userId: string, botSlug: BotSlug): Promise<boole
   const limit = FREE_TRIAL_LIMITS[botSlug];
   if (limit === 0) return false;
 
-  const { data: trial } = await supabase
+  const { data: trial, error: selectError } = await supabase
     .from("free_trials")
-    .select("uses")
+    .select("uses_remaining")
     .eq("user_id", userId)
     .eq("bot_slug", botSlug)
     .maybeSingle();
 
+  if (selectError) {
+    console.error(`hasAccess [${botSlug}]: free_trials select error:`, selectError);
+    return false; // fail closed on DB error
+  }
+
   if (!trial) {
-    // First time — create row and grant access
-    await supabase
+    // First visit — initialize the trial row and grant access
+    const { error: insertError } = await supabase
       .from("free_trials")
-      .insert({ user_id: userId, bot_slug: botSlug, uses: 0 });
+      .insert({ user_id: userId, bot_slug: botSlug, uses_remaining: limit, uses_total: limit });
+
+    if (insertError) {
+      console.error(`hasAccess [${botSlug}]: free_trials insert error:`, insertError);
+      return false;
+    }
     return true;
   }
 
-  return trial.uses < limit;
+  return (trial.uses_remaining ?? 0) > 0;
 }
 
 /**
- * Atomically increment trial use count using a Postgres RPC.
- * Safe against race conditions and always creates the row if missing.
+ * Decrement uses_remaining by 1 (min 0).
+ * Call this after every successful bot generation.
  */
 export async function incrementTrial(userId: string, botSlug: BotSlug): Promise<void> {
   const supabase = getServiceSupabase();
-  const { error } = await supabase.rpc("increment_trial_uses", {
-    p_user_id: userId,
-    p_bot_slug: botSlug,
-  });
-  if (error) {
-    console.error("incrementTrial RPC error:", error);
+
+  // Read current uses_remaining
+  const { data, error: selectError } = await supabase
+    .from("free_trials")
+    .select("uses_remaining")
+    .eq("user_id", userId)
+    .eq("bot_slug", botSlug)
+    .maybeSingle();
+
+  if (selectError || !data) {
+    console.error(`incrementTrial [${botSlug}]: could not fetch trial row`, selectError);
+    return;
+  }
+
+  const newRemaining = Math.max(0, (data.uses_remaining ?? 0) - 1);
+
+  const { error: updateError } = await supabase
+    .from("free_trials")
+    .update({ uses_remaining: newRemaining })
+    .eq("user_id", userId)
+    .eq("bot_slug", botSlug);
+
+  if (updateError) {
+    console.error(`incrementTrial [${botSlug}]: update error:`, updateError);
   }
 }
 
@@ -111,7 +141,7 @@ export async function incrementIfTrial(userId: string, botSlug: BotSlug): Promis
 }
 
 /**
- * Returns remaining free trial uses for a bot.
+ * Returns remaining free trial uses for a bot (0 if no row yet = full limit available).
  */
 export async function getTrialRemaining(userId: string, botSlug: BotSlug): Promise<number> {
   const limit = FREE_TRIAL_LIMITS[botSlug];
@@ -120,12 +150,13 @@ export async function getTrialRemaining(userId: string, botSlug: BotSlug): Promi
   const supabase = getServiceSupabase();
   const { data } = await supabase
     .from("free_trials")
-    .select("uses")
+    .select("uses_remaining")
     .eq("user_id", userId)
     .eq("bot_slug", botSlug)
     .maybeSingle();
 
-  return Math.max(0, limit - (data?.uses ?? 0));
+  // If no row exists yet, the user still has their full allotment
+  return data?.uses_remaining ?? limit;
 }
 
 /**
