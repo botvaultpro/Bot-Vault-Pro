@@ -2,6 +2,7 @@ import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
   testDir: './',
+  globalSetup: './tests/global-setup.ts',
   timeout: 60000,
   use: {
     baseURL: 'https://botvaultpro.com',
