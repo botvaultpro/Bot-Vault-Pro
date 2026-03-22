@@ -25,7 +25,7 @@ function SignupForm() {
     setLoading(true);
     setError("");
     const supabase = createClient();
-    const { error } = await supabase.auth.signUp({
+    const { data: signUpData, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -37,11 +37,12 @@ function SignupForm() {
       setError(error.message);
       setLoading(false);
     } else {
-      // Fire welcome email — best-effort, don't block the flow
+      const userId = signUpData?.user?.id;
+      // Fire welcome email + Inngest drip sequence — best-effort
       fetch("/api/auth/welcome", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, name: fullName }),
+        body: JSON.stringify({ email, name: fullName, userId }),
       }).catch(() => {});
 
       // Track referral if a ref code was passed in the URL

@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
+import { inngest } from "@/inngest/client";
 
 export async function POST(req: NextRequest) {
-  const { email, name } = await req.json();
+  const { email, name, userId } = await req.json();
 
   if (!email) {
     return NextResponse.json({ error: "Email is required" }, { status: 400 });
@@ -104,6 +105,16 @@ export async function POST(req: NextRequest) {
       subject: "Welcome to Bot Vault Pro",
       html,
     });
+
+    // Fire Inngest event to start the 7-day trial-to-paid drip sequence.
+    // Best-effort — never fail the welcome route if Inngest is unavailable.
+    if (userId) {
+      inngest.send({
+        name: "user/signed.up",
+        data: { email, name: name ?? "", userId },
+      }).catch((err) => console.error("Inngest user/signed.up event failed (non-fatal):", err));
+    }
+
     return NextResponse.json({ sent: true });
   } catch (err) {
     console.error("Welcome email error:", err);
