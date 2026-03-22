@@ -59,3 +59,20 @@ ALTER TABLE public.demo_usage ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Service role full access demo_usage" ON public.demo_usage
   FOR ALL USING (auth.role() = 'service_role');
+
+-- ============================================================
+-- Demo Lead Capture (email capture from non-auth demo users)
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS public.demo_leads (
+  id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  email      TEXT NOT NULL UNIQUE,
+  name       TEXT,
+  source     TEXT NOT NULL DEFAULT 'demo', -- clausecheck | emailcoach | invoiceforge | weeklypulse
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE public.demo_leads ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Service role full access demo_leads" ON public.demo_leads
+  FOR ALL USING (auth.role() = 'service_role');

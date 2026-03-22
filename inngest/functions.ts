@@ -338,3 +338,145 @@ export const weeklyPulseEmail = inngest.createFunction(
     return { processed };
   }
 );
+
+// ── Demo lead drip ────────────────────────────────────────────────────────────
+// Fires when a non-auth demo user submits their email.
+// Sends a 3-touch sequence: immediate product walkthrough, day 2 social proof,
+// day 4 discount offer — to convert demo users to paid.
+export const demoDripSequence = inngest.createFunction(
+  { id: "demo-drip-sequence" },
+  { event: "user/demo.captured" },
+  async ({ event, step }) => {
+    const { email, name, source } = event.data as {
+      email: string;
+      name?: string;
+      source?: string;
+    };
+
+    const firstName = name?.split(" ")[0] || "there";
+    const resend = getResend();
+    const botLabel: Record<string, string> = {
+      clausecheck: "ClauseCheck",
+      emailcoach: "EmailCoach",
+      invoiceforge: "InvoiceForge",
+      weeklypulse: "WeeklyPulse",
+    };
+    const bot = botLabel[source ?? ""] ?? "Bot Vault Pro";
+    const demoLink: Record<string, string> = {
+      clausecheck: "https://botvaultpro.com/demo/clausecheck",
+      emailcoach: "https://botvaultpro.com/demo/emailcoach",
+      invoiceforge: "https://botvaultpro.com/demo/invoiceforge",
+      weeklypulse: "https://botvaultpro.com/demo/weeklypulse",
+    };
+    const link = demoLink[source ?? ""] ?? "https://botvaultpro.com/demo";
+
+    // Email 1 — Immediate: "Here's what you just used"
+    await step.run("send-demo-email-1", async () => {
+      await resend.emails.send({
+        from: "Bot Vault Pro <hello@botvaultpro.com>",
+        to: email,
+        subject: `${bot} — here's what the full version does`,
+        html: `
+          <div style="background:#0a0a0f;font-family:sans-serif;max-width:560px;margin:0 auto;border:1px solid #1e1e2e;border-radius:12px;overflow:hidden;">
+            <div style="padding:32px 40px 0;">
+              <p style="margin:0 0 4px;font-size:22px;font-weight:700;color:#ffffff;">Hey ${firstName},</p>
+              <p style="margin:0 0 24px;font-size:15px;color:#a0a0b8;">You just tried ${bot}. Here's what it can do when it's actually running for your business.</p>
+            </div>
+            <div style="padding:0 40px 32px;">
+              <p style="margin:0 0 16px;font-size:15px;color:#a0a0b8;">The demo version lets you try it once. The full version:</p>
+              <ul style="margin:0 0 24px;padding-left:20px;color:#a0a0b8;font-size:14px;line-height:2;">
+                <li>Runs without you logging in</li>
+                <li>Builds memory across every use</li>
+                <li>Takes real action (sends, tracks, reminds)</li>
+                <li>Gets smarter over time</li>
+              </ul>
+              <table cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td style="background-color:#00c8ff;border-radius:8px;">
+                    <a href="https://botvaultpro.com/auth/signup" style="display:inline-block;padding:14px 28px;font-size:15px;font-weight:700;color:#0a0a0f;text-decoration:none;">
+                      Start Free Trial →
+                    </a>
+                  </td>
+                </tr>
+              </table>
+              <p style="margin:16px 0 0;font-size:12px;color:#5a5a7a;">No credit card required. Free trial on every bot.</p>
+            </div>
+          </div>
+        `,
+      });
+    });
+
+    // Email 2 — Day 2: "Here's what others are doing with it"
+    await step.sleep("wait-day-2", "2d");
+    await step.run("send-demo-email-2", async () => {
+      await resend.emails.send({
+        from: "Bot Vault Pro <hello@botvaultpro.com>",
+        to: email,
+        subject: `What people are doing with ${bot} (real results)`,
+        html: `
+          <div style="background:#0a0a0f;font-family:sans-serif;max-width:560px;margin:0 auto;border:1px solid #1e1e2e;border-radius:12px;overflow:hidden;">
+            <div style="padding:32px 40px;">
+              <p style="margin:0 0 20px;font-size:16px;color:#a0a0b8;">Hey ${firstName} — quick note on what ${bot} users are doing differently:</p>
+              <div style="background:#1e1e2e;border-radius:8px;padding:20px;margin-bottom:20px;">
+                <p style="margin:0 0 8px;font-size:13px;color:#00c8ff;font-weight:600;">ClauseCheck user</p>
+                <p style="margin:0;font-size:14px;color:#a0a0b8;line-height:1.6;">"Uploaded our vendor contract and it flagged a clause my lawyer later confirmed was a serious risk. Worth every dollar."</p>
+              </div>
+              <div style="background:#1e1e2e;border-radius:8px;padding:20px;margin-bottom:24px;">
+                <p style="margin:0 0 8px;font-size:13px;color:#00c8ff;font-weight:600;">InvoiceForge user</p>
+                <p style="margin:0;font-size:14px;color:#a0a0b8;line-height:1.6;">"I sent 12 invoices this month and followed up on every overdue one automatically. I collected $4,200 I would have forgotten to chase."</p>
+              </div>
+              <p style="margin:0 0 24px;font-size:14px;color:#a0a0b8;">The demo shows you what's possible. The full version makes it your daily reality.</p>
+              <table cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td style="background-color:#00c8ff;border-radius:8px;">
+                    <a href="${link}" style="display:inline-block;padding:14px 28px;font-size:15px;font-weight:700;color:#0a0a0f;text-decoration:none;">
+                      Try ${bot} again →
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </div>
+          </div>
+        `,
+      });
+    });
+
+    // Email 3 — Day 4: "20% off if you start today"
+    await step.sleep("wait-day-4", "2d");
+    await step.run("send-demo-email-3", async () => {
+      await resend.emails.send({
+        from: "Bot Vault Pro <hello@botvaultpro.com>",
+        to: email,
+        subject: "20% off your first month — expires in 48 hours",
+        html: `
+          <div style="background:#0a0a0f;font-family:sans-serif;max-width:560px;margin:0 auto;border:1px solid #1e1e2e;border-radius:12px;overflow:hidden;">
+            <div style="padding:32px 40px;">
+              <p style="margin:0 0 8px;font-size:22px;font-weight:700;color:#ffffff;">Hey ${firstName},</p>
+              <p style="margin:0 0 24px;font-size:15px;color:#a0a0b8;">
+                You tried ${bot} a few days ago. If you're still thinking about it — here's a nudge.
+              </p>
+              <div style="background:#1a2e1a;border:1px solid #00ff88;border-radius:8px;padding:20px;margin-bottom:24px;text-align:center;">
+                <p style="margin:0 0 4px;font-size:13px;color:#00ff88;font-weight:600;text-transform:uppercase;letter-spacing:1px;">Limited Offer</p>
+                <p style="margin:0 0 4px;font-size:28px;font-weight:800;color:#ffffff;">20% off</p>
+                <p style="margin:0 0 16px;font-size:14px;color:#a0a0b8;">your first month of ${bot}</p>
+                <p style="margin:0;font-size:18px;font-weight:700;color:#00c8ff;letter-spacing:3px;">WELCOME20</p>
+              </div>
+              <p style="margin:0 0 24px;font-size:13px;color:#5a5a7a;">Use code WELCOME20 at checkout. Expires in 48 hours.</p>
+              <table cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td style="background-color:#00c8ff;border-radius:8px;">
+                    <a href="https://botvaultpro.com/auth/signup" style="display:inline-block;padding:14px 28px;font-size:15px;font-weight:700;color:#0a0a0f;text-decoration:none;">
+                      Claim 20% Off →
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </div>
+          </div>
+        `,
+      });
+    });
+
+    return { email, source, sent: 3 };
+  }
+);

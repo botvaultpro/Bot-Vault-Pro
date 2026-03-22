@@ -3,6 +3,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Mail, Copy, Check, ArrowRight, Lock, CheckCircle2, Loader2 } from "lucide-react";
 import clsx from "clsx";
+import DemoEmailCapture from "@/app/components/DemoEmailCapture";
 
 interface Reply { approach: string; body: string }
 interface ReplySet { professional: Reply; direct: Reply; diplomatic: Reply }
@@ -214,6 +215,13 @@ export default function EmailCoachDemoClient() {
                   Get unlimited replies free <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>
+
+              {/* Email capture */}
+              <DemoEmailCapture
+                source="emailcoach"
+                headline="Want EmailCoach to learn your writing style?"
+                subline="Create a free account and it starts building your tone profile — so every reply sounds more like you over time."
+              />
 
               <div className="rounded-2xl border border-vault-accent/30 bg-vault-accent/5 p-6 text-center">
                 <p className="font-semibold text-vault-text mb-1">EmailCoach gets smarter over time</p>

@@ -2,6 +2,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { FileText, Plus, Trash2, ArrowRight, Lock, CheckCircle2, Loader2, Copy, Check } from "lucide-react";
+import DemoEmailCapture from "@/app/components/DemoEmailCapture";
 
 interface Service { description: string; amount: string }
 
@@ -258,6 +259,13 @@ export default function InvoiceForgeDemoClient() {
                   Get unlimited invoices free <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>
+
+              {/* Email capture */}
+              <DemoEmailCapture
+                source="invoiceforge"
+                headline="Want to stop chasing late payments forever?"
+                subline="Drop your email and we'll send you a free walkthrough of InvoiceForge's auto-reminder system."
+              />
 
               <div className="rounded-2xl border border-blue-400/20 bg-blue-400/5 p-6 text-center">
                 <p className="font-semibold text-vault-text mb-1">InvoiceForge does the follow-up for you</p>

@@ -3,6 +3,7 @@ import { useState, useRef } from "react";
 import Link from "next/link";
 import { Upload, Scale, AlertTriangle, CheckCircle2, ArrowRight, Lock, ChevronDown, ChevronUp } from "lucide-react";
 import clsx from "clsx";
+import DemoEmailCapture from "@/app/components/DemoEmailCapture";
 
 interface RiskFlag {
   clause_title: string;
@@ -316,6 +317,13 @@ export default function ClauseCheckDemoClient() {
                   </ol>
                 </div>
               )}
+
+              {/* Email capture */}
+              <DemoEmailCapture
+                source="clausecheck"
+                headline="Get notified when we add new contract templates"
+                subline="Plus a free walkthrough of ClauseCheck Pro — see how it builds a risk profile across all your contracts."
+              />
 
               {/* CTA — convert to signup */}
               <div className="rounded-2xl border border-vault-accent/30 bg-vault-accent/5 p-8 text-center">
