@@ -11,9 +11,20 @@ interface BotSub {
   status: string;
 }
 
+// Must match FREE_TRIAL_LIMITS in lib/entitlements.ts
+const TRIAL_ELIGIBLE: Record<string, number> = {
+  emailcoach: 3,
+  weeklypulse: 2,
+  clausecheck: 2,
+  invoiceforge: 3,
+  reviewbot: 3,
+  sitebuilder: 2,
+};
+
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [subscriptions, setSubscriptions] = useState<BotSub[]>([]);
+  const [trialBots, setTrialBots] = useState<string[]>([]);
   const [email, setEmail] = useState("");
 
   useEffect(() => {
@@ -22,11 +33,29 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
       setEmail(user.email ?? "");
-      const { data } = await supabase
-        .from("bot_subscriptions")
-        .select("bot_slug, status")
-        .eq("user_id", user.id);
-      setSubscriptions(data ?? []);
+
+      const [{ data: subs }, { data: trials }] = await Promise.all([
+        supabase.from("bot_subscriptions").select("bot_slug, status").eq("user_id", user.id),
+        supabase.from("free_trials").select("bot_slug, uses_remaining").eq("user_id", user.id),
+      ]);
+
+      setSubscriptions(subs ?? []);
+
+      // Bots accessible via trial: trial-eligible, not subscribed, and uses_remaining > 0 (or no row yet)
+      const activeSlugs = new Set(
+        (subs ?? []).filter(s => s.status === "active" || s.status === "trialing").map(s => s.bot_slug)
+      );
+      const trialMap = new Map((trials ?? []).map(t => [t.bot_slug, t.uses_remaining]));
+
+      const unlocked = Object.entries(TRIAL_ELIGIBLE)
+        .filter(([slug, limit]) => {
+          if (activeSlugs.has(slug)) return false;
+          const remaining = trialMap.has(slug) ? (trialMap.get(slug) ?? 0) : limit;
+          return remaining > 0;
+        })
+        .map(([slug]) => slug);
+
+      setTrialBots(unlocked);
     }
     loadUser();
   }, []);
@@ -40,12 +69,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       {/* Sidebar - desktop */}
       <div className="hidden md:flex shrink-0">
-        <Sidebar subscriptions={subscriptions} email={email} />
+        <Sidebar subscriptions={subscriptions} trialBots={trialBots} email={email} />
       </div>
 
       {/* Sidebar - mobile */}
       <div className={`fixed inset-y-0 left-0 z-50 transform transition-transform duration-300 md:hidden ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}>
-        <Sidebar subscriptions={subscriptions} email={email} onClose={() => setSidebarOpen(false)} />
+        <Sidebar subscriptions={subscriptions} trialBots={trialBots} email={email} onClose={() => setSidebarOpen(false)} />
       </div>
 
       {/* Main content */}

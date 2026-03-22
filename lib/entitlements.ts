@@ -12,10 +12,10 @@ export type BotSlug =
 export const FREE_TRIAL_LIMITS: Record<BotSlug, number> = {
   sitebuilder: 2,
   emailcoach: 3,
-  weeklypulse: 3,
-  clausecheck: 1,
+  weeklypulse: 2,
+  clausecheck: 2,
   invoiceforge: 3,
-  reviewbot: 0,
+  reviewbot: 3,
 };
 
 export const BOT_NAMES: Record<BotSlug, string> = {
@@ -34,14 +34,20 @@ function getServiceSupabase() {
   );
 }
 
+export type AccessResult = {
+  access: boolean;
+  reason: "subscribed" | "trial" | "expired";
+  trialUsesRemaining: number;
+};
+
 /**
- * Returns true if the user has an active subscription OR remaining free trial uses.
+ * Returns access status with reason and remaining trial uses.
  * On first access for a trial-eligible bot, creates the free_trials row.
  *
  * Table schema: free_trials (user_id, bot_slug, uses_remaining, uses_total)
  */
-export async function hasAccess(userId: string, botSlug: BotSlug): Promise<boolean> {
-  if (!userId) return false;
+export async function hasAccess(userId: string, botSlug: BotSlug): Promise<AccessResult> {
+  if (!userId) return { access: false, reason: "expired", trialUsesRemaining: 0 };
 
   const supabase = getServiceSupabase();
 
@@ -54,11 +60,11 @@ export async function hasAccess(userId: string, botSlug: BotSlug): Promise<boole
     .in("status", ["active", "trialing"])
     .maybeSingle();
 
-  if (sub) return true;
+  if (sub) return { access: true, reason: "subscribed", trialUsesRemaining: 999 };
 
   // Check 2: free trial
   const limit = FREE_TRIAL_LIMITS[botSlug];
-  if (limit === 0) return false;
+  if (limit === 0) return { access: false, reason: "expired", trialUsesRemaining: 0 };
 
   const { data: trial, error: selectError } = await supabase
     .from("free_trials")
@@ -69,7 +75,7 @@ export async function hasAccess(userId: string, botSlug: BotSlug): Promise<boole
 
   if (selectError) {
     console.error(`hasAccess [${botSlug}]: free_trials select error:`, selectError);
-    return false; // fail closed on DB error
+    return { access: false, reason: "expired", trialUsesRemaining: 0 };
   }
 
   if (!trial) {
@@ -80,12 +86,14 @@ export async function hasAccess(userId: string, botSlug: BotSlug): Promise<boole
 
     if (insertError) {
       console.error(`hasAccess [${botSlug}]: free_trials insert error:`, insertError);
-      return false;
+      return { access: false, reason: "expired", trialUsesRemaining: 0 };
     }
-    return true;
+    return { access: true, reason: "trial", trialUsesRemaining: limit };
   }
 
-  return (trial.uses_remaining ?? 0) > 0;
+  const remaining = trial.uses_remaining ?? 0;
+  if (remaining > 0) return { access: true, reason: "trial", trialUsesRemaining: remaining };
+  return { access: false, reason: "expired", trialUsesRemaining: 0 };
 }
 
 /**

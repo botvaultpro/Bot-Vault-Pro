@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const access = await hasAccess(user.id, "clausecheck");
-  if (!access) {
+  if (!access.access) {
     return NextResponse.json({
       error: "trial_exhausted",
       message: "You've used your free ClauseCheck trial. Subscribe to continue.",

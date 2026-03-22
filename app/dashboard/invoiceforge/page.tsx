@@ -47,7 +47,35 @@ export default function InvoiceForgePage() {
     taxRate: 0, notes: "", currency: "USD", aiScope: "",
   });
 
-  useEffect(() => { loadInvoices(); }, []);
+  const [trialRemaining, setTrialRemaining] = useState<number | null>(null);
+
+  useEffect(() => { loadInvoices(); loadAccess(); }, []);
+
+  async function loadAccess() {
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    const { data: sub } = await supabase
+      .from("bot_subscriptions")
+      .select("status")
+      .eq("user_id", user.id)
+      .eq("bot_slug", "invoiceforge")
+      .in("status", ["active", "trialing"])
+      .maybeSingle();
+    if (sub) return;
+    const { data: trial } = await supabase
+      .from("free_trials")
+      .select("uses_remaining")
+      .eq("user_id", user.id)
+      .eq("bot_slug", "invoiceforge")
+      .maybeSingle();
+    const remaining = trial?.uses_remaining ?? 3;
+    if (remaining <= 0) {
+      setBlocked(true);
+    } else {
+      setTrialRemaining(remaining);
+    }
+  }
 
   async function loadInvoices() {
     const supabase = createClient();
@@ -164,12 +192,22 @@ export default function InvoiceForgePage() {
         <div className="no-print rounded-xl border border-blue-400/30 bg-blue-400/5 px-5 py-5 flex flex-col sm:flex-row items-start sm:items-center gap-4">
           <Lock className="w-6 h-6 text-blue-400 shrink-0" />
           <div>
-            <p className="font-semibold text-vault-text">You&apos;ve used your 3 free InvoiceForge invoices.</p>
+            <p className="font-semibold text-vault-text">You&apos;ve used your free InvoiceForge invoices.</p>
             <p className="text-sm text-vault-text-dim">Subscribe to create unlimited invoices.</p>
           </div>
           <Link href="/dashboard/billing" className="sm:ml-auto bg-blue-400 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-400/90 transition-colors whitespace-nowrap">
             Subscribe Now
           </Link>
+        </div>
+      )}
+
+      {!blocked && trialRemaining !== null && (
+        <div className="no-print rounded-xl border border-blue-400/20 bg-blue-400/5 px-5 py-3 flex items-center gap-3">
+          <span className="text-sm text-vault-text">
+            <span className="font-semibold text-blue-400">{trialRemaining} free invoice{trialRemaining !== 1 ? "s" : ""} remaining</span>
+            {" — "}
+            <Link href="/dashboard/billing" className="text-blue-400 underline">Subscribe for unlimited access</Link>
+          </span>
         </div>
       )}
 

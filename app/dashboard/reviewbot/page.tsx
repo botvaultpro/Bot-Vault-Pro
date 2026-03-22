@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Star, RefreshCw, Check, Edit2, Loader2, Lock, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import clsx from "clsx";
+import { createClient } from "@/lib/supabase/client";
 
 type Review = {
   id: string;
@@ -34,8 +35,32 @@ export default function ReviewBotPage() {
   const [editingReply, setEditingReply] = useState<{ id: string; text: string } | null>(null);
   const [filterRating, setFilterRating] = useState<number | null>(null);
   const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [trialRemaining, setTrialRemaining] = useState<number | null>(null);
 
-  useEffect(() => { loadReviews(); }, []);
+  useEffect(() => { loadReviews(); loadAccess(); }, []);
+
+  async function loadAccess() {
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    const { data: sub } = await supabase
+      .from("bot_subscriptions")
+      .select("status")
+      .eq("user_id", user.id)
+      .eq("bot_slug", "reviewbot")
+      .in("status", ["active", "trialing"])
+      .maybeSingle();
+    if (sub) return;
+    const { data: trial } = await supabase
+      .from("free_trials")
+      .select("uses_remaining")
+      .eq("user_id", user.id)
+      .eq("bot_slug", "reviewbot")
+      .maybeSingle();
+    const remaining = trial?.uses_remaining ?? 3;
+    if (remaining > 0) setTrialRemaining(remaining);
+    // blocked is already set by loadReviews() if API returns 403
+  }
 
   async function loadReviews() {
     setLoading(true);
@@ -119,12 +144,22 @@ export default function ReviewBotPage() {
         <div className="rounded-xl border border-yellow-400/30 bg-yellow-400/5 px-5 py-5 flex flex-col sm:flex-row items-start sm:items-center gap-4">
           <Lock className="w-6 h-6 text-yellow-400 shrink-0" />
           <div>
-            <p className="font-semibold text-vault-text">ReviewBot requires an active subscription.</p>
-            <p className="text-sm text-vault-text-dim">No free trial for ReviewBot — requires Google Business API connection.</p>
+            <p className="font-semibold text-vault-text">You&apos;ve used your free ReviewBot replies.</p>
+            <p className="text-sm text-vault-text-dim">Subscribe to keep replying to reviews with AI.</p>
           </div>
           <Link href="/dashboard/billing" className="sm:ml-auto bg-yellow-400 text-gray-900 px-4 py-2 rounded-lg text-sm font-bold hover:bg-yellow-400/90 transition-colors whitespace-nowrap">
             Subscribe Now
           </Link>
+        </div>
+      )}
+
+      {!blocked && trialRemaining !== null && (
+        <div className="rounded-xl border border-yellow-400/20 bg-yellow-400/5 px-5 py-3 flex items-center gap-3">
+          <span className="text-sm text-vault-text">
+            <span className="font-semibold text-yellow-400">{trialRemaining} free repl{trialRemaining !== 1 ? "ies" : "y"} remaining</span>
+            {" — "}
+            <Link href="/dashboard/billing" className="text-yellow-400 underline">Subscribe for unlimited access</Link>
+          </span>
         </div>
       )}
 

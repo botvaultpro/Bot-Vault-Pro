@@ -38,10 +38,38 @@ export default function EmailCoachPage() {
   const [blocked, setBlocked] = useState(false);
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [expandedHistory, setExpandedHistory] = useState<string | null>(null);
+  const [trialRemaining, setTrialRemaining] = useState<number | null>(null);
 
   useEffect(() => {
     loadHistory();
+    loadAccess();
   }, []);
+
+  async function loadAccess() {
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    const { data: sub } = await supabase
+      .from("bot_subscriptions")
+      .select("status")
+      .eq("user_id", user.id)
+      .eq("bot_slug", "emailcoach")
+      .in("status", ["active", "trialing"])
+      .maybeSingle();
+    if (sub) return; // subscribed — no banner needed
+    const { data: trial } = await supabase
+      .from("free_trials")
+      .select("uses_remaining")
+      .eq("user_id", user.id)
+      .eq("bot_slug", "emailcoach")
+      .maybeSingle();
+    const remaining = trial?.uses_remaining ?? 3;
+    if (remaining <= 0) {
+      setBlocked(true);
+    } else {
+      setTrialRemaining(remaining);
+    }
+  }
 
   async function loadHistory() {
     const supabase = createClient();
@@ -120,6 +148,16 @@ export default function EmailCoachPage() {
           >
             Subscribe Now
           </Link>
+        </div>
+      )}
+
+      {!blocked && trialRemaining !== null && (
+        <div className="rounded-xl border border-vault-accent/20 bg-vault-accent/5 px-5 py-3 flex items-center gap-3">
+          <span className="text-sm text-vault-text">
+            <span className="font-semibold text-vault-accent">{trialRemaining} free use{trialRemaining !== 1 ? "s" : ""} remaining</span>
+            {" — "}
+            <Link href="/dashboard/billing" className="text-vault-accent underline">Subscribe for unlimited access</Link>
+          </span>
         </div>
       )}
 

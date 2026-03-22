@@ -19,6 +19,7 @@ interface BotSub {
 
 interface SidebarProps {
   subscriptions?: BotSub[];
+  trialBots?: string[];
   email: string;
   onClose?: () => void;
 }
@@ -83,7 +84,7 @@ const bottomItems = [
   { href: "/dashboard/settings", icon: Settings, label: "Settings" },
 ];
 
-export default function Sidebar({ subscriptions = [], email, onClose }: SidebarProps) {
+export default function Sidebar({ subscriptions = [], trialBots = [], email, onClose }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [siteBuilderOpen, setSiteBuilderOpen] = useState(
@@ -102,9 +103,13 @@ export default function Sidebar({ subscriptions = [], email, onClose }: SidebarP
     return pathname === href;
   }
 
-  function isBotActive(slug: string) {
+  function isBotSubscribed(slug: string) {
     const sub = subscriptions.find((s) => s.bot_slug === slug);
     return sub?.status === "active" || sub?.status === "trialing";
+  }
+
+  function isBotActive(slug: string) {
+    return isBotSubscribed(slug) || trialBots.includes(slug);
   }
 
   return (

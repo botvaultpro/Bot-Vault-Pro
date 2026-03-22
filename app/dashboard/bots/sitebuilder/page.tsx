@@ -58,6 +58,8 @@ export default function SiteBuilderPage() {
   const [showProposalModal, setShowProposalModal] = useState(false);
   const proposalRef = useRef<HTMLDivElement>(null);
 
+  const [trialRemaining, setTrialRemaining] = useState<number | null>(null);
+
   useEffect(() => {
     async function load() {
       const supabase = createClient();
@@ -70,6 +72,24 @@ export default function SiteBuilderPage() {
         .eq("status", "active")
         .single();
       if (data?.tier) setTier(data.tier as Tier);
+
+      // Check bot_subscriptions for trial/access status
+      const { data: sub } = await supabase
+        .from("bot_subscriptions")
+        .select("status")
+        .eq("user_id", user.id)
+        .eq("bot_slug", "sitebuilder")
+        .in("status", ["active", "trialing"])
+        .maybeSingle();
+      if (sub) return;
+      const { data: trial } = await supabase
+        .from("free_trials")
+        .select("uses_remaining")
+        .eq("user_id", user.id)
+        .eq("bot_slug", "sitebuilder")
+        .maybeSingle();
+      const remaining = trial?.uses_remaining ?? 2;
+      if (remaining > 0) setTrialRemaining(remaining);
     }
     load();
   }, []);
@@ -197,18 +217,14 @@ export default function SiteBuilderPage() {
         ))}
       </div>
 
-      {/* Free tier notice */}
-      {tier === "free" && (
-        <div className="bg-vault-accent/5 border border-vault-accent/20 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center gap-3">
-          <Lock className="w-4 h-4 text-vault-accent shrink-0" />
-          <span className="text-sm font-semibold text-vault-accent">Free tier — 1 run only.</span>
-          <p className="text-sm text-vault-text-dim">Upgrade to Starter ($49/mo) for full access.</p>
-          <Link
-            href="/dashboard/billing"
-            className="sm:ml-auto text-sm bg-vault-accent text-vault-bg font-bold px-4 py-2 rounded-lg hover:bg-vault-accent-dim transition-colors whitespace-nowrap"
-          >
-            Upgrade Now
-          </Link>
+      {/* Trial banner */}
+      {trialRemaining !== null && (
+        <div className="bg-vault-green/5 border border-vault-green/20 rounded-xl p-4 flex items-center gap-3">
+          <span className="text-sm text-vault-text">
+            <span className="font-semibold text-vault-green">{trialRemaining} free site{trialRemaining !== 1 ? "s" : ""} remaining</span>
+            {" — "}
+            <Link href="/dashboard/billing" className="text-vault-green underline">Subscribe for unlimited access</Link>
+          </span>
         </div>
       )}
 
