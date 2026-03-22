@@ -31,7 +31,7 @@ const demos = [
     color: "text-blue-400",
     border: "border-blue-400/20",
     bg: "bg-blue-400/5",
-    tagline: "Generate a professional invoice in 60 seconds.",
+    tagline: "Fill in your details. Get a professional invoice in 60 seconds.",
     trial: "3 free invoices — no credit card",
     href: "/demo/invoiceforge",
   },
@@ -47,11 +47,6 @@ const demos = [
     href: "/demo/weeklypulse",
   },
 ];
-
-export const metadata = {
-  title: "Try Bot Vault Pro Free — AI Tools for Business",
-  description: "Try ClauseCheck, EmailCoach, InvoiceForge, and WeeklyPulse free. No credit card required.",
-};
 
 export default function DemoPage() {
   return (
