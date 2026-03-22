@@ -119,8 +119,8 @@ export default function LandingPage() {
           <div className="hidden md:flex items-center gap-8 text-sm text-vault-text-dim">
             <a href="#bots" className="hover:text-vault-accent transition-colors">Bots</a>
             <Link href="/pricing" className="hover:text-vault-accent transition-colors">Pricing</Link>
+            <Link href="/demo" className="hover:text-vault-accent transition-colors">Try Demo</Link>
             <a href="#roadmap" className="hover:text-vault-accent transition-colors">Roadmap</a>
-            <a href="#build" className="hover:text-vault-accent transition-colors">Request a Bot</a>
           </div>
           <div className="flex items-center gap-3">
             <Link href="/auth/login" className="text-sm text-vault-text-dim hover:text-vault-text transition-colors hidden sm:block">
@@ -157,9 +157,9 @@ export default function LandingPage() {
                 <Link href="/auth/signup" className="w-full sm:w-auto flex items-center justify-center gap-2 bg-vault-accent text-vault-bg font-display font-bold px-8 py-4 rounded-xl text-lg hover:bg-vault-accent-dim transition-all hover:scale-105">
                   Start Free — No Credit Card <ArrowRight className="w-5 h-5" />
                 </Link>
-                <a href="#bots" className="w-full sm:w-auto flex items-center justify-center gap-2 border border-vault-border text-vault-text-dim px-8 py-4 rounded-xl text-lg hover:border-vault-accent hover:text-vault-accent transition-all">
-                  See How It Works <ChevronRight className="w-5 h-5" />
-                </a>
+                <Link href="/demo" className="w-full sm:w-auto flex items-center justify-center gap-2 border border-vault-border text-vault-text-dim px-8 py-4 rounded-xl text-lg hover:border-vault-accent hover:text-vault-accent transition-all">
+                  Try a Live Demo <ChevronRight className="w-5 h-5" />
+                </Link>
               </div>
               <p className="text-vault-text-dim text-sm max-w-md mx-auto lg:mx-0">
                 6 AI bots. Every one replaces a task you do manually every week. Your business keeps running — even when you&apos;re not.
@@ -435,8 +435,11 @@ export default function LandingPage() {
             <span className="text-gradient-cyan">Bot</span> Vault Pro
           </span>
           <span>© 2026 Bot Vault Pro. All rights reserved.</span>
-          <div className="flex gap-6">
+          <div className="flex flex-wrap justify-center gap-6">
             <Link href="/pricing" className="hover:text-vault-accent transition-colors">Pricing</Link>
+            <Link href="/demo" className="hover:text-vault-accent transition-colors">Try Demo</Link>
+            <Link href="/tools/free-contract-review" className="hover:text-vault-accent transition-colors">Contract Review</Link>
+            <Link href="/tools/ai-email-writer" className="hover:text-vault-accent transition-colors">Email Writer</Link>
             <Link href="/privacy" className="hover:text-vault-accent transition-colors">Privacy</Link>
             <Link href="/terms" className="hover:text-vault-accent transition-colors">Terms</Link>
             <a href="mailto:hello@botvaultpro.com" className="hover:text-vault-accent transition-colors">Contact</a>

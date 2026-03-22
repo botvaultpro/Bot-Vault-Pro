@@ -6,3 +6,7 @@ export { buildEmailCoachEmail } from "./purchase-emailcoach";
 export { buildClauseCheckEmail } from "./purchase-clausecheck";
 export { buildWeeklyPulseEmail } from "./purchase-weeklypulse";
 export { buildSiteBuilderEmail } from "./purchase-sitebuilder";
+export { buildDripDay1Email } from "./drip-day1";
+export { buildDripDay3Email } from "./drip-day3";
+export { buildDripDay5Email } from "./drip-day5";
+export { buildDripDay7Email } from "./drip-day7";

@@ -7,6 +7,7 @@ import {
   ArrowRight, CheckCircle2, Lock, Zap, Activity,
 } from "lucide-react";
 import clsx from "clsx";
+import ReferralWidget from "@/app/components/ReferralWidget";
 
 const BOT_GRID = [
   { slug: "sitebuilder", name: "SiteBuilder Pro", icon: Globe, color: "text-vault-green", border: "border-vault-green/20", bg: "bg-vault-green/5", href: "/dashboard/bots/sitebuilder", description: "Generate AI websites & proposals" },
@@ -151,6 +152,9 @@ function DashboardInner() {
           })}
         </div>
       </div>
+
+      {/* Referral Program */}
+      <ReferralWidget />
 
       {/* Recent Activity */}
       <div className="card-surface rounded-2xl p-6">
