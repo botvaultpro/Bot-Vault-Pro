@@ -42,3 +42,20 @@ CREATE POLICY "Service role full access referrals" ON public.referrals
 -- Index for fast lookup by code
 CREATE INDEX IF NOT EXISTS idx_referral_codes_code ON public.referral_codes(code);
 CREATE INDEX IF NOT EXISTS idx_referrals_referrer_id ON public.referrals(referrer_id);
+
+-- ============================================================
+-- Demo Usage Tracking
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS public.demo_usage (
+  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  bot_slug      TEXT NOT NULL,
+  ip_hash       TEXT,
+  document_name TEXT,
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE public.demo_usage ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Service role full access demo_usage" ON public.demo_usage
+  FOR ALL USING (auth.role() = 'service_role');
