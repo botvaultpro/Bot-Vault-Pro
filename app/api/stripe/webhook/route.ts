@@ -12,6 +12,7 @@ import {
   buildSiteBuilderEmail,
 } from "@/lib/emails";
 import { validateEnv } from "@/lib/env";
+import { inngest } from "@/inngest/client";
 
 validateEnv();
 
@@ -161,6 +162,25 @@ export async function POST(req: NextRequest) {
         sendPurchaseEmail(resolvedBotSlug, tier, userId, supabase).catch((err) =>
           console.error("Purchase email failed (non-fatal):", err)
         );
+
+        // Fire Inngest event for post-subscription upsell sequence
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("email, full_name")
+          .eq("id", userId)
+          .single();
+        if (profile?.email) {
+          inngest.send({
+            name: "user/subscribed",
+            data: {
+              userId,
+              email: profile.email,
+              name: profile.full_name ?? "",
+              botSlug: resolvedBotSlug,
+              tier,
+            },
+          }).catch((err) => console.error("Inngest user/subscribed event failed (non-fatal):", err));
+        }
 
         break;
       }

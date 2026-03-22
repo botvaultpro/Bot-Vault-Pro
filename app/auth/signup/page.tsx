@@ -10,6 +10,7 @@ function SignupForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const plan = searchParams.get("plan");
+  const refCode = searchParams.get("ref");
 
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -42,6 +43,15 @@ function SignupForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, name: fullName }),
       }).catch(() => {});
+
+      // Track referral if a ref code was passed in the URL
+      if (refCode) {
+        fetch("/api/referral", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ referralCode: refCode }),
+        }).catch(() => {});
+      }
 
       if (plan && plan !== "free") {
         router.push(`/dashboard/billing?plan=${plan}`);
@@ -82,6 +92,11 @@ function SignupForm() {
           <p className="text-vault-text-dim">
             {plan && plan !== "free" ? `Starting with the ${plan} plan` : "Start free — upgrade anytime"}
           </p>
+          {refCode && (
+            <div className="mt-3 inline-flex items-center gap-2 text-sm text-vault-green border border-vault-green/30 bg-vault-green/5 px-3 py-1.5 rounded-full">
+              <span>🎁</span> You were referred — you&apos;ll both get 1 month free when you subscribe
+            </div>
+          )}
         </div>
         <div className="card-surface rounded-2xl p-8">
           {error && (
