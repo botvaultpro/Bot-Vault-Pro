@@ -67,9 +67,12 @@ export async function POST(req: NextRequest) {
     },
   };
 
-  // Apply BUNDLE20 coupon automatically when user will have 3+ bots
+  // Apply BUNDLE20 coupon automatically when user will have 3+ bots.
+  // When bundle applies we lock the discount; otherwise allow user-entered promo codes (e.g. WELCOME20).
   if (applyBundle) {
     sessionParams.discounts = [{ coupon: "BUNDLE20" }];
+  } else {
+    sessionParams.allow_promotion_codes = true;
   }
 
   try {
