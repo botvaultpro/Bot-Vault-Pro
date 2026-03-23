@@ -8,6 +8,24 @@ export const metadata: Metadata = {
 
 const posts = [
   {
+    slug: "best-ai-tools-for-small-business",
+    title: "Best AI Tools for Small Business in 2026 (Honest Comparison)",
+    excerpt: "We tested the top AI tools for invoicing, email, contract review, and analytics. Here's what actually works for solopreneurs and small business owners — with real pricing.",
+    tag: "AI Tools",
+    tagColor: "text-vault-accent bg-vault-accent/10 border-vault-accent/20",
+    readTime: "8 min read",
+    date: "March 2026",
+  },
+  {
+    slug: "how-to-write-an-invoice",
+    title: "How to Write a Professional Invoice That Gets Paid Faster",
+    excerpt: "10 required fields, the right payment terms, an example invoice, and the follow-up sequence that collects 94%+ of overdue invoices before day 14.",
+    tag: "Invoicing",
+    tagColor: "text-blue-400 bg-blue-400/10 border-blue-400/20",
+    readTime: "7 min read",
+    date: "March 2026",
+  },
+  {
     slug: "how-to-review-a-contract",
     title: "How to Review a Contract (Without a Lawyer): A Practical Checklist",
     excerpt: "Before you sign anything, run through these 12 checks. They catch the clauses that cost freelancers and small businesses the most money.",

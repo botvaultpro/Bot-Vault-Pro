@@ -438,8 +438,10 @@ export default function LandingPage() {
           <div className="flex flex-wrap justify-center gap-6">
             <Link href="/pricing" className="hover:text-vault-accent transition-colors">Pricing</Link>
             <Link href="/demo" className="hover:text-vault-accent transition-colors">Try Demo</Link>
+            <Link href="/blog" className="hover:text-vault-accent transition-colors">Blog</Link>
             <Link href="/tools/free-contract-review" className="hover:text-vault-accent transition-colors">Contract Review</Link>
             <Link href="/tools/ai-email-writer" className="hover:text-vault-accent transition-colors">Email Writer</Link>
+            <Link href="/affiliate" className="hover:text-vault-accent transition-colors">Affiliates</Link>
             <Link href="/privacy" className="hover:text-vault-accent transition-colors">Privacy</Link>
             <Link href="/terms" className="hover:text-vault-accent transition-colors">Terms</Link>
             <a href="mailto:hello@botvaultpro.com" className="hover:text-vault-accent transition-colors">Contact</a>
