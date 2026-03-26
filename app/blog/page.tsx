@@ -8,6 +8,15 @@ export const metadata: Metadata = {
 
 const posts = [
   {
+    slug: "how-to-get-clients-as-a-freelancer",
+    title: "How to Get Clients as a Freelancer in 2026 (Without Cold Emailing Strangers)",
+    excerpt: "The 5 channels that consistently book 3–5 new clients per month, the exact scripts to use, and one AI shortcut that freelancers are using to close deals in the first email.",
+    tag: "Freelancing",
+    tagColor: "text-vault-green bg-vault-green/10 border-vault-green/20",
+    readTime: "10 min read",
+    date: "March 2026",
+  },
+  {
     slug: "best-ai-tools-for-small-business",
     title: "Best AI Tools for Small Business in 2026 (Honest Comparison)",
     excerpt: "We tested the top AI tools for invoicing, email, contract review, and analytics. Here's what actually works for solopreneurs and small business owners — with real pricing.",

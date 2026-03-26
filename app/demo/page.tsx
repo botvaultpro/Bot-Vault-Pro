@@ -1,7 +1,18 @@
 import Link from "next/link";
-import { ArrowRight, Scale, FileText, Mail, BarChart2 } from "lucide-react";
+import { ArrowRight, Scale, FileText, Mail, BarChart2, Globe } from "lucide-react";
 
 const demos = [
+  {
+    slug: "sitebuilder",
+    name: "SiteBuilder Pro",
+    icon: Globe,
+    color: "text-vault-green",
+    border: "border-vault-green/20",
+    bg: "bg-vault-green/5",
+    tagline: "Enter your business details. Get a full website generated in 60 seconds.",
+    trial: "2 free generations — no credit card",
+    href: "/demo/sitebuilder",
+  },
   {
     slug: "clausecheck",
     name: "ClauseCheck",
