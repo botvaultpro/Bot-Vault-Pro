@@ -12,6 +12,7 @@ const bots = [
     color: "green",
     description: "Generate a live website sample for any local business in 30 seconds. Auto-create a professional sales proposal. Track every prospect from first contact to closed deal.",
     tagline: "Your pipeline, your proposals, your clients — all in one place.",
+    demo: "/demo/sitebuilder",
   },
   {
     icon: Star,
@@ -21,6 +22,7 @@ const bots = [
     color: "yellow",
     description: "Connects to your Google Business Profile and auto-drafts a personalized reply for every new review. Approve with one click or let it publish automatically. Monitors competitors too.",
     tagline: "Replies to reviews while you sleep.",
+    demo: null,
   },
   {
     icon: BarChart2,
@@ -30,6 +32,7 @@ const bots = [
     color: "purple",
     description: "Enter your numbers once a week. Get a plain-English business health report delivered to your inbox every Monday — with trend analysis comparing this week to the last four.",
     tagline: "Shows up in your inbox Monday morning. You didn't ask for it.",
+    demo: "/demo/weeklypulse",
   },
   {
     icon: Mail,
@@ -39,6 +42,7 @@ const bots = [
     color: "cyan",
     description: "Paste any difficult email and get three ready-to-send replies. Over time it learns your tone and writes more like you. Connect Gmail and it reads your inbox directly.",
     tagline: "Gets smarter every time you use it.",
+    demo: "/demo/emailcoach",
   },
   {
     icon: Scale,
@@ -48,6 +52,7 @@ const bots = [
     color: "orange",
     description: "Upload any contract. Get flagged risk clauses, plain-English explanations, and missing protections. Builds a personal risk profile across every contract you review.",
     tagline: "Every contract makes the next analysis smarter.",
+    demo: "/demo/clausecheck",
   },
   {
     icon: FileText,
@@ -57,6 +62,7 @@ const bots = [
     color: "blue",
     description: "Build professional invoices, send directly from the app, track when clients open them, and trigger automatic overdue reminders — without lifting a finger.",
     tagline: "Sends. Tracks. Follows up. Automatically.",
+    demo: "/demo/invoiceforge",
   },
 ];
 
@@ -323,7 +329,12 @@ export default function LandingPage() {
                     <span className={`text-sm font-mono font-semibold ${colors.text}`}>{bot.price}</span>
                   </div>
                   <p className="text-vault-text-dim leading-relaxed mb-3">{bot.description}</p>
-                  <p className={`text-sm italic ${colors.text}`}>{bot.tagline}</p>
+                  <p className={`text-sm italic ${colors.text} mb-4`}>{bot.tagline}</p>
+                  {bot.demo && (
+                    <Link href={bot.demo} className={`inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border ${colors.border} ${colors.text} hover:opacity-80 transition-opacity`}>
+                      Try free demo <ChevronRight className="w-3.5 h-3.5" />
+                    </Link>
+                  )}
                 </div>
               );
             })}

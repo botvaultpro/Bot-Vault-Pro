@@ -13,7 +13,7 @@ const bots = [
   { icon: FileText, color: "text-blue-400",   bg: "bg-blue-400/10",   border: "border-blue-400/20",   name: "InvoiceForge",  price: "$29/mo", blurb: "Generate invoices, track opens, auto-send payment reminders.",     demo: "/demo/invoiceforge" },
   { icon: BarChart2,color: "text-purple-400", bg: "bg-purple-400/10", border: "border-purple-400/20", name: "WeeklyPulse",   price: "$19/mo", blurb: "Enter your numbers → business health report every Monday morning.", demo: null },
   { icon: Star,     color: "text-yellow-400", bg: "bg-yellow-400/10", border: "border-yellow-400/20", name: "ReviewBot",     price: "$29/mo", blurb: "Monitors Google reviews 24/7, auto-drafts and publishes replies.",  demo: null },
-  { icon: Globe,    color: "text-vault-green", bg: "bg-vault-green/10", border: "border-vault-green/20", name: "SiteBuilder Pro", price: "$49/mo", blurb: "Find local businesses, generate custom site demos, close deals.",    demo: null },
+  { icon: Globe,    color: "text-vault-green", bg: "bg-vault-green/10", border: "border-vault-green/20", name: "SiteBuilder Pro", price: "$49/mo", blurb: "Find local businesses, generate custom site demos, close deals.",    demo: "/demo/sitebuilder" },
 ];
 
 export default function LaunchPage() {
@@ -135,8 +135,11 @@ export default function LaunchPage() {
           {/* Live demos CTA */}
           <div className="rounded-2xl border border-vault-accent/30 bg-vault-accent/5 p-8 text-center">
             <h2 className="font-display text-2xl font-bold mb-3">See it before you commit</h2>
-            <p className="text-vault-text-dim mb-6">Three of our bots have live demos — no account required. Upload a real contract, paste a real email, or build a real invoice.</p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <p className="text-vault-text-dim mb-6">All four demos are live — no account required. Build a real website, review a real contract, or generate a real invoice.</p>
+            <div className="flex flex-col sm:flex-row flex-wrap items-center justify-center gap-3">
+              <Link href="/demo/sitebuilder" className="inline-flex items-center gap-2 border border-vault-green/40 text-vault-green px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-vault-green/10 transition-colors">
+                <Globe className="w-4 h-4" /> Try SiteBuilder Pro
+              </Link>
               <Link href="/demo/clausecheck" className="inline-flex items-center gap-2 border border-orange-400/40 text-orange-400 px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-orange-400/10 transition-colors">
                 <Scale className="w-4 h-4" /> Try ClauseCheck
               </Link>
