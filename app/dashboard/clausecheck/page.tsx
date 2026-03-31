@@ -1,7 +1,10 @@
 "use client";
 import { useEffect, useState, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { Scale, Upload, Loader2, AlertTriangle, Shield, HelpCircle, FileText, Lock, Printer, ChevronDown, ChevronUp } from "lucide-react";
+import {
+  ShieldCheck, Upload, Loader2, AlertTriangle, Shield,
+  HelpCircle, FileText, Lock, Printer, ChevronDown, ChevronUp,
+} from "lucide-react";
 import Link from "next/link";
 import clsx from "clsx";
 
@@ -27,23 +30,24 @@ type HistoryItem = {
   created_at: string;
 };
 
-const RISK_COLORS: Record<string, string> = {
-  Low: "bg-vault-green/10 text-vault-green border-vault-green/20",
-  Medium: "bg-yellow-400/10 text-yellow-400 border-yellow-400/20",
-  High: "bg-red-400/10 text-red-400 border-red-400/20",
+const RISK_STYLES: Record<string, { bg: string; border: string; color: string }> = {
+  Low:    { bg: "rgba(16,185,129,0.08)",  border: "rgba(16,185,129,0.25)",  color: "var(--accent-green)" },
+  Medium: { bg: "rgba(245,158,11,0.08)",  border: "rgba(245,158,11,0.25)",  color: "var(--accent-amber)" },
+  High:   { bg: "rgba(239,68,68,0.08)",   border: "rgba(239,68,68,0.25)",   color: "var(--accent-red)" },
 };
 
 export default function ClauseCheckPage() {
-  const [file, setFile] = useState<File | null>(null);
-  const [context, setContext] = useState("");
-  const [analyzing, setAnalyzing] = useState(false);
-  const [analysis, setAnalysis] = useState<Analysis | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [blocked, setBlocked] = useState(false);
-  const [history, setHistory] = useState<HistoryItem[]>([]);
+  const [file, setFile]                   = useState<File | null>(null);
+  const [context, setContext]             = useState("");
+  const [analyzing, setAnalyzing]         = useState(false);
+  const [progress, setProgress]           = useState("");
+  const [analysis, setAnalysis]           = useState<Analysis | null>(null);
+  const [error, setError]                 = useState<string | null>(null);
+  const [blocked, setBlocked]             = useState(false);
+  const [history, setHistory]             = useState<HistoryItem[]>([]);
   const [expandedHistory, setExpandedHistory] = useState<string | null>(null);
-  const [dragging, setDragging] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [dragging, setDragging]           = useState(false);
+  const fileInputRef                      = useRef<HTMLInputElement>(null);
 
   useEffect(() => { loadHistory(); }, []);
 
@@ -73,9 +77,16 @@ export default function ClauseCheckPage() {
     setAnalyzing(true);
     setError(null);
     setBlocked(false);
+    setProgress("Reading document...");
+
+    const PROGRESS_STEPS = ["Reading document...", "Identifying clauses...", "Generating report..."];
+    let step = 0;
+    const progressInterval = setInterval(() => {
+      step = (step + 1) % PROGRESS_STEPS.length;
+      setProgress(PROGRESS_STEPS[step]);
+    }, 2500);
 
     try {
-      // Read PDF as text using FileReader (base64) — send to API
       const arrayBuffer = await file.arrayBuffer();
       const uint8 = new Uint8Array(arrayBuffer);
       let binary = "";
@@ -85,11 +96,7 @@ export default function ClauseCheckPage() {
       const res = await fetch("/api/bots/clausecheck", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          documentName: file.name,
-          documentBase64: base64,
-          context,
-        }),
+        body: JSON.stringify({ documentName: file.name, documentBase64: base64, context }),
       });
 
       const data = await res.json();
@@ -100,57 +107,103 @@ export default function ClauseCheckPage() {
     } catch {
       setError("Network error. Please try again.");
     } finally {
+      clearInterval(progressInterval);
       setAnalyzing(false);
+      setProgress("");
     }
   }
 
-  function exportReport() {
-    window.print();
-  }
-
   return (
-    <div className="max-w-5xl mx-auto space-y-8 animate-fade-in">
-      <style>{`@media print { .no-print { display: none !important; } .print-only { display: block !important; } }`}</style>
+    <div className="max-w-5xl mx-auto space-y-8 page-enter">
+      <style>{`@media print { .no-print { display: none !important; } }`}</style>
 
-      <div className="no-print">
-        <h1 className="font-display text-3xl font-bold flex items-center gap-3">
-          <Scale className="w-7 h-7 text-orange-400" />
-          ClauseCheck
-        </h1>
-        <p className="text-vault-text-dim mt-1">AI Contract Risk Scanner — instant analysis of any legal document.</p>
+      {/* Page Header */}
+      <div className="no-print flex items-center gap-3">
+        <div
+          className="w-10 h-10 rounded-xl flex items-center justify-center"
+          style={{ background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.2)" }}
+        >
+          <ShieldCheck className="w-5 h-5" style={{ color: "var(--accent-amber)" }} />
+        </div>
+        <div>
+          <h1
+            className="font-display font-extrabold text-3xl"
+            style={{ color: "var(--text-primary)", letterSpacing: "-0.02em" }}
+          >
+            ClauseCheck
+          </h1>
+          <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
+            AI Contract Risk Scanner — instant analysis of any legal document.
+          </p>
+        </div>
       </div>
 
-      {/* Disclaimer */}
-      <div className="no-print rounded-xl border border-orange-400/20 bg-orange-400/5 px-4 py-3 flex items-start gap-3">
-        <AlertTriangle className="w-4 h-4 text-orange-400 shrink-0 mt-0.5" />
-        <p className="text-sm text-orange-400">
+      {/* Legal disclaimer */}
+      <div
+        className="no-print rounded-xl px-4 py-3 flex items-start gap-3"
+        style={{
+          background: "rgba(245,158,11,0.05)",
+          border: "1px solid rgba(245,158,11,0.2)",
+          borderRadius: "12px",
+        }}
+      >
+        <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" style={{ color: "var(--accent-amber)" }} />
+        <p className="text-sm" style={{ color: "var(--accent-amber)" }}>
           ClauseCheck is <strong>not legal advice</strong>. Always consult a licensed attorney for legal decisions.
         </p>
       </div>
 
+      {/* Blocked */}
       {blocked && (
-        <div className="no-print rounded-xl border border-orange-400/30 bg-orange-400/5 px-5 py-5 flex flex-col sm:flex-row items-start sm:items-center gap-4">
-          <Lock className="w-6 h-6 text-orange-400 shrink-0" />
+        <div
+          className="no-print rounded-xl px-5 py-5 flex flex-col sm:flex-row items-start sm:items-center gap-4"
+          style={{
+            background: "rgba(245,158,11,0.06)",
+            border: "1px solid rgba(245,158,11,0.25)",
+            borderRadius: "12px",
+          }}
+        >
+          <Lock className="w-5 h-5 shrink-0" style={{ color: "var(--accent-amber)" }} />
           <div>
-            <p className="font-semibold text-vault-text">You&apos;ve used your 1 free ClauseCheck analysis.</p>
-            <p className="text-sm text-vault-text-dim">Subscribe to analyze unlimited contracts.</p>
+            <p className="font-semibold" style={{ color: "var(--text-primary)" }}>
+              You&apos;ve used your 1 free ClauseCheck analysis.
+            </p>
+            <p className="text-sm" style={{ color: "var(--text-secondary)" }}>Subscribe to analyze unlimited contracts.</p>
           </div>
-          <Link href="/dashboard/billing" className="sm:ml-auto bg-orange-400 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-orange-400/90 transition-colors whitespace-nowrap">
+          <Link
+            href="/dashboard/billing"
+            className="sm:ml-auto px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all hover:-translate-y-px"
+            style={{ background: "var(--accent-amber)", color: "#0A0F1A" }}
+          >
             Subscribe Now
           </Link>
         </div>
       )}
 
-      <div className="no-print card-surface rounded-2xl p-6 space-y-4">
+      {/* Upload zone */}
+      <div
+        className="no-print rounded-xl p-6 space-y-4"
+        style={{ background: "var(--bg-surface)", border: "1px solid var(--border)", borderRadius: "12px" }}
+      >
+        {/* Drop zone */}
         <div
           onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
           onDragLeave={() => setDragging(false)}
           onDrop={handleFileDrop}
           onClick={() => fileInputRef.current?.click()}
-          className={clsx(
-            "border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-all",
-            dragging ? "border-orange-400 bg-orange-400/5" : file ? "border-vault-green bg-vault-green/5" : "border-vault-border hover:border-vault-accent hover:bg-vault-accent/5"
-          )}
+          className="border-2 border-dashed rounded-xl p-12 text-center cursor-pointer transition-all"
+          style={{
+            borderColor: dragging
+              ? "var(--accent-amber)"
+              : file
+                ? "var(--accent-green)"
+                : "var(--border)",
+            background: dragging
+              ? "rgba(245,158,11,0.04)"
+              : file
+                ? "rgba(16,185,129,0.04)"
+                : "var(--bg-input)",
+          }}
         >
           <input
             ref={fileInputRef}
@@ -161,112 +214,209 @@ export default function ClauseCheckPage() {
           />
           {file ? (
             <div className="flex flex-col items-center gap-2">
-              <FileText className="w-8 h-8 text-vault-green" />
-              <p className="font-medium text-vault-text">{file.name}</p>
-              <p className="text-sm text-vault-text-dim">{(file.size / 1024 / 1024).toFixed(2)} MB · Click to change</p>
+              <FileText className="w-10 h-10" style={{ color: "var(--accent-green)" }} />
+              <p className="font-medium" style={{ color: "var(--text-primary)" }}>{file.name}</p>
+              <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
+                {(file.size / 1024 / 1024).toFixed(2)} MB · Click to change
+              </p>
             </div>
           ) : (
-            <div className="flex flex-col items-center gap-2">
-              <Upload className="w-8 h-8 text-vault-text-dim" />
-              <p className="font-medium text-vault-text">Drag & drop or click to upload PDF</p>
-              <p className="text-sm text-vault-text-dim">Max 10MB · Contracts, leases, NDAs, service agreements</p>
+            <div className="flex flex-col items-center gap-3">
+              <Upload className="w-10 h-10" style={{ color: "var(--text-tertiary)" }} />
+              <div>
+                <p className="font-medium" style={{ color: "var(--text-primary)" }}>
+                  Drop your contract PDF here or click to browse
+                </p>
+                <p className="text-sm mt-1" style={{ color: "var(--text-tertiary)" }}>
+                  Max 10MB · Contracts, leases, NDAs, service agreements
+                </p>
+              </div>
             </div>
           )}
         </div>
 
+        {/* Context */}
         <div>
-          <label className="block text-sm font-medium text-vault-text mb-2">
-            What is this contract for? <span className="text-vault-text-dim">(optional)</span>
+          <label className="block text-sm font-medium mb-2" style={{ color: "var(--text-secondary)" }}>
+            What is this contract for?{" "}
+            <span style={{ color: "var(--text-tertiary)" }}>(optional)</span>
           </label>
           <input
             type="text"
             value={context}
             onChange={(e) => setContext(e.target.value)}
             placeholder="e.g. Freelance client agreement, apartment lease, vendor NDA..."
-            className="w-full bg-vault-bg border border-vault-border rounded-xl px-4 py-3 text-sm text-vault-text placeholder:text-vault-text-dim focus:outline-none focus:border-vault-accent"
+            style={{
+              width: "100%",
+              background: "var(--bg-input)",
+              border: "1px solid var(--border)",
+              borderRadius: "8px",
+              padding: "12px 16px",
+              color: "var(--text-primary)",
+              fontSize: "14px",
+              outline: "none",
+            }}
+            onFocus={(e) => {
+              e.target.style.borderColor = "var(--border-active)";
+              e.target.style.boxShadow = "0 0 0 3px var(--accent-blue-glow)";
+            }}
+            onBlur={(e) => {
+              e.target.style.borderColor = "var(--border)";
+              e.target.style.boxShadow = "none";
+            }}
           />
         </div>
 
-        {error && <p className="text-sm text-red-400 bg-red-400/10 border border-red-400/20 rounded-lg px-4 py-3">{error}</p>}
+        {/* Progress */}
+        {analyzing && progress && (
+          <div className="flex items-center gap-3">
+            <Loader2 className="w-4 h-4 animate-spin" style={{ color: "var(--accent-amber)" }} />
+            <span className="text-sm" style={{ color: "var(--accent-amber)" }}>{progress}</span>
+          </div>
+        )}
+
+        {error && (
+          <p
+            className="text-sm px-4 py-3 rounded-lg"
+            style={{
+              background: "rgba(239,68,68,0.08)",
+              border: "1px solid rgba(239,68,68,0.25)",
+              color: "var(--accent-red)",
+            }}
+          >
+            {error}
+          </p>
+        )}
 
         <button
           onClick={handleAnalyze}
           disabled={analyzing || !file}
-          className="flex items-center gap-2 bg-orange-400 text-white px-6 py-3 rounded-xl font-display font-bold text-sm hover:bg-orange-400/90 transition-colors disabled:opacity-50"
+          className="flex items-center gap-2 px-6 py-3 rounded-lg font-medium text-sm transition-all hover:-translate-y-px disabled:opacity-50"
+          style={{ background: "var(--accent-amber)", color: "#0A0F1A", borderRadius: "8px" }}
         >
-          {analyzing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Scale className="w-4 h-4" />}
-          {analyzing ? "Reading your document..." : "Analyze Contract"}
+          {analyzing ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
+          {analyzing ? progress || "Analyzing..." : "Analyze Contract"}
         </button>
       </div>
 
+      {/* Analysis results */}
       {analysis && (
         <div className="space-y-6">
           <div className="flex items-center justify-between no-print">
-            <h2 className="font-display text-xl font-bold">Analysis Results</h2>
-            <button onClick={exportReport} className="flex items-center gap-2 text-sm text-vault-text-dim hover:text-vault-text border border-vault-border px-3 py-2 rounded-lg transition-colors">
+            <h2 className="font-display font-bold text-xl" style={{ color: "var(--text-primary)" }}>
+              Analysis Results
+            </h2>
+            <button
+              onClick={() => window.print()}
+              className="flex items-center gap-2 text-sm px-3 py-2 rounded-lg transition-all"
+              style={{
+                background: "var(--bg-elevated)",
+                border: "1px solid var(--border)",
+                color: "var(--text-secondary)",
+              }}
+            >
               <Printer className="w-4 h-4" /> Export Report
             </button>
           </div>
 
-          <div className="card-surface rounded-2xl p-6">
-            <h3 className="font-display font-bold text-lg mb-3 flex items-center gap-2">
-              <FileText className="w-5 h-5 text-vault-accent" /> Summary
+          {/* Summary */}
+          <div
+            className="rounded-xl p-6"
+            style={{ background: "var(--bg-surface)", border: "1px solid var(--border)", borderRadius: "12px" }}
+          >
+            <h3 className="font-display font-bold text-lg mb-3 flex items-center gap-2" style={{ color: "var(--text-primary)" }}>
+              <FileText className="w-5 h-5" style={{ color: "var(--accent-blue)" }} /> Summary
             </h3>
-            <p className="text-vault-text-dim leading-relaxed">{analysis.summary}</p>
+            <p style={{ color: "var(--text-secondary)" }}>{analysis.summary}</p>
           </div>
 
-          <div className="card-surface rounded-2xl p-6">
-            <h3 className="font-display font-bold text-lg mb-4 flex items-center gap-2">
-              <AlertTriangle className="w-5 h-5 text-red-400" /> Risk Flags ({analysis.risk_flags.length})
+          {/* Risk Flags */}
+          <div
+            className="rounded-xl p-6"
+            style={{ background: "var(--bg-surface)", border: "1px solid var(--border)", borderRadius: "12px" }}
+          >
+            <h3 className="font-display font-bold text-lg mb-4 flex items-center gap-2" style={{ color: "var(--text-primary)" }}>
+              <AlertTriangle className="w-5 h-5" style={{ color: "var(--accent-red)" }} />
+              Risk Flags ({analysis.risk_flags.length})
             </h3>
             {analysis.risk_flags.length === 0 ? (
-              <p className="text-vault-text-dim">No significant risk flags found.</p>
+              <p style={{ color: "var(--text-secondary)" }}>No significant risk flags found.</p>
             ) : (
               <div className="space-y-4">
-                {analysis.risk_flags.map((flag, i) => (
-                  <div key={i} className="border border-vault-border rounded-xl p-4">
-                    <div className="flex items-start justify-between gap-3 mb-2">
-                      <h4 className="font-semibold text-vault-text">{flag.clause_title}</h4>
-                      <span className={clsx("text-xs font-bold px-2.5 py-1 rounded-full border shrink-0", RISK_COLORS[flag.risk_level])}>
-                        {flag.risk_level}
-                      </span>
+                {analysis.risk_flags.map((flag, i) => {
+                  const rs = RISK_STYLES[flag.risk_level] ?? RISK_STYLES.Low;
+                  return (
+                    <div
+                      key={i}
+                      className="rounded-xl p-4"
+                      style={{ border: "1px solid var(--border)", background: "var(--bg-input)" }}
+                    >
+                      <div className="flex items-start justify-between gap-3 mb-2">
+                        <h4 className="font-semibold" style={{ color: "var(--text-primary)" }}>
+                          {flag.clause_title}
+                        </h4>
+                        <span
+                          className="text-xs font-bold px-2.5 py-1 rounded-full shrink-0"
+                          style={{ background: rs.bg, border: `1px solid ${rs.border}`, color: rs.color }}
+                        >
+                          {flag.risk_level}
+                        </span>
+                      </div>
+                      <blockquote
+                        className="text-xs rounded-lg p-3 mb-2 italic border-l-2"
+                        style={{
+                          background: "var(--bg-primary)",
+                          borderLeftColor: "var(--border-active)",
+                          color: "var(--text-secondary)",
+                        }}
+                      >
+                        &ldquo;{flag.flagged_text}&rdquo;
+                      </blockquote>
+                      <p className="text-sm" style={{ color: "var(--text-secondary)" }}>{flag.explanation}</p>
                     </div>
-                    <blockquote className="text-xs text-vault-text-dim bg-vault-bg/50 rounded-lg p-3 mb-2 italic border-l-2 border-vault-border">
-                      &ldquo;{flag.flagged_text}&rdquo;
-                    </blockquote>
-                    <p className="text-sm text-vault-text-dim">{flag.explanation}</p>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="card-surface rounded-2xl p-6">
-              <h3 className="font-display font-bold text-lg mb-4 flex items-center gap-2">
-                <Shield className="w-5 h-5 text-vault-green" /> Missing Protections
+            {/* Missing Protections */}
+            <div
+              className="rounded-xl p-6"
+              style={{ background: "var(--bg-surface)", border: "1px solid var(--border)", borderRadius: "12px" }}
+            >
+              <h3 className="font-display font-bold text-lg mb-4 flex items-center gap-2" style={{ color: "var(--text-primary)" }}>
+                <Shield className="w-5 h-5" style={{ color: "var(--accent-green)" }} /> Missing Protections
               </h3>
               {analysis.missing_protections.length === 0 ? (
-                <p className="text-vault-text-dim">No major missing protections found.</p>
+                <p style={{ color: "var(--text-secondary)" }}>No major missing protections found.</p>
               ) : (
                 <ul className="space-y-2">
                   {analysis.missing_protections.map((p, i) => (
-                    <li key={i} className="flex items-start gap-2 text-sm text-vault-text-dim">
-                      <span className="text-vault-accent mt-0.5">•</span> {p}
+                    <li key={i} className="flex items-start gap-2 text-sm" style={{ color: "var(--text-secondary)" }}>
+                      <span style={{ color: "var(--accent-blue)" }}>•</span> {p}
                     </li>
                   ))}
                 </ul>
               )}
             </div>
 
-            <div className="card-surface rounded-2xl p-6">
-              <h3 className="font-display font-bold text-lg mb-4 flex items-center gap-2">
-                <HelpCircle className="w-5 h-5 text-blue-400" /> Questions To Ask
+            {/* Questions */}
+            <div
+              className="rounded-xl p-6"
+              style={{ background: "var(--bg-surface)", border: "1px solid var(--border)", borderRadius: "12px" }}
+            >
+              <h3 className="font-display font-bold text-lg mb-4 flex items-center gap-2" style={{ color: "var(--text-primary)" }}>
+                <HelpCircle className="w-5 h-5" style={{ color: "var(--accent-blue)" }} /> Questions To Ask Your Lawyer
               </h3>
               <ol className="space-y-2">
                 {analysis.questions_to_ask.map((q, i) => (
-                  <li key={i} className="flex items-start gap-2 text-sm text-vault-text-dim">
-                    <span className="text-blue-400 font-bold shrink-0">{i + 1}.</span> {q}
+                  <li key={i} className="flex items-start gap-2 text-sm" style={{ color: "var(--text-secondary)" }}>
+                    <span className="font-bold shrink-0" style={{ color: "var(--accent-blue)", fontFamily: "var(--font-mono)" }}>
+                      {i + 1}.
+                    </span>
+                    {q}
                   </li>
                 ))}
               </ol>
@@ -275,29 +425,66 @@ export default function ClauseCheckPage() {
         </div>
       )}
 
+      {/* Scan history */}
       {history.length > 0 && (
-        <div className="no-print card-surface rounded-2xl p-6">
-          <h2 className="font-display text-lg font-bold mb-4">Analysis History</h2>
+        <div
+          className="no-print rounded-xl p-6"
+          style={{ background: "var(--bg-surface)", border: "1px solid var(--border)", borderRadius: "12px" }}
+        >
+          <h2 className="font-display font-bold text-lg mb-4" style={{ color: "var(--text-primary)" }}>
+            Scan History
+          </h2>
           <div className="space-y-2">
             {history.map((item) => (
-              <div key={item.id} className="border border-vault-border rounded-xl overflow-hidden">
+              <div
+                key={item.id}
+                className="rounded-xl overflow-hidden"
+                style={{ border: "1px solid var(--border)" }}
+              >
                 <button
                   onClick={() => setExpandedHistory(expandedHistory === item.id ? null : item.id)}
-                  className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-vault-border/30 transition-colors"
+                  className="w-full flex items-center justify-between px-4 py-3 text-left transition-colors"
+                  onMouseEnter={(e) => (e.currentTarget.style.background = "var(--bg-elevated)")}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <FileText className="w-4 h-4 text-orange-400 shrink-0" />
-                    <span className="text-sm text-vault-text truncate">{item.document_name}</span>
+                    <FileText className="w-4 h-4 shrink-0" style={{ color: "var(--accent-amber)" }} />
+                    <span className="text-sm truncate" style={{ color: "var(--text-primary)" }}>
+                      {item.document_name}
+                    </span>
+                    {(item.risk_flags?.length ?? 0) > 0 && (
+                      <span
+                        className="text-xs px-2 py-0.5 rounded-full shrink-0"
+                        style={{
+                          background: "rgba(239,68,68,0.1)",
+                          border: "1px solid rgba(239,68,68,0.2)",
+                          color: "var(--accent-red)",
+                        }}
+                      >
+                        {item.risk_flags.length} flags
+                      </span>
+                    )}
                   </div>
                   <div className="flex items-center gap-2 shrink-0 ml-2">
-                    <span className="text-xs text-vault-text-dim">{new Date(item.created_at).toLocaleDateString()}</span>
-                    {expandedHistory === item.id ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                    <span className="text-xs" style={{ color: "var(--text-tertiary)" }}>
+                      {new Date(item.created_at).toLocaleDateString()}
+                    </span>
+                    {expandedHistory === item.id ? (
+                      <ChevronUp className="w-4 h-4" style={{ color: "var(--text-tertiary)" }} />
+                    ) : (
+                      <ChevronDown className="w-4 h-4" style={{ color: "var(--text-tertiary)" }} />
+                    )}
                   </div>
                 </button>
                 {expandedHistory === item.id && (
-                  <div className="px-4 pb-4 border-t border-vault-border pt-3">
-                    <p className="text-sm text-vault-text-dim mb-2">{item.summary}</p>
-                    <p className="text-xs text-vault-text-dim">{item.risk_flags?.length ?? 0} risk flags found</p>
+                  <div
+                    className="px-4 pb-4 border-t pt-3"
+                    style={{ borderColor: "var(--border)" }}
+                  >
+                    <p className="text-sm mb-1" style={{ color: "var(--text-secondary)" }}>{item.summary}</p>
+                    <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>
+                      {item.risk_flags?.length ?? 0} risk flags found
+                    </p>
                   </div>
                 )}
               </div>

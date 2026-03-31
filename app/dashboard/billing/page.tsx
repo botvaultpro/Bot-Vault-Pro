@@ -3,23 +3,18 @@ import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import {
-  Check, Loader2, CreditCard, Globe, Star, FileText,
-  Scale, BarChart2, Mail, Zap, Lock, CheckCircle2,
+  Check, Loader2, CreditCard, LayoutPanelLeft, Star, FileText,
+  ShieldCheck, BarChart2, Mail, Zap, Lock, CheckCircle2,
 } from "lucide-react";
 import clsx from "clsx";
 
 type BotSub = { bot_slug: string; tier: string; status: string };
 
-// Hardcoded price IDs (created via scripts/create-stripe-products.js)
 const BOT_CONFIGS = [
   {
     slug: "sitebuilder",
     name: "SiteBuilder Pro",
-    Icon: Globe,
-    iconColor: "text-vault-green",
-    borderColor: "border-vault-green/20",
-    bgColor: "bg-vault-green/5",
-    badgeClass: "bg-vault-green/10 text-vault-green border-vault-green/20",
+    Icon: LayoutPanelLeft,
     description: "Generate AI websites and sales proposals in minutes",
     starter: {
       price: 49,
@@ -36,10 +31,6 @@ const BOT_CONFIGS = [
     slug: "reviewbot",
     name: "ReviewBot",
     Icon: Star,
-    iconColor: "text-yellow-400",
-    borderColor: "border-yellow-400/20",
-    bgColor: "bg-yellow-400/5",
-    badgeClass: "bg-yellow-400/10 text-yellow-400 border-yellow-400/20",
     description: "Monitor and auto-reply to Google Business reviews with AI",
     starter: {
       price: 29,
@@ -56,10 +47,6 @@ const BOT_CONFIGS = [
     slug: "invoiceforge",
     name: "InvoiceForge",
     Icon: FileText,
-    iconColor: "text-blue-400",
-    borderColor: "border-blue-400/20",
-    bgColor: "bg-blue-400/5",
-    badgeClass: "bg-blue-400/10 text-blue-400 border-blue-400/20",
     description: "Create professional invoices and project proposals with AI",
     starter: {
       price: 29,
@@ -75,11 +62,7 @@ const BOT_CONFIGS = [
   {
     slug: "clausecheck",
     name: "ClauseCheck",
-    Icon: Scale,
-    iconColor: "text-orange-400",
-    borderColor: "border-orange-400/20",
-    bgColor: "bg-orange-400/5",
-    badgeClass: "bg-orange-400/10 text-orange-400 border-orange-400/20",
+    Icon: ShieldCheck,
     description: "Upload any contract and get instant AI risk analysis",
     starter: {
       price: 29,
@@ -96,10 +79,6 @@ const BOT_CONFIGS = [
     slug: "weeklypulse",
     name: "WeeklyPulse",
     Icon: BarChart2,
-    iconColor: "text-purple-400",
-    borderColor: "border-purple-400/20",
-    bgColor: "bg-purple-400/5",
-    badgeClass: "bg-purple-400/10 text-purple-400 border-purple-400/20",
     description: "Weekly AI business health report delivered every Monday",
     starter: {
       price: 19,
@@ -116,10 +95,6 @@ const BOT_CONFIGS = [
     slug: "emailcoach",
     name: "EmailCoach",
     Icon: Mail,
-    iconColor: "text-vault-accent",
-    borderColor: "border-vault-accent/20",
-    bgColor: "bg-vault-accent/5",
-    badgeClass: "bg-vault-accent/10 text-vault-accent border-vault-accent/20",
     description: "Get 3 AI-crafted reply options for any difficult email",
     starter: {
       price: 19,
@@ -136,9 +111,9 @@ const BOT_CONFIGS = [
 
 function BillingInner() {
   const [subscriptions, setSubscriptions] = useState<BotSub[]>([]);
-  const [loading, setLoading] = useState<string | null>(null);
+  const [loading, setLoading]             = useState<string | null>(null);
   const [portalLoading, setPortalLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError]                 = useState<string | null>(null);
   const [successBanner, setSuccessBanner] = useState(false);
   const searchParams = useSearchParams();
 
@@ -200,53 +175,114 @@ function BillingInner() {
   const activeCount = subscriptions.filter((s) => s.status === "active").length;
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8 animate-fade-in">
+    <div className="max-w-7xl mx-auto space-y-8 page-enter">
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="font-display text-3xl font-bold">Billing</h1>
-          <p className="text-vault-text-dim mt-1">Subscribe to individual bots. Pay only for what you use.</p>
+          <h1
+            className="font-display font-extrabold text-3xl"
+            style={{ color: "var(--text-primary)", letterSpacing: "-0.02em" }}
+          >
+            Your Bots
+          </h1>
+          <p className="mt-1 text-sm" style={{ color: "var(--text-secondary)" }}>
+            Subscribe to individual bots. Bundle 3+ and save 20% automatically.
+          </p>
         </div>
-        <button
-          onClick={handlePortal}
-          disabled={portalLoading}
-          className="flex items-center gap-2 border border-vault-border text-vault-text-dim px-4 py-2.5 rounded-lg text-sm hover:border-vault-accent hover:text-vault-accent transition-colors"
-        >
-          {portalLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />}
-          Manage Billing
-        </button>
+        <div className="flex items-center gap-3">
+          <span
+            className="text-sm font-mono px-3 py-1.5 rounded-lg"
+            style={{
+              fontFamily: "var(--font-mono)",
+              background: "var(--bg-elevated)",
+              border: "1px solid var(--border)",
+              color: "var(--text-secondary)",
+            }}
+          >
+            {activeCount} of 6 active
+          </span>
+          <button
+            onClick={handlePortal}
+            disabled={portalLoading}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all hover:-translate-y-px"
+            style={{
+              background: "var(--bg-elevated)",
+              border: "1px solid var(--border)",
+              color: "var(--text-secondary)",
+            }}
+          >
+            {portalLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />}
+            Manage Billing
+          </button>
+        </div>
       </div>
 
       {successBanner && (
-        <div className="flex items-center gap-3 rounded-xl border border-vault-green/30 bg-vault-green/10 px-5 py-4 text-vault-green">
-          <CheckCircle2 className="w-5 h-5 shrink-0" />
+        <div
+          className="flex items-center gap-3 rounded-xl px-5 py-4"
+          style={{
+            background: "rgba(16,185,129,0.08)",
+            border: "1px solid rgba(16,185,129,0.25)",
+            borderRadius: "12px",
+          }}
+        >
+          <CheckCircle2 className="w-5 h-5 shrink-0" style={{ color: "var(--accent-green)" }} />
           <div>
-            <p className="font-semibold">Payment successful!</p>
-            <p className="text-sm opacity-80">Your bot is being activated — refresh if it doesn&apos;t appear immediately.</p>
+            <p className="font-semibold" style={{ color: "var(--accent-green)" }}>Payment successful!</p>
+            <p className="text-sm opacity-80" style={{ color: "var(--accent-green)" }}>
+              Your bot is being activated — refresh if it doesn&apos;t appear immediately.
+            </p>
           </div>
         </div>
       )}
 
       {error && (
-        <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+        <div
+          className="rounded-xl px-4 py-3 text-sm"
+          style={{
+            background: "rgba(239,68,68,0.08)",
+            border: "1px solid rgba(239,68,68,0.25)",
+            color: "var(--accent-red)",
+            borderRadius: "12px",
+          }}
+        >
           {error}
         </div>
       )}
 
       {/* Bundle banner */}
-      <div className="rounded-xl border border-vault-accent/30 bg-vault-accent/5 px-5 py-4 flex items-center gap-3">
-        <Zap className="w-5 h-5 text-vault-accent shrink-0" />
+      <div
+        className="rounded-xl px-5 py-4 flex items-center gap-3"
+        style={{
+          background: "rgba(245,158,11,0.06)",
+          border: "1px solid rgba(245,158,11,0.25)",
+          borderRadius: "12px",
+        }}
+      >
+        <Zap className="w-5 h-5 shrink-0" style={{ color: "var(--accent-amber)" }} />
         <div>
-          <p className="font-semibold text-vault-text">Subscribe to 3 or more bots and save 20% automatically.</p>
-          <p className="text-sm text-vault-text-dim">No coupon needed — discount applied at checkout when you reach 3 bots.</p>
+          <p className="font-semibold" style={{ color: "var(--text-primary)" }}>
+            🎁 Bundle Discount: Subscribe to 3 or more bots and BUNDLE20 applies automatically. Save 20% every month.
+          </p>
+          <p className="text-sm mt-0.5" style={{ color: "var(--text-secondary)" }}>
+            No coupon needed — discount applied at checkout when you reach 3 bots.
+          </p>
         </div>
         {activeCount >= 3 && (
-          <span className="ml-auto text-xs bg-vault-green/10 text-vault-green border border-vault-green/20 px-2 py-1 rounded-full font-semibold whitespace-nowrap">
+          <span
+            className="ml-auto text-xs font-medium px-2.5 py-1 rounded-full whitespace-nowrap shrink-0"
+            style={{
+              background: "rgba(16,185,129,0.1)",
+              border: "1px solid rgba(16,185,129,0.25)",
+              color: "var(--accent-green)",
+            }}
+          >
             Bundle active ✓
           </span>
         )}
       </div>
 
-      {/* Bot cards */}
+      {/* Bot cards grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {BOT_CONFIGS.map((bot) => {
           const { Icon } = bot;
@@ -254,61 +290,144 @@ function BillingInner() {
           const isActive = sub?.status === "active" || sub?.status === "trialing";
 
           return (
-            <div key={bot.slug} className={clsx(
-              "rounded-2xl border p-6 transition-all",
-              isActive ? "border-vault-green/30 bg-vault-green/5" : "card-surface"
-            )}>
-              <div className="flex items-start justify-between mb-4">
+            <div
+              key={bot.slug}
+              className="rounded-xl p-6 transition-all"
+              style={{
+                background: isActive ? "rgba(59,130,246,0.04)" : "var(--bg-surface)",
+                border: `1px solid ${isActive ? "rgba(59,130,246,0.25)" : "var(--border)"}`,
+                borderRadius: "12px",
+              }}
+            >
+              {/* Bot header */}
+              <div className="flex items-start justify-between mb-5">
                 <div className="flex items-center gap-3">
-                  <div className={clsx("w-10 h-10 rounded-xl border flex items-center justify-center", bot.borderColor, bot.bgColor)}>
-                    <Icon className={clsx("w-5 h-5", bot.iconColor)} />
+                  <div
+                    className="w-10 h-10 rounded-lg flex items-center justify-center"
+                    style={{
+                      background: isActive ? "var(--accent-blue-glow)" : "var(--bg-elevated)",
+                      border: `1px solid ${isActive ? "rgba(59,130,246,0.25)" : "var(--border)"}`,
+                    }}
+                  >
+                    <Icon
+                      className="w-5 h-5"
+                      style={{ color: isActive ? "var(--accent-blue)" : "var(--text-secondary)" }}
+                    />
                   </div>
                   <div>
-                    <h3 className="font-display text-lg font-bold">{bot.name}</h3>
-                    <p className="text-sm text-vault-text-dim">{bot.description}</p>
+                    <h3
+                      className="font-display font-bold text-lg"
+                      style={{ color: "var(--text-primary)" }}
+                    >
+                      {bot.name}
+                    </h3>
+                    <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
+                      {bot.description}
+                    </p>
                   </div>
                 </div>
                 {isActive && (
-                  <span className={clsx("text-xs font-semibold px-2.5 py-1 rounded-full border capitalize shrink-0 ml-2", bot.badgeClass)}>
+                  <span
+                    className="text-xs font-medium px-2.5 py-1 rounded-full border capitalize shrink-0 ml-2"
+                    style={{
+                      background: "rgba(16,185,129,0.1)",
+                      border: "1px solid rgba(16,185,129,0.25)",
+                      color: "var(--accent-green)",
+                    }}
+                  >
                     Active — {sub?.tier}
                   </span>
                 )}
               </div>
 
+              {/* Tier cards side by side */}
               <div className="grid grid-cols-2 gap-3">
                 {(["starter", "pro"] as const).map((tierKey) => {
                   const tierConfig = bot[tierKey];
                   const isCurrentTier = isActive && sub?.tier === tierKey;
                   const loadingKey = `${bot.slug}-${tierKey}`;
+                  const isPro = tierKey === "pro";
 
                   return (
-                    <div key={tierKey} className={clsx(
-                      "rounded-xl border p-4 flex flex-col",
-                      isCurrentTier ? "border-vault-green/40 bg-vault-green/5" : "border-vault-border bg-vault-bg/50"
-                    )}>
+                    <div
+                      key={tierKey}
+                      className="rounded-xl p-4 flex flex-col"
+                      style={{
+                        background: isCurrentTier
+                          ? "rgba(16,185,129,0.06)"
+                          : isPro
+                            ? "rgba(139,92,246,0.04)"
+                            : "var(--bg-elevated)",
+                        border: `1px solid ${
+                          isCurrentTier
+                            ? "rgba(16,185,129,0.3)"
+                            : isPro
+                              ? "rgba(139,92,246,0.2)"
+                              : "var(--border)"
+                        }`,
+                        borderRadius: "12px",
+                        position: "relative",
+                      }}
+                    >
+                      {isPro && (
+                        <span
+                          className="absolute top-2 right-2 text-xs font-bold px-1.5 py-0.5 rounded"
+                          style={{
+                            background: "rgba(139,92,246,0.15)",
+                            color: "var(--accent-purple)",
+                            fontFamily: "var(--font-mono)",
+                          }}
+                        >
+                          PRO
+                        </span>
+                      )}
+
                       <div className="flex items-baseline justify-between mb-3">
-                        <span className="text-xs font-mono uppercase tracking-wider text-vault-text-dim capitalize">{tierKey}</span>
-                        <span className="font-display font-bold text-xl">
-                          ${tierConfig.price}<span className="text-xs text-vault-text-dim font-normal">/mo</span>
+                        <span
+                          className="text-xs font-mono uppercase tracking-wider capitalize"
+                          style={{ color: "var(--text-tertiary)", fontFamily: "var(--font-mono)" }}
+                        >
+                          {tierKey}
+                        </span>
+                        <span
+                          className="font-bold text-xl price-display"
+                          style={{ color: "var(--text-primary)", fontFamily: "var(--font-mono)" }}
+                        >
+                          ${tierConfig.price}
+                          <span className="text-xs font-normal" style={{ color: "var(--text-secondary)" }}>/mo</span>
                         </span>
                       </div>
+
                       <ul className="space-y-1.5 mb-4 flex-1">
                         {tierConfig.features.map((f) => (
-                          <li key={f} className="flex items-start gap-1.5 text-xs text-vault-text-dim">
-                            <Check className="w-3 h-3 text-vault-green mt-0.5 shrink-0" />
+                          <li key={f} className="flex items-start gap-1.5 text-xs" style={{ color: "var(--text-secondary)" }}>
+                            <Check className="w-3 h-3 mt-0.5 shrink-0" style={{ color: "var(--accent-green)" }} />
                             {f}
                           </li>
                         ))}
                       </ul>
+
                       {isCurrentTier ? (
-                        <div className="text-center text-xs font-semibold text-vault-green py-2 rounded-lg bg-vault-green/10 border border-vault-green/20">
+                        <div
+                          className="text-center text-xs font-semibold py-2 rounded-lg"
+                          style={{
+                            background: "rgba(16,185,129,0.1)",
+                            border: "1px solid rgba(16,185,129,0.2)",
+                            color: "var(--accent-green)",
+                          }}
+                        >
                           ✓ Current Plan
                         </div>
                       ) : isActive ? (
                         <button
                           onClick={() => handleSubscribe(tierConfig.priceId, bot.slug, tierKey)}
                           disabled={loading === loadingKey}
-                          className="text-xs font-semibold py-2 rounded-lg border border-vault-border text-vault-text-dim hover:border-vault-accent hover:text-vault-accent transition-colors disabled:opacity-50 flex items-center justify-center gap-1.5"
+                          className="text-xs font-medium py-2 rounded-lg transition-all hover:-translate-y-px disabled:opacity-50 flex items-center justify-center gap-1.5"
+                          style={{
+                            background: "var(--bg-elevated)",
+                            border: "1px solid var(--border)",
+                            color: "var(--text-secondary)",
+                          }}
                         >
                           {loading === loadingKey && <Loader2 className="w-3 h-3 animate-spin" />}
                           Switch to {tierKey}
@@ -318,11 +437,20 @@ function BillingInner() {
                           onClick={() => handleSubscribe(tierConfig.priceId, bot.slug, tierKey)}
                           disabled={loading === loadingKey}
                           className={clsx(
-                            "text-xs font-semibold py-2 rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-1.5",
-                            tierKey === "pro"
-                              ? "bg-vault-accent text-vault-bg hover:bg-vault-accent/90"
-                              : "border border-vault-border text-vault-text-dim hover:border-vault-accent hover:text-vault-accent"
+                            "text-xs font-medium py-2 rounded-lg transition-all hover:-translate-y-px disabled:opacity-50 flex items-center justify-center gap-1.5"
                           )}
+                          style={
+                            isPro
+                              ? {
+                                  background: "var(--accent-blue)",
+                                  color: "#0A0F1A",
+                                }
+                              : {
+                                  background: "var(--bg-elevated)",
+                                  border: "1px solid var(--border)",
+                                  color: "var(--text-secondary)",
+                                }
+                          }
                         >
                           {loading === loadingKey && <Loader2 className="w-3 h-3 animate-spin" />}
                           Subscribe
@@ -334,7 +462,7 @@ function BillingInner() {
               </div>
 
               {!isActive && (
-                <p className="mt-3 text-xs text-vault-text-dim flex items-center gap-1.5">
+                <p className="mt-3 text-xs flex items-center gap-1.5" style={{ color: "var(--text-tertiary)" }}>
                   <Lock className="w-3 h-3" />
                   Free trial available — try before you subscribe
                 </p>

@@ -7,7 +7,6 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
-// ── Types ──────────────────────────────────────────────────────────────
 type Stage =
   | "new_lead"
   | "site_generated"
@@ -36,17 +35,17 @@ interface Lead {
 interface Column {
   id: Stage;
   label: string;
-  color: string;
   dotColor: string;
+  borderColor: string;
 }
 
 const COLUMNS: Column[] = [
-  { id: "new_lead",       label: "New Lead",       color: "border-gray-500/30",  dotColor: "bg-gray-400" },
-  { id: "site_generated", label: "Site Generated",  color: "border-vault-green/30", dotColor: "bg-vault-green" },
-  { id: "proposal_sent",  label: "Proposal Sent",   color: "border-vault-accent/30", dotColor: "bg-vault-accent" },
-  { id: "follow_up",      label: "Follow Up",       color: "border-yellow-500/30", dotColor: "bg-yellow-400" },
-  { id: "closed_won",     label: "Closed Won",      color: "border-emerald-500/30", dotColor: "bg-emerald-400" },
-  { id: "closed_lost",    label: "Closed Lost",     color: "border-red-500/30",  dotColor: "bg-red-400" },
+  { id: "new_lead",       label: "New Lead",       dotColor: "var(--text-tertiary)",  borderColor: "var(--border)" },
+  { id: "site_generated", label: "Site Generated",  dotColor: "var(--accent-green)",   borderColor: "rgba(16,185,129,0.3)" },
+  { id: "proposal_sent",  label: "Proposal Sent",   dotColor: "var(--accent-blue)",    borderColor: "rgba(59,130,246,0.3)" },
+  { id: "follow_up",      label: "Follow Up",       dotColor: "var(--accent-amber)",   borderColor: "rgba(245,158,11,0.3)" },
+  { id: "closed_won",     label: "Closed Won",      dotColor: "#34d399",               borderColor: "rgba(52,211,153,0.3)" },
+  { id: "closed_lost",    label: "Closed Lost",     dotColor: "var(--accent-red)",     borderColor: "rgba(239,68,68,0.3)" },
 ];
 
 const BUSINESS_TYPES = [
@@ -57,7 +56,18 @@ const BUSINESS_TYPES = [
   "Plumbing / HVAC", "Marketing Agency", "Insurance", "Other",
 ];
 
-// ── Main component ────────────────────────────────────────────────────
+const inputStyle: React.CSSProperties = {
+  width: "100%",
+  background: "var(--bg-input)",
+  border: "1px solid var(--border)",
+  borderRadius: "8px",
+  padding: "10px 14px",
+  color: "var(--text-primary)",
+  fontSize: "13px",
+  outline: "none",
+  fontFamily: "var(--font-body)",
+};
+
 export default function PipelinePage() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
@@ -70,8 +80,7 @@ export default function PipelinePage() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
     const { data } = await supabase
-      .from("pipeline_leads")
-      .select("*")
+      .from("pipeline_leads").select("*")
       .eq("user_id", user.id)
       .order("updated_at", { ascending: false });
     setLeads((data as Lead[]) ?? []);
@@ -80,13 +89,11 @@ export default function PipelinePage() {
 
   useEffect(() => { fetchLeads(); }, [fetchLeads]);
 
-  // ── Summary stats ──
   const total = leads.length;
   const proposalsSent = leads.filter((l) => ["proposal_sent", "follow_up", "closed_won"].includes(l.stage)).length;
   const closedWon = leads.filter((l) => l.stage === "closed_won").length;
   const convRate = total > 0 ? Math.round((closedWon / total) * 100) : 0;
 
-  // ── Drag & drop ──
   function handleDragStart(leadId: string) { setDragLeadId(leadId); }
   function handleDragOver(e: React.DragEvent) { e.preventDefault(); }
 
@@ -94,65 +101,92 @@ export default function PipelinePage() {
     e.preventDefault();
     if (!dragLeadId) return;
     const supabase = createClient();
-    await supabase
-      .from("pipeline_leads")
+    await supabase.from("pipeline_leads")
       .update({ stage: targetStage, updated_at: new Date().toISOString() })
       .eq("id", dragLeadId);
-    setLeads((prev) =>
-      prev.map((l) => (l.id === dragLeadId ? { ...l, stage: targetStage } : l))
-    );
+    setLeads((prev) => prev.map((l) => (l.id === dragLeadId ? { ...l, stage: targetStage } : l)));
     setDragLeadId(null);
   }
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64 text-vault-text-dim">
+      <div className="flex items-center justify-center h-64" style={{ color: "var(--text-secondary)" }}>
         Loading pipeline…
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-8 page-enter">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <Link href="/dashboard/bots/sitebuilder" className="text-vault-text-dim hover:text-vault-text transition-colors">
+        <Link
+          href="/dashboard/bots/sitebuilder"
+          className="transition-colors"
+          style={{ color: "var(--text-tertiary)" }}
+          onMouseEnter={(e) => (e.currentTarget.style.color = "var(--text-primary)")}
+          onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-tertiary)")}
+        >
           <ArrowLeft className="w-5 h-5" />
         </Link>
-        <div className="flex items-center justify-center w-10 h-10 rounded-xl border border-vault-green/20 bg-vault-green/5">
-          <GitBranch className="w-5 h-5 text-vault-green" />
+        <div
+          className="w-10 h-10 rounded-xl flex items-center justify-center"
+          style={{ background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.2)" }}
+        >
+          <GitBranch className="w-5 h-5" style={{ color: "var(--accent-green)" }} />
         </div>
         <div>
-          <h1 className="font-display text-2xl font-bold">Client Pipeline</h1>
-          <p className="text-vault-text-dim text-sm">Drag cards between stages to track every prospect.</p>
+          <h1
+            className="font-display font-extrabold text-3xl"
+            style={{ color: "var(--text-primary)", letterSpacing: "-0.02em" }}
+          >
+            Client Pipeline
+          </h1>
+          <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
+            Drag cards between stages to track every prospect.
+          </p>
         </div>
         <button
           onClick={() => setShowAddModal(true)}
-          className="ml-auto flex items-center gap-2 bg-vault-green text-vault-bg font-bold px-4 py-2.5 rounded-xl text-sm hover:opacity-90 transition-colors"
+          className="ml-auto flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all hover:-translate-y-px"
+          style={{ background: "var(--accent-green)", color: "#0A0F1A" }}
         >
-          <Plus className="w-4 h-4" />
-          Add Lead
+          <Plus className="w-4 h-4" /> Add Lead
         </button>
       </div>
 
-      {/* Summary bar */}
+      {/* Stats row */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[
-          { label: "Total Leads", value: total, color: "text-vault-text" },
-          { label: "Proposals Sent", value: proposalsSent, color: "text-vault-accent" },
-          { label: "Closed Won", value: closedWon, color: "text-emerald-400" },
-          { label: "Conversion Rate", value: `${convRate}%`, color: closedWon > 0 ? "text-emerald-400" : "text-vault-text-dim" },
+          { label: "Total Leads",      value: total,         color: "var(--text-primary)" },
+          { label: "Proposals Sent",   value: proposalsSent, color: "var(--accent-blue)" },
+          { label: "Closed Won",       value: closedWon,     color: "#34d399" },
+          { label: "Conversion Rate",  value: `${convRate}%`, color: closedWon > 0 ? "#34d399" : "var(--text-tertiary)" },
         ].map((s) => (
-          <div key={s.label} className="card-surface rounded-xl p-4">
-            <p className="text-xs text-vault-text-dim font-mono uppercase tracking-widest mb-1">{s.label}</p>
-            <p className={`font-display text-2xl font-bold ${s.color}`}>{s.value}</p>
+          <div
+            key={s.label}
+            className="rounded-xl p-5"
+            style={{ background: "var(--bg-surface)", border: "1px solid var(--border)", borderRadius: "12px" }}
+          >
+            <p
+              className="text-xs font-mono uppercase tracking-wider mb-1"
+              style={{ color: "var(--text-tertiary)", fontFamily: "var(--font-mono)" }}
+            >
+              {s.label}
+            </p>
+            <p
+              className="font-display text-2xl font-bold"
+              style={{ color: s.color, fontFamily: "var(--font-mono)" }}
+            >
+              {s.value}
+            </p>
           </div>
         ))}
       </div>
 
       {/* Kanban board */}
       <div className="overflow-x-auto pb-4">
-        <div className="flex gap-4 min-w-max">
+        <div className="flex gap-4" style={{ minWidth: "max-content" }}>
           {COLUMNS.map((col) => {
             const colLeads = leads.filter((l) => l.stage === col.id);
             return (
@@ -160,19 +194,39 @@ export default function PipelinePage() {
                 key={col.id}
                 onDragOver={handleDragOver}
                 onDrop={(e) => handleDrop(e, col.id)}
-                className={`flex flex-col w-64 rounded-2xl border bg-vault-surface/50 ${col.color}`}
+                className="flex flex-col rounded-xl w-64"
+                style={{
+                  background: "var(--bg-surface)",
+                  border: `1px solid ${col.borderColor}`,
+                  borderRadius: "12px",
+                }}
               >
                 {/* Column header */}
-                <div className="flex items-center gap-2 px-4 py-3 border-b border-vault-border">
-                  <span className={`w-2 h-2 rounded-full shrink-0 ${col.dotColor}`} />
-                  <span className="font-display font-semibold text-sm">{col.label}</span>
-                  <span className="ml-auto text-xs text-vault-text-dim bg-vault-border px-2 py-0.5 rounded-full">
+                <div
+                  className="flex items-center gap-2 px-4 py-3"
+                  style={{ borderBottom: "1px solid var(--border)" }}
+                >
+                  <span
+                    className="w-2 h-2 rounded-full shrink-0"
+                    style={{ background: col.dotColor }}
+                  />
+                  <span className="font-display font-semibold text-sm" style={{ color: "var(--text-primary)" }}>
+                    {col.label}
+                  </span>
+                  <span
+                    className="ml-auto text-xs px-2 py-0.5 rounded-full"
+                    style={{
+                      background: "var(--bg-elevated)",
+                      color: "var(--text-tertiary)",
+                      fontFamily: "var(--font-mono)",
+                    }}
+                  >
                     {colLeads.length}
                   </span>
                 </div>
 
                 {/* Cards */}
-                <div className="flex-1 p-2 space-y-2 min-h-[200px]">
+                <div className="flex-1 p-2 space-y-2" style={{ minHeight: "200px" }}>
                   {colLeads.map((lead) => (
                     <LeadCard
                       key={lead.id}
@@ -195,8 +249,7 @@ export default function PipelinePage() {
           onClose={() => setSelectedLead(null)}
           onSave={async (updated) => {
             const supabase = createClient();
-            await supabase
-              .from("pipeline_leads")
+            await supabase.from("pipeline_leads")
               .update({
                 contact_name: updated.contact_name,
                 contact_email: updated.contact_email,
@@ -212,7 +265,7 @@ export default function PipelinePage() {
         />
       )}
 
-      {/* Add lead modal */}
+      {/* Add modal */}
       {showAddModal && (
         <AddLeadModal
           onClose={() => setShowAddModal(false)}
@@ -223,8 +276,7 @@ export default function PipelinePage() {
             const { data } = await supabase
               .from("pipeline_leads")
               .insert({ ...newLead, user_id: user.id, stage: "new_lead" })
-              .select()
-              .single();
+              .select().single();
             if (data) setLeads((prev) => [data as Lead, ...prev]);
             setShowAddModal(false);
           }}
@@ -234,12 +286,8 @@ export default function PipelinePage() {
   );
 }
 
-// ── Lead card ────────────────────────────────────────────────────────
-function LeadCard({
-  lead,
-  onClick,
-  onDragStart,
-}: {
+// ── Lead card ─────────────────────────────────────────────────────────
+function LeadCard({ lead, onClick, onDragStart }: {
   lead: Lead;
   onClick: () => void;
   onDragStart: () => void;
@@ -249,27 +297,42 @@ function LeadCard({
       draggable
       onDragStart={onDragStart}
       onClick={onClick}
-      className="bg-vault-surface border border-vault-border rounded-xl p-3 cursor-grab active:cursor-grabbing hover:border-vault-accent/30 transition-all select-none"
+      className="rounded-xl p-3 cursor-grab active:cursor-grabbing select-none transition-all"
+      style={{
+        background: "var(--bg-elevated)",
+        border: "1px solid var(--border)",
+        borderRadius: "10px",
+      }}
+      onMouseEnter={(e) => { e.currentTarget.style.borderColor = "rgba(59,130,246,0.3)"; e.currentTarget.style.transform = "translateY(-1px)"; }}
+      onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.transform = "none"; }}
     >
-      <p className="font-semibold text-sm text-vault-text truncate">{lead.business_name}</p>
+      <p className="font-semibold text-sm truncate" style={{ color: "var(--text-primary)" }}>
+        {lead.business_name}
+      </p>
       {lead.business_type && (
-        <p className="text-xs text-vault-accent mt-0.5">{lead.business_type}</p>
+        <p className="text-xs mt-0.5" style={{ color: "var(--accent-blue)" }}>{lead.business_type}</p>
       )}
       {lead.location && (
-        <p className="text-xs text-vault-text-dim mt-1 truncate">📍 {lead.location}</p>
+        <p className="text-xs mt-1 truncate" style={{ color: "var(--text-tertiary)" }}>📍 {lead.location}</p>
       )}
       <div className="flex items-center justify-between mt-2">
-        <span className="text-xs text-vault-muted">
+        <span className="text-xs" style={{ color: "var(--text-tertiary)", fontFamily: "var(--font-mono)" }}>
           {new Date(lead.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
         </span>
         <div className="flex gap-1">
           {lead.site_preview_id && (
-            <span className="text-xs bg-vault-green/10 text-vault-green border border-vault-green/20 px-1.5 py-0.5 rounded-full">
+            <span
+              className="text-xs px-1.5 py-0.5 rounded-full"
+              style={{ background: "rgba(16,185,129,0.1)", color: "var(--accent-green)", border: "1px solid rgba(16,185,129,0.2)" }}
+            >
               Site
             </span>
           )}
           {lead.proposal_id && (
-            <span className="text-xs bg-vault-accent/10 text-vault-accent border border-vault-accent/20 px-1.5 py-0.5 rounded-full">
+            <span
+              className="text-xs px-1.5 py-0.5 rounded-full"
+              style={{ background: "rgba(59,130,246,0.1)", color: "var(--accent-blue)", border: "1px solid rgba(59,130,246,0.2)" }}
+            >
               Prop
             </span>
           )}
@@ -279,12 +342,8 @@ function LeadCard({
   );
 }
 
-// ── Lead detail modal ────────────────────────────────────────────────
-function LeadDetailModal({
-  lead,
-  onClose,
-  onSave,
-}: {
+// ── Lead detail modal ─────────────────────────────────────────────────
+function LeadDetailModal({ lead, onClose, onSave }: {
   lead: Lead;
   onClose: () => void;
   onSave: (updated: Lead) => void;
@@ -292,36 +351,67 @@ function LeadDetailModal({
   const [edited, setEdited] = useState<Lead>({ ...lead });
   const [showNotes, setShowNotes] = useState(false);
 
+  const inp: React.CSSProperties = {
+    width: "100%",
+    background: "var(--bg-input)",
+    border: "1px solid var(--border)",
+    borderRadius: "8px",
+    padding: "10px 14px",
+    color: "var(--text-primary)",
+    fontSize: "13px",
+    outline: "none",
+    fontFamily: "var(--font-body)",
+  };
+
   return (
     <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4">
-      <div className="bg-vault-surface border border-vault-border rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-vault-border">
-          <h2 className="font-display font-bold text-lg">{lead.business_name}</h2>
-          <button onClick={onClose} className="text-vault-text-dim hover:text-vault-text transition-colors">
+      <div
+        className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl"
+        style={{ background: "var(--bg-surface)", border: "1px solid var(--border)", borderRadius: "16px" }}
+      >
+        <div
+          className="flex items-center justify-between px-6 py-4"
+          style={{ borderBottom: "1px solid var(--border)" }}
+        >
+          <h2 className="font-display font-bold text-lg" style={{ color: "var(--text-primary)" }}>
+            {lead.business_name}
+          </h2>
+          <button
+            onClick={onClose}
+            className="transition-colors"
+            style={{ color: "var(--text-tertiary)" }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = "var(--text-primary)")}
+            onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-tertiary)")}
+          >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         <div className="p-6 space-y-5">
-          {/* Info */}
+          {/* Info grid */}
           <div className="grid grid-cols-2 gap-3 text-sm">
             {lead.business_type && (
               <div>
-                <p className="text-vault-text-dim text-xs uppercase tracking-widest font-mono mb-1">Type</p>
-                <p className="text-vault-text">{lead.business_type}</p>
+                <p className="text-xs font-mono uppercase tracking-widest mb-1" style={{ color: "var(--text-tertiary)", fontFamily: "var(--font-mono)" }}>Type</p>
+                <p style={{ color: "var(--text-primary)" }}>{lead.business_type}</p>
               </div>
             )}
             {lead.location && (
               <div>
-                <p className="text-vault-text-dim text-xs uppercase tracking-widest font-mono mb-1">Location</p>
-                <p className="text-vault-text">{lead.location}</p>
+                <p className="text-xs font-mono uppercase tracking-widest mb-1" style={{ color: "var(--text-tertiary)", fontFamily: "var(--font-mono)" }}>Location</p>
+                <p style={{ color: "var(--text-primary)" }}>{lead.location}</p>
               </div>
             )}
             {lead.current_website && (
               <div className="col-span-2">
-                <p className="text-vault-text-dim text-xs uppercase tracking-widest font-mono mb-1">Current Site</p>
-                <a href={lead.current_website} target="_blank" rel="noopener noreferrer"
-                  className="text-vault-accent flex items-center gap-1 text-xs hover:underline">
+                <p className="text-xs font-mono uppercase tracking-widest mb-1" style={{ color: "var(--text-tertiary)", fontFamily: "var(--font-mono)" }}>Current Site</p>
+                <a
+                  href={lead.current_website}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1 text-xs hover:underline"
+                  style={{ color: "var(--accent-blue)" }}
+                >
                   <ExternalLink className="w-3 h-3" />
                   {lead.current_website}
                 </a>
@@ -331,11 +421,13 @@ function LeadDetailModal({
 
           {/* Stage */}
           <div>
-            <label className="block text-xs text-vault-text-dim uppercase tracking-widest font-mono mb-2">Stage</label>
+            <label className="block text-xs font-mono uppercase tracking-widest mb-2" style={{ color: "var(--text-tertiary)", fontFamily: "var(--font-mono)" }}>
+              Stage
+            </label>
             <select
               value={edited.stage}
               onChange={(e) => setEdited({ ...edited, stage: e.target.value as Stage })}
-              className="w-full bg-vault-bg border border-vault-border rounded-lg px-3 py-2 text-vault-text text-sm focus:outline-none focus:border-vault-accent"
+              style={{ ...inp, cursor: "pointer" }}
             >
               {COLUMNS.map((c) => (
                 <option key={c.id} value={c.id}>{c.label}</option>
@@ -345,30 +437,38 @@ function LeadDetailModal({
 
           {/* Contact */}
           <div className="space-y-3">
-            <p className="text-xs text-vault-text-dim uppercase tracking-widest font-mono">Contact Info</p>
+            <p className="text-xs font-mono uppercase tracking-widest" style={{ color: "var(--text-tertiary)", fontFamily: "var(--font-mono)" }}>
+              Contact Info
+            </p>
             <input
               value={edited.contact_name ?? ""}
               onChange={(e) => setEdited({ ...edited, contact_name: e.target.value })}
               placeholder="Contact name"
-              className="w-full bg-vault-bg border border-vault-border rounded-lg px-3 py-2 text-vault-text placeholder-vault-muted text-sm focus:outline-none focus:border-vault-accent"
+              style={inp}
+              onFocus={(e) => { e.target.style.borderColor = "var(--border-active)"; }}
+              onBlur={(e) => { e.target.style.borderColor = "var(--border)"; }}
             />
             <div className="grid grid-cols-2 gap-2">
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-vault-muted" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5" style={{ color: "var(--text-tertiary)" }} />
                 <input
                   value={edited.contact_email ?? ""}
                   onChange={(e) => setEdited({ ...edited, contact_email: e.target.value })}
                   placeholder="Email"
-                  className="w-full bg-vault-bg border border-vault-border rounded-lg pl-8 pr-3 py-2 text-vault-text placeholder-vault-muted text-sm focus:outline-none focus:border-vault-accent"
+                  style={{ ...inp, paddingLeft: "32px" }}
+                  onFocus={(e) => { e.target.style.borderColor = "var(--border-active)"; }}
+                  onBlur={(e) => { e.target.style.borderColor = "var(--border)"; }}
                 />
               </div>
               <div className="relative">
-                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-vault-muted" />
+                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5" style={{ color: "var(--text-tertiary)" }} />
                 <input
                   value={edited.contact_phone ?? ""}
                   onChange={(e) => setEdited({ ...edited, contact_phone: e.target.value })}
                   placeholder="Phone"
-                  className="w-full bg-vault-bg border border-vault-border rounded-lg pl-8 pr-3 py-2 text-vault-text placeholder-vault-muted text-sm focus:outline-none focus:border-vault-accent"
+                  style={{ ...inp, paddingLeft: "32px" }}
+                  onFocus={(e) => { e.target.style.borderColor = "var(--border-active)"; }}
+                  onBlur={(e) => { e.target.style.borderColor = "var(--border)"; }}
                 />
               </div>
             </div>
@@ -378,7 +478,10 @@ function LeadDetailModal({
           <div>
             <button
               onClick={() => setShowNotes(!showNotes)}
-              className="flex items-center gap-2 text-xs text-vault-text-dim uppercase tracking-widest font-mono hover:text-vault-text transition-colors"
+              className="flex items-center gap-2 text-xs font-mono uppercase tracking-widest transition-colors"
+              style={{ color: "var(--text-tertiary)", fontFamily: "var(--font-mono)" }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = "var(--text-primary)")}
+              onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-tertiary)")}
             >
               Notes
               {showNotes ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
@@ -389,23 +492,25 @@ function LeadDetailModal({
                 onChange={(e) => setEdited({ ...edited, notes: e.target.value })}
                 rows={4}
                 placeholder="Add notes about this lead…"
-                className="mt-2 w-full bg-vault-bg border border-vault-border rounded-lg px-3 py-2 text-vault-text placeholder-vault-muted text-sm focus:outline-none focus:border-vault-accent resize-none"
+                style={{ ...inp, marginTop: "8px", resize: "none", padding: "12px 14px" }}
+                onFocus={(e) => { e.target.style.borderColor = "var(--border-active)"; }}
+                onBlur={(e) => { e.target.style.borderColor = "var(--border)"; }}
               />
             )}
           </div>
 
           {/* Assets */}
-          <div className="flex gap-2">
+          <div className="flex gap-2 items-center">
             {lead.site_preview_id && (
               <Link
                 href="/dashboard/bots/sitebuilder"
-                className="flex items-center gap-1.5 text-xs bg-vault-green/10 text-vault-green border border-vault-green/20 px-3 py-2 rounded-lg hover:bg-vault-green/20 transition-colors"
+                className="flex items-center gap-1.5 text-xs px-3 py-2 rounded-lg transition-all"
+                style={{ background: "rgba(16,185,129,0.1)", color: "var(--accent-green)", border: "1px solid rgba(16,185,129,0.2)" }}
               >
-                <Globe className="w-3.5 h-3.5" />
-                View Site
+                <Globe className="w-3.5 h-3.5" /> View Site
               </Link>
             )}
-            <p className="text-xs text-vault-muted self-center">
+            <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>
               Added {new Date(lead.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
             </p>
           </div>
@@ -413,10 +518,10 @@ function LeadDetailModal({
           {/* Save */}
           <button
             onClick={() => onSave(edited)}
-            className="w-full flex items-center justify-center gap-2 bg-vault-accent text-vault-bg font-bold py-3 rounded-xl hover:bg-vault-accent-dim transition-colors text-sm"
+            className="w-full flex items-center justify-center gap-2 py-3 rounded-lg font-medium text-sm transition-all hover:-translate-y-px"
+            style={{ background: "var(--accent-blue)", color: "#0A0F1A", borderRadius: "8px" }}
           >
-            <Save className="w-4 h-4" />
-            Save Changes
+            <Save className="w-4 h-4" /> Save Changes
           </button>
         </div>
       </div>
@@ -425,109 +530,133 @@ function LeadDetailModal({
 }
 
 // ── Add lead modal ────────────────────────────────────────────────────
-function AddLeadModal({
-  onClose,
-  onAdd,
-}: {
+function AddLeadModal({ onClose, onAdd }: {
   onClose: () => void;
   onAdd: (lead: Partial<Lead>) => void;
 }) {
   const [form, setForm] = useState({
-    business_name: "",
-    business_type: "",
-    location: "",
-    current_website: "",
-    contact_name: "",
-    contact_email: "",
-    contact_phone: "",
+    business_name: "", business_type: "", location: "",
+    current_website: "", contact_name: "", contact_email: "", contact_phone: "",
   });
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    onAdd(form);
-  }
+  const inp: React.CSSProperties = {
+    width: "100%",
+    background: "var(--bg-input)",
+    border: "1px solid var(--border)",
+    borderRadius: "8px",
+    padding: "10px 14px",
+    color: "var(--text-primary)",
+    fontSize: "13px",
+    outline: "none",
+    fontFamily: "var(--font-body)",
+  };
+
+  function handleSubmit(e: React.FormEvent) { e.preventDefault(); onAdd(form); }
 
   return (
     <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4">
-      <div className="bg-vault-surface border border-vault-border rounded-2xl w-full max-w-md shadow-2xl">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-vault-border">
-          <h2 className="font-display font-bold text-lg">Add Lead</h2>
-          <button onClick={onClose} className="text-vault-text-dim hover:text-vault-text">
+      <div
+        className="w-full max-w-md rounded-2xl"
+        style={{ background: "var(--bg-surface)", border: "1px solid var(--border)", borderRadius: "16px" }}
+      >
+        <div
+          className="flex items-center justify-between px-6 py-4"
+          style={{ borderBottom: "1px solid var(--border)" }}
+        >
+          <h2 className="font-display font-bold text-lg" style={{ color: "var(--text-primary)" }}>Add Lead</h2>
+          <button onClick={onClose} style={{ color: "var(--text-tertiary)" }}>
             <X className="w-5 h-5" />
           </button>
         </div>
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div>
-            <label className="block text-xs text-vault-text-dim mb-1.5">Business Name <span className="text-red-400">*</span></label>
+            <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-secondary)" }}>
+              Business Name <span style={{ color: "var(--accent-red)" }}>*</span>
+            </label>
             <input
               required
               value={form.business_name}
               onChange={(e) => setForm({ ...form, business_name: e.target.value })}
               placeholder="Joe's Plumbing"
-              className="w-full bg-vault-bg border border-vault-border rounded-lg px-3 py-2.5 text-vault-text placeholder-vault-muted text-sm focus:outline-none focus:border-vault-accent"
+              style={inp}
+              onFocus={(e) => { e.target.style.borderColor = "var(--border-active)"; }}
+              onBlur={(e) => { e.target.style.borderColor = "var(--border)"; }}
             />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs text-vault-text-dim mb-1.5">Business Type</label>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-secondary)" }}>Business Type</label>
               <select
                 value={form.business_type}
                 onChange={(e) => setForm({ ...form, business_type: e.target.value })}
-                className="w-full bg-vault-bg border border-vault-border rounded-lg px-3 py-2.5 text-vault-text text-sm focus:outline-none focus:border-vault-accent"
+                style={{ ...inp, cursor: "pointer" }}
               >
                 <option value="">Select…</option>
-                {BUSINESS_TYPES.map((bt) => (
-                  <option key={bt} value={bt}>{bt}</option>
-                ))}
+                {BUSINESS_TYPES.map((bt) => <option key={bt} value={bt}>{bt}</option>)}
               </select>
             </div>
             <div>
-              <label className="block text-xs text-vault-text-dim mb-1.5">Location</label>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-secondary)" }}>Location</label>
               <input
                 value={form.location}
                 onChange={(e) => setForm({ ...form, location: e.target.value })}
                 placeholder="Austin, TX"
-                className="w-full bg-vault-bg border border-vault-border rounded-lg px-3 py-2.5 text-vault-text placeholder-vault-muted text-sm focus:outline-none focus:border-vault-accent"
+                style={inp}
+                onFocus={(e) => { e.target.style.borderColor = "var(--border-active)"; }}
+                onBlur={(e) => { e.target.style.borderColor = "var(--border)"; }}
               />
             </div>
           </div>
           <div>
-            <label className="block text-xs text-vault-text-dim mb-1.5">Current Website</label>
+            <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-secondary)" }}>Current Website</label>
             <input
               value={form.current_website}
               onChange={(e) => setForm({ ...form, current_website: e.target.value })}
               placeholder="https://example.com"
-              className="w-full bg-vault-bg border border-vault-border rounded-lg px-3 py-2.5 text-vault-text placeholder-vault-muted text-sm focus:outline-none focus:border-vault-accent"
+              style={inp}
+              onFocus={(e) => { e.target.style.borderColor = "var(--border-active)"; }}
+              onBlur={(e) => { e.target.style.borderColor = "var(--border)"; }}
             />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs text-vault-text-dim mb-1.5">Contact Email</label>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-secondary)" }}>Contact Email</label>
               <input
                 type="email"
                 value={form.contact_email}
                 onChange={(e) => setForm({ ...form, contact_email: e.target.value })}
                 placeholder="owner@biz.com"
-                className="w-full bg-vault-bg border border-vault-border rounded-lg px-3 py-2.5 text-vault-text placeholder-vault-muted text-sm focus:outline-none focus:border-vault-accent"
+                style={inp}
+                onFocus={(e) => { e.target.style.borderColor = "var(--border-active)"; }}
+                onBlur={(e) => { e.target.style.borderColor = "var(--border)"; }}
               />
             </div>
             <div>
-              <label className="block text-xs text-vault-text-dim mb-1.5">Contact Phone</label>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-secondary)" }}>Contact Phone</label>
               <input
                 value={form.contact_phone}
                 onChange={(e) => setForm({ ...form, contact_phone: e.target.value })}
                 placeholder="(512) 000-0000"
-                className="w-full bg-vault-bg border border-vault-border rounded-lg px-3 py-2.5 text-vault-text placeholder-vault-muted text-sm focus:outline-none focus:border-vault-accent"
+                style={inp}
+                onFocus={(e) => { e.target.style.borderColor = "var(--border-active)"; }}
+                onBlur={(e) => { e.target.style.borderColor = "var(--border)"; }}
               />
             </div>
           </div>
           <div className="flex gap-3 pt-2">
-            <button type="button" onClick={onClose}
-              className="flex-1 border border-vault-border text-vault-text-dim py-2.5 rounded-xl text-sm hover:border-vault-accent hover:text-vault-accent transition-colors">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 py-2.5 rounded-lg text-sm font-medium transition-all"
+              style={{ background: "var(--bg-elevated)", color: "var(--text-secondary)", border: "1px solid var(--border)" }}
+            >
               Cancel
             </button>
-            <button type="submit"
-              className="flex-1 bg-vault-accent text-vault-bg font-bold py-2.5 rounded-xl text-sm hover:bg-vault-accent-dim transition-colors">
+            <button
+              type="submit"
+              className="flex-1 py-2.5 rounded-lg text-sm font-medium transition-all hover:-translate-y-px"
+              style={{ background: "var(--accent-blue)", color: "#0A0F1A" }}
+            >
               Add to Pipeline
             </button>
           </div>

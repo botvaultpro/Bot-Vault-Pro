@@ -1,329 +1,316 @@
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, Globe, Check, ChevronRight, Clock, Lightbulb, Star, BarChart2, Mail, Scale, FileText } from "lucide-react";
+import {
+  ArrowRight, LayoutPanelLeft, Star, BarChart2, Mail,
+  ShieldCheck, FileText, Zap, Check, ChevronRight,
+} from "lucide-react";
 import WishlistForm from "@/app/components/WishlistForm";
 
-const bots = [
+const BOTS = [
   {
-    icon: Globe,
+    icon: LayoutPanelLeft,
     name: "SiteBuilder Pro",
     slug: "sitebuilder",
-    price: "$49/mo",
-    color: "green",
-    description: "Generate a live website sample for any local business in 30 seconds. Auto-create a professional sales proposal. Track every prospect from first contact to closed deal.",
+    starter: "$49/mo",
+    pro: "$99/mo",
+    description:
+      "Generate a live website sample for any local business in 30 seconds. Auto-create a professional sales proposal. Track every prospect from first contact to closed deal.",
     tagline: "Your pipeline, your proposals, your clients — all in one place.",
   },
   {
     icon: Star,
     name: "ReviewBot",
     slug: "reviewbot",
-    price: "$29/mo",
-    color: "yellow",
-    description: "Connects to your Google Business Profile and auto-drafts a personalized reply for every new review. Approve with one click or let it publish automatically. Monitors competitors too.",
+    starter: "$29/mo",
+    pro: "$49/mo",
+    description:
+      "Connects to your Google Business Profile and auto-drafts a personalized reply for every new review. Approve with one click or let it publish automatically.",
     tagline: "Replies to reviews while you sleep.",
   },
   {
     icon: BarChart2,
     name: "WeeklyPulse",
     slug: "weeklypulse",
-    price: "$19/mo",
-    color: "purple",
-    description: "Enter your numbers once a week. Get a plain-English business health report delivered to your inbox every Monday — with trend analysis comparing this week to the last four.",
-    tagline: "Shows up in your inbox Monday morning. You didn't ask for it.",
+    starter: "$19/mo",
+    pro: "$39/mo",
+    description:
+      "Enter your numbers once a week. Get a plain-English business health report delivered to your inbox every Monday — with trend analysis.",
+    tagline: "Shows up in your inbox Monday morning.",
   },
   {
     icon: Mail,
     name: "EmailCoach",
     slug: "emailcoach",
-    price: "$19/mo",
-    color: "cyan",
-    description: "Paste any difficult email and get three ready-to-send replies. Over time it learns your tone and writes more like you. Connect Gmail and it reads your inbox directly.",
+    starter: "$19/mo",
+    pro: "$39/mo",
+    description:
+      "Paste any difficult email and get three ready-to-send replies. Over time it learns your tone and writes more like you.",
     tagline: "Gets smarter every time you use it.",
   },
   {
-    icon: Scale,
+    icon: ShieldCheck,
     name: "ClauseCheck",
     slug: "clausecheck",
-    price: "$29/mo",
-    color: "orange",
-    description: "Upload any contract. Get flagged risk clauses, plain-English explanations, and missing protections. Builds a personal risk profile across every contract you review.",
+    starter: "$29/mo",
+    pro: "$49/mo",
+    description:
+      "Upload any contract. Get flagged risk clauses, plain-English explanations, and missing protections. Builds a personal risk profile.",
     tagline: "Every contract makes the next analysis smarter.",
   },
   {
     icon: FileText,
     name: "InvoiceForge",
     slug: "invoiceforge",
-    price: "$29/mo",
-    color: "blue",
-    description: "Build professional invoices, send directly from the app, track when clients open them, and trigger automatic overdue reminders — without lifting a finger.",
+    starter: "$29/mo",
+    pro: "$49/mo",
+    description:
+      "Build professional invoices, send directly from the app, track when clients open them, and trigger automatic overdue reminders.",
     tagline: "Sends. Tracks. Follows up. Automatically.",
   },
 ];
 
-const botColorMap: Record<string, { text: string; border: string; bg: string }> = {
-  green:  { text: "text-vault-green",  border: "border-vault-green/20",  bg: "bg-vault-green/5"  },
-  yellow: { text: "text-yellow-400",   border: "border-yellow-400/20",   bg: "bg-yellow-400/5"   },
-  purple: { text: "text-purple-400",   border: "border-purple-400/20",   bg: "bg-purple-400/5"   },
-  cyan:   { text: "text-vault-accent", border: "border-vault-accent/20", bg: "bg-vault-accent/5" },
-  orange: { text: "text-orange-400",   border: "border-orange-400/20",   bg: "bg-orange-400/5"   },
-  blue:   { text: "text-blue-400",     border: "border-blue-400/20",     bg: "bg-blue-400/5"     },
-};
-
-const comparison = [
-  { feature: "Remembers your clients and history",    free: "Forgets everything",           pro: "Builds over time" },
-  { feature: "Works while you're offline",            free: "Only when you ask",            pro: "Runs 24/7 automatically" },
-  { feature: "Connects to your real systems",         free: "No integrations",              pro: "Gmail, Google Business, more" },
-  { feature: "Sends emails and invoices for you",     free: "Just generates text",          pro: "Takes real action" },
-  { feature: "Gets smarter the more you use it",      free: "Starts fresh every time",      pro: "Learns your voice and patterns" },
-  { feature: "Tracks your leads and pipeline",        free: "No memory",                    pro: "Full CRM built in" },
-  { feature: "Delivers reports on a schedule",        free: "You have to ask every time",   pro: "Automated weekly delivery" },
-  { feature: "Monitors your reviews 24/7",            free: "Not possible",                 pro: "Replies while you sleep" },
-];
-
-const outcomes = [
-  { quote: "I used to spend 45 minutes writing a client proposal. Now I generate it in 60 seconds and close deals in the first meeting.", bot: "SiteBuilder Pro" },
-  { quote: "ReviewBot replied to 34 Google reviews last month. I didn't write a single one.", bot: "ReviewBot" },
-  { quote: "WeeklyPulse showed me my new customer count had been dropping for 3 weeks before I noticed. I fixed it before it became a real problem.", bot: "WeeklyPulse" },
-  { quote: "I sent 12 invoices this month and followed up on every overdue one automatically. I collected $4,200 I would have forgotten to chase.", bot: "InvoiceForge" },
-  { quote: "I uploaded our vendor contract and ClauseCheck flagged a clause my lawyer later confirmed was a serious risk. Worth every dollar.", bot: "ClauseCheck" },
-];
-
-const roadmap = [
-  { name: "BVP ResumeRank", description: "AI resume screener for small business hiring — filter 200 applicants to the top 5 in seconds." },
-  { name: "BVP Newsletter", description: "AI newsletter generator and scheduler — write, design, and send to your list automatically." },
-  { name: "BVP LeadGen Pro", description: "Find and qualify local business leads automatically — full prospect pipeline with email outreach." },
-  { name: "BVP DebtBuster", description: "Personalized debt payoff plan with budget tracking — AI maps your fastest path to zero." },
-  { name: "BVP TaxAuditor", description: "Small business quarterly tax tips and audit prep — never get caught off guard by the IRS again." },
-  { name: "BVP OpportunityFinder", description: "Searches for business pains in your market and surfaces AI-powered solutions you can act on today." },
-];
-
-const targetCustomers = [
-  { label: "Solopreneurs", emoji: "🧠" },
-  { label: "Freelancers", emoji: "💻" },
-  { label: "Small business owners", emoji: "🏪" },
-  { label: "Side hustlers", emoji: "🚀" },
-  { label: "Early-stage startups", emoji: "⚡" },
-  { label: "Anyone who can't afford an agency", emoji: "💰" },
+const HOW_IT_WORKS = [
+  {
+    step: "01",
+    title: "Subscribe to a bot",
+    description:
+      "Pick the automation that fixes your biggest pain point. Every bot has a free trial — no credit card required to start.",
+    icon: Zap,
+  },
+  {
+    step: "02",
+    title: "Configure once",
+    description:
+      "Connect your accounts, set your preferences, and define your workflow. Takes minutes, not days.",
+    icon: Check,
+  },
+  {
+    step: "03",
+    title: "It runs forever",
+    description:
+      "Your bot handles the task automatically while you focus on the work that actually requires you.",
+    icon: ArrowRight,
+  },
 ];
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-vault-bg overflow-x-hidden">
-      {/* Nav */}
-      <nav className="fixed top-0 left-0 right-0 z-50 border-b border-vault-border bg-vault-bg/80 backdrop-blur-md">
+    <div
+      className="min-h-screen overflow-x-hidden"
+      style={{ background: "var(--bg-primary)" }}
+    >
+
+      {/* ── 1. Sticky Nav ──────────────────────────────────────────────── */}
+      <nav
+        className="fixed top-0 left-0 right-0 z-50 border-b backdrop-blur-md"
+        style={{ background: "rgba(10,15,26,0.85)", borderColor: "var(--border)" }}
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-          <span className="font-display font-bold text-xl tracking-tight">
-            <span className="text-gradient-cyan">Bot</span>
-            <span className="text-vault-text"> Vault Pro</span>
-          </span>
-          <div className="hidden md:flex items-center gap-8 text-sm text-vault-text-dim">
-            <a href="#bots" className="hover:text-vault-accent transition-colors">Bots</a>
-            <Link href="/pricing" className="hover:text-vault-accent transition-colors">Pricing</Link>
-            <Link href="/demo" className="hover:text-vault-accent transition-colors">Try Demo</Link>
-            <a href="#roadmap" className="hover:text-vault-accent transition-colors">Roadmap</a>
+          {/* Logo */}
+          <Link href="/" className="flex items-center gap-2">
+            <Image
+              src="/BVP_Bot_Tranparent.png"
+              alt="Bot Vault Pro"
+              width={28}
+              height={28}
+              className="object-contain"
+            />
+            <span className="font-display font-extrabold text-lg tracking-tight">
+              <span style={{ color: "var(--text-primary)" }}>Bot </span>
+              <span style={{ color: "var(--accent-blue)" }}>Vault</span>
+              <span style={{ color: "var(--text-primary)" }}> Pro</span>
+            </span>
+          </Link>
+
+          {/* Center links */}
+          <div className="hidden md:flex items-center gap-8 text-sm" style={{ color: "var(--text-secondary)" }}>
+            <a href="#features" className="hover:text-white transition-colors">Features</a>
+            <a href="#pricing"  className="hover:text-white transition-colors">Pricing</a>
+            <a href="#bots"     className="hover:text-white transition-colors">Bots</a>
           </div>
+
+          {/* CTAs */}
           <div className="flex items-center gap-3">
-            <Link href="/auth/login" className="text-sm text-vault-text-dim hover:text-vault-text transition-colors hidden sm:block">
+            <Link
+              href="/auth/login"
+              className="hidden sm:block text-sm transition-colors"
+              style={{ color: "var(--text-secondary)" }}
+            >
               Log in
             </Link>
-            <Link href="/auth/signup" className="text-sm bg-vault-accent text-vault-bg font-semibold px-4 py-2 rounded-lg hover:bg-vault-accent-dim transition-colors">
-              Get Started
+            <Link
+              href="/auth/signup"
+              className="text-sm font-medium px-4 py-2 rounded-lg transition-all hover:-translate-y-px"
+              style={{
+                background: "var(--accent-blue)",
+                color: "#0A0F1A",
+                fontFamily: "var(--font-body)",
+              }}
+            >
+              Sign Up
             </Link>
           </div>
         </div>
       </nav>
 
-      {/* Hero */}
-      <section className="relative pt-32 pb-24 px-4 sm:px-6 overflow-hidden">
-        <div className="absolute inset-0 bg-grid-pattern bg-grid-size opacity-100 pointer-events-none" />
-        <div className="absolute top-1/3 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[500px] bg-glow-cyan pointer-events-none" />
-        <div className="relative max-w-7xl mx-auto">
-          <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
-            {/* Left: copy */}
-            <div className="flex-1 text-center lg:text-left">
-              <div className="inline-flex items-center gap-2 bg-vault-surface border border-vault-border rounded-full px-4 py-1.5 text-sm text-vault-text-dim mb-8">
-                <span className="w-2 h-2 rounded-full bg-vault-green animate-pulse-slow" />
-                Always building — new automations every quarter
-              </div>
-              <h1 className="font-display text-5xl sm:text-6xl md:text-7xl font-extrabold leading-tight mb-4">
-                Stop Prompting.
-                <br />
-                <span className="text-gradient-cyan">Start Automating.</span>
-              </h1>
-              <p className="text-vault-text-dim text-lg sm:text-xl max-w-xl mb-8 mx-auto lg:mx-0">
-                Bot Vault Pro is a suite of AI-powered business tools that work for you around the clock — not just when you ask them to.
-              </p>
-              <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 mb-6">
-                <Link href="/auth/signup" className="w-full sm:w-auto flex items-center justify-center gap-2 bg-vault-accent text-vault-bg font-display font-bold px-8 py-4 rounded-xl text-lg hover:bg-vault-accent-dim transition-all hover:scale-105">
-                  Start Free — No Credit Card <ArrowRight className="w-5 h-5" />
-                </Link>
-                <Link href="/demo" className="w-full sm:w-auto flex items-center justify-center gap-2 border border-vault-border text-vault-text-dim px-8 py-4 rounded-xl text-lg hover:border-vault-accent hover:text-vault-accent transition-all">
-                  Try a Live Demo <ChevronRight className="w-5 h-5" />
-                </Link>
-              </div>
-              <p className="text-vault-text-dim text-sm max-w-md mx-auto lg:mx-0">
-                6 AI bots. Every one replaces a task you do manually every week. Your business keeps running — even when you&apos;re not.
-              </p>
-            </div>
-            {/* Right: mascot */}
-            <div className="flex-shrink-0 flex items-center justify-center">
-              <div className="relative w-48 sm:w-64 lg:w-80 xl:w-96">
-                <div className="absolute inset-0 rounded-full bg-vault-accent/10 blur-3xl scale-110 pointer-events-none" />
-                <Image
-                  src="/mascot.png"
-                  alt="Bot Vault Pro mascot"
-                  width={400}
-                  height={600}
-                  priority
-                  className="relative drop-shadow-2xl w-full h-auto"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* ── 2. Hero ────────────────────────────────────────────────────── */}
+      <section
+        className="relative pt-36 pb-28 px-4 sm:px-6 overflow-hidden"
+        style={{ borderBottom: "1px solid var(--border)" }}
+      >
+        {/* Background accent */}
+        <div
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[600px] pointer-events-none"
+          style={{
+            background:
+              "radial-gradient(ellipse at center, rgba(59,130,246,0.08) 0%, transparent 65%)",
+          }}
+        />
 
-      {/* Challenge Section */}
-      <section className="py-20 px-4 sm:px-6 border-t border-vault-border">
-        <div className="max-w-3xl mx-auto">
-          <h2 className="font-display text-3xl sm:text-4xl font-bold mb-4">
-            You&apos;ve tried ChatGPT. So has everyone else.
-          </h2>
-          <p className="text-vault-text-dim text-lg mb-6">Here&apos;s the problem with prompting a free AI:</p>
-          <ul className="space-y-3 mb-8">
-            {[
-              "It forgets everything the moment you close the tab",
-              "You have to do the work to get the output — every single time",
-              "It doesn't connect to your clients, your inbox, or your business",
-              "It can't send an invoice, reply to a review, or email you a report on Monday morning",
-              "It's a tool. You still have to do the job.",
-            ].map((item) => (
-              <li key={item} className="flex items-start gap-3 text-vault-text-dim">
-                <span className="text-red-400 font-bold mt-0.5 shrink-0">✗</span>
-                <span>{item}</span>
-              </li>
-            ))}
-          </ul>
-          <div className="bg-vault-accent/5 border border-vault-accent/20 rounded-xl px-6 py-5">
-            <p className="text-vault-text leading-relaxed">
-              Bot Vault Pro is different. Our bots remember your business, learn your preferences, connect to your real systems, and take action — automatically.{" "}
-              <strong className="text-vault-accent">You set them up once. They run forever.</strong>
-            </p>
+        <div className="relative max-w-5xl mx-auto text-center">
+          {/* Status pill */}
+          <div
+            className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm mb-8"
+            style={{
+              background: "var(--bg-elevated)",
+              border: "1px solid var(--border)",
+              color: "var(--text-secondary)",
+            }}
+          >
+            <span
+              className="w-2 h-2 rounded-full"
+              style={{ background: "var(--accent-green)", animation: "statusPulse 2s ease-in-out infinite" }}
+            />
+            Always building — new automations every quarter
           </div>
-        </div>
-      </section>
 
-      {/* Comparison Table */}
-      <section className="py-20 px-4 sm:px-6 border-t border-vault-border">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-10">
-            <h2 className="font-display text-3xl sm:text-4xl font-bold mb-3">Free AI Prompts vs. Bot Vault Pro</h2>
-          </div>
-          <div className="rounded-2xl border border-vault-border overflow-hidden">
-            {/* Table header */}
-            <div className="grid grid-cols-3 bg-vault-surface border-b border-vault-border">
-              <div className="px-4 sm:px-6 py-4 text-sm font-semibold text-vault-text">Feature</div>
-              <div className="px-4 sm:px-6 py-4 text-sm font-semibold text-vault-text-dim text-center border-l border-vault-border">Free AI (ChatGPT, etc.)</div>
-              <div className="px-4 sm:px-6 py-4 text-sm font-semibold text-vault-accent text-center border-l border-vault-border">Bot Vault Pro</div>
-            </div>
-            {comparison.map((row, i) => (
-              <div key={i} className={`grid grid-cols-3 border-b border-vault-border last:border-0 ${i % 2 === 0 ? "" : "bg-vault-surface/30"}`}>
-                <div className="px-4 sm:px-6 py-4 text-sm font-semibold text-vault-text">{row.feature}</div>
-                <div className="px-4 sm:px-6 py-4 text-sm text-center border-l border-vault-border">
-                  <span className="inline-flex items-center gap-1.5 bg-red-400/10 text-red-400 rounded-lg px-2.5 py-1">
-                    <span className="font-bold shrink-0">✗</span> {row.free}
-                  </span>
-                </div>
-                <div className="px-4 sm:px-6 py-4 text-sm text-center border-l border-vault-border">
-                  <span className="inline-flex items-center gap-1.5 bg-vault-green/10 text-vault-green rounded-lg px-2.5 py-1">
-                    <span className="font-bold shrink-0">✓</span> {row.pro}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+          {/* Headline with cycling animation */}
+          <h1
+            className="font-display font-extrabold text-5xl sm:text-6xl md:text-7xl leading-tight mb-6"
+            style={{ letterSpacing: "-0.02em", color: "var(--text-primary)" }}
+          >
+            Stop Prompting.{" "}
+            <br className="hidden sm:block" />
+            Start{" "}
+            <span className="typing-cycle" aria-label="Automating" />
+            <span style={{ color: "var(--accent-blue)" }}>.</span>
+          </h1>
 
-      {/* Who it's for */}
-      <section className="py-16 px-4 sm:px-6 border-t border-vault-border">
-        <div className="max-w-5xl mx-auto text-center">
-          <p className="text-vault-text-dim text-sm uppercase tracking-widest font-mono mb-6">Built for</p>
-          <div className="flex flex-wrap justify-center gap-3">
-            {targetCustomers.map((c) => (
-              <div key={c.label} className="flex items-center gap-2 bg-vault-surface border border-vault-border rounded-full px-4 py-2 text-sm text-vault-text">
-                <span>{c.emoji}</span>
-                <span>{c.label}</span>
-              </div>
-            ))}
+          <p
+            className="text-lg sm:text-xl max-w-2xl mx-auto mb-10"
+            style={{ color: "var(--text-secondary)" }}
+          >
+            Six AI bots that run the parts of your business you&apos;re handling manually right now.
+            Set them up once — they run forever.
+          </p>
+
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
+            <Link
+              href="/auth/signup"
+              className="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-4 rounded-lg font-medium text-lg transition-all hover:-translate-y-px"
+              style={{
+                background: "var(--accent-blue)",
+                color: "#0A0F1A",
+                fontFamily: "var(--font-body)",
+              }}
+            >
+              Start Free Trial <ArrowRight className="w-5 h-5" />
+            </Link>
+            <a
+              href="#bots"
+              className="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-4 rounded-lg text-lg transition-all hover:-translate-y-px"
+              style={{
+                background: "transparent",
+                border: "1px solid var(--border)",
+                color: "var(--text-secondary)",
+              }}
+            >
+              See All Bots <ChevronRight className="w-5 h-5" />
+            </a>
           </div>
-          <p className="text-vault-text-dim text-base mt-8 max-w-2xl mx-auto">
-            If you&apos;ve ever thought <em>&ldquo;I wish I had someone to handle this&rdquo;</em> — that&apos;s exactly what we built.
-            AI that works for you around the clock, at a fraction of what an agency charges.
+
+          <p className="text-sm" style={{ color: "var(--text-tertiary)" }}>
+            No credit card required. Free trial on every bot.
           </p>
         </div>
       </section>
 
-      {/* About / Company positioning */}
-      <section className="py-20 px-4 sm:px-6 border-t border-vault-border">
-        <div className="max-w-5xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-            <div>
-              <p className="text-vault-accent font-mono text-sm uppercase tracking-widest mb-4">What we do</p>
-              <h2 className="font-display text-4xl font-bold mb-6 leading-tight">
-                We build AI automation for real business problems.
-              </h2>
-              <p className="text-vault-text-dim leading-relaxed mb-4">
-                Bot Vault Pro is an AI automation company. We identify the most painful, time-consuming tasks that small businesses and independent operators face — and we build AI systems that replace them entirely.
-              </p>
-              <p className="text-vault-text-dim leading-relaxed mb-4">
-                Our 6 AI bots target client acquisition, review management, business analytics, email drafting, contract review, and invoicing. But we&apos;re not stopping there. Every quarter we ship new automations. Our goal is simple: give small operators the same leverage as a 10-person team.
-              </p>
-              <p className="text-vault-text-dim leading-relaxed">
-                No agency markups. No developers needed. No six-month implementation projects. Just plug in, configure, and let the bots run.
-              </p>
-            </div>
-            <div className="space-y-4">
-              {[
-                { title: "Any industry, any workflow", body: "We build for e-commerce, agencies, service businesses, SaaS founders, coaches, consultants — wherever there&apos;s a repetitive process, there&apos;s a bot waiting to own it." },
-                { title: "Always expanding", body: "Our product roadmap is driven by what customers actually need. Submit a request. Vote on ideas. We build what the market demands." },
-                { title: "Production-ready from day one", body: "These aren&apos;t demos or prototypes. Every bot in the vault is battle-tested, production-grade, and designed to run unsupervised." },
-              ].map((item) => (
-                <div key={item.title} className="card-surface rounded-xl p-5">
-                  <h3 className="font-display font-bold text-vault-text mb-1">{item.title}</h3>
-                  <p className="text-vault-text-dim text-sm leading-relaxed" dangerouslySetInnerHTML={{ __html: item.body }} />
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 6 Bots */}
-      <section id="bots" className="py-24 px-4 sm:px-6 border-t border-vault-border">
+      {/* ── 3. Bot Showcase ────────────────────────────────────────────── */}
+      <section
+        id="bots"
+        className="py-24 px-4 sm:px-6"
+        style={{ borderBottom: "1px solid var(--border)" }}
+      >
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <p className="text-vault-accent font-mono text-sm uppercase tracking-widest mb-3">Available now</p>
-            <h2 className="font-display text-4xl sm:text-5xl font-bold mb-4">Six bots. Six business problems solved — permanently.</h2>
-            <p className="text-vault-text-dim text-lg max-w-2xl mx-auto">
-              Each bot owns a critical business function and runs on autopilot — so you don&apos;t have to.
+            <p
+              className="text-sm font-mono uppercase tracking-widest mb-3"
+              style={{ color: "var(--accent-blue)", fontFamily: "var(--font-mono)" }}
+            >
+              Available now
+            </p>
+            <h2
+              className="font-display font-extrabold text-4xl sm:text-5xl mb-4"
+              style={{ color: "var(--text-primary)" }}
+            >
+              Six bots. Six business problems solved.
+            </h2>
+            <p className="text-lg max-w-2xl mx-auto" style={{ color: "var(--text-secondary)" }}>
+              Each bot owns a critical business function and runs on autopilot.
             </p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {bots.map((bot) => {
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {BOTS.map((bot) => {
               const Icon = bot.icon;
-              const colors = botColorMap[bot.color];
               return (
-                <div key={bot.slug} className="card-surface rounded-2xl p-8 hover:border-vault-accent/30 transition-all group">
-                  <div className={`inline-flex items-center justify-center w-12 h-12 rounded-xl border ${colors.bg} ${colors.border} mb-4`}>
-                    <Icon className={`w-6 h-6 ${colors.text}`} />
+                <div
+                  key={bot.slug}
+                  className="card-hover rounded-xl p-7 transition-all"
+                  style={{
+                    background: "var(--bg-surface)",
+                    border: "1px solid var(--border)",
+                    borderRadius: "12px",
+                  }}
+                >
+                  <div className="flex items-start justify-between mb-4">
+                    <div
+                      className="w-10 h-10 rounded-lg flex items-center justify-center"
+                      style={{
+                        background: "var(--accent-blue-glow)",
+                        border: "1px solid rgba(59,130,246,0.25)",
+                      }}
+                    >
+                      <Icon className="w-5 h-5" style={{ color: "var(--accent-blue)" }} />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span
+                        className="text-sm font-mono"
+                        style={{ color: "var(--accent-blue)", fontFamily: "var(--font-mono)" }}
+                      >
+                        {bot.starter}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex items-baseline gap-3 mb-2">
-                    <h3 className="font-display text-2xl font-bold">{bot.name}</h3>
-                    <span className={`text-sm font-mono font-semibold ${colors.text}`}>{bot.price}</span>
-                  </div>
-                  <p className="text-vault-text-dim leading-relaxed mb-3">{bot.description}</p>
-                  <p className={`text-sm italic ${colors.text}`}>{bot.tagline}</p>
+                  <h3
+                    className="font-display font-bold text-xl mb-2"
+                    style={{ color: "var(--text-primary)" }}
+                  >
+                    {bot.name}
+                  </h3>
+                  <p className="text-sm leading-relaxed mb-3" style={{ color: "var(--text-secondary)" }}>
+                    {bot.description}
+                  </p>
+                  <p className="text-sm italic" style={{ color: "var(--text-tertiary)" }}>
+                    {bot.tagline}
+                  </p>
+                  <Link
+                    href="/auth/signup"
+                    className="mt-5 inline-flex items-center gap-1.5 text-sm font-medium transition-all hover:-translate-y-px"
+                    style={{ color: "var(--accent-blue)" }}
+                  >
+                    Try Free <ArrowRight className="w-3.5 h-3.5" />
+                  </Link>
                 </div>
               );
             })}
@@ -331,120 +318,181 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Outcome / Social Proof */}
-      <section className="py-24 px-4 sm:px-6 border-t border-vault-border">
-        <div className="max-w-7xl mx-auto">
+      {/* ── 4. How it Works ────────────────────────────────────────────── */}
+      <section
+        id="features"
+        className="py-24 px-4 sm:px-6"
+        style={{ borderBottom: "1px solid var(--border)" }}
+      >
+        <div className="max-w-5xl mx-auto">
           <div className="text-center mb-16">
-            <p className="text-vault-accent font-mono text-sm uppercase tracking-widest mb-3">Real results</p>
-            <h2 className="font-display text-4xl sm:text-5xl font-bold mb-4">What changes when you stop prompting and start automating.</h2>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {outcomes.map((o, i) => (
-              <div key={i} className="card-surface rounded-2xl p-6 flex flex-col gap-4">
-                <div className="flex gap-0.5">
-                  {Array.from({ length: 5 }).map((_, j) => (
-                    <svg key={j} className="w-4 h-4 text-yellow-400 fill-yellow-400" viewBox="0 0 20 20">
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                    </svg>
-                  ))}
-                </div>
-                <p className="text-vault-text-dim text-sm leading-relaxed flex-1">&ldquo;{o.quote}&rdquo;</p>
-                <span className="text-xs font-mono text-vault-accent bg-vault-accent/10 border border-vault-accent/20 px-2 py-0.5 rounded-full self-start">
-                  {o.bot}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Roadmap — In Development */}
-      <section id="roadmap" className="py-24 px-4 sm:px-6 border-t border-vault-border">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <p className="text-vault-accent font-mono text-sm uppercase tracking-widest mb-3">What&apos;s next</p>
-            <h2 className="font-display text-4xl sm:text-5xl font-bold mb-4">In development.</h2>
-            <p className="text-vault-text-dim text-lg max-w-2xl mx-auto">
-              We&apos;re always building. Here&apos;s what&apos;s on the production floor right now.
-              Early subscribers get access to every new bot as it ships — no extra charge.
+            <p
+              className="text-sm font-mono uppercase tracking-widest mb-3"
+              style={{ color: "var(--accent-blue)", fontFamily: "var(--font-mono)" }}
+            >
+              Simple process
             </p>
+            <h2
+              className="font-display font-extrabold text-4xl sm:text-5xl"
+              style={{ color: "var(--text-primary)" }}
+            >
+              How it works
+            </h2>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {roadmap.map((item) => (
-              <div key={item.name} className="card-surface rounded-xl p-5 relative overflow-hidden group hover:border-vault-accent/30 transition-all">
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="inline-flex items-center gap-1 bg-vault-green/10 border border-vault-green/20 text-vault-green text-xs font-mono font-semibold px-2 py-0.5 rounded-full">
-                    <Clock className="w-3 h-3" /> Coming Soon
-                  </span>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {HOW_IT_WORKS.map((step) => {
+              const Icon = step.icon;
+              return (
+                <div
+                  key={step.step}
+                  className="relative p-8 rounded-xl"
+                  style={{
+                    background: "var(--bg-surface)",
+                    border: "1px solid var(--border)",
+                    borderRadius: "12px",
+                  }}
+                >
+                  <div
+                    className="text-5xl font-mono font-bold mb-6 opacity-10 absolute top-6 right-6"
+                    style={{ fontFamily: "var(--font-mono)", color: "var(--accent-blue)" }}
+                  >
+                    {step.step}
+                  </div>
+                  <div
+                    className="w-10 h-10 rounded-lg flex items-center justify-center mb-5"
+                    style={{
+                      background: "var(--accent-blue-glow)",
+                      border: "1px solid rgba(59,130,246,0.25)",
+                    }}
+                  >
+                    <Icon className="w-5 h-5" style={{ color: "var(--accent-blue)" }} />
+                  </div>
+                  <h3
+                    className="font-display font-bold text-lg mb-3"
+                    style={{ color: "var(--text-primary)" }}
+                  >
+                    {step.title}
+                  </h3>
+                  <p className="text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+                    {step.description}
+                  </p>
                 </div>
-                <h3 className="font-display font-bold text-vault-text text-sm mb-2">{item.name}</h3>
-                <p className="text-vault-text-dim text-xs leading-relaxed">{item.description}</p>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* ── 5. Bundle Banner ───────────────────────────────────────────── */}
+      <section
+        id="pricing"
+        className="py-16 px-4 sm:px-6"
+        style={{ borderBottom: "1px solid var(--border)" }}
+      >
+        <div className="max-w-4xl mx-auto">
+          <div
+            className="rounded-xl p-8 flex flex-col sm:flex-row items-center justify-between gap-6"
+            style={{
+              background: "rgba(245,158,11,0.06)",
+              border: "1px solid rgba(245,158,11,0.25)",
+              borderRadius: "12px",
+            }}
+          >
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-2xl">🎁</span>
+                <h3
+                  className="font-display font-bold text-xl"
+                  style={{ color: "var(--text-primary)" }}
+                >
+                  Bundle Discount
+                </h3>
               </div>
-            ))}
+              <p style={{ color: "var(--text-secondary)" }}>
+                Subscribe to <strong style={{ color: "var(--accent-amber)" }}>3 or more bots</strong> and{" "}
+                <strong style={{ color: "var(--accent-amber)" }}>BUNDLE20</strong> applies automatically.{" "}
+                Save 20% every month — no coupon needed.
+              </p>
+            </div>
+            <Link
+              href="/auth/signup"
+              className="shrink-0 px-6 py-3 rounded-lg font-medium transition-all hover:-translate-y-px"
+              style={{
+                background: "var(--accent-amber)",
+                color: "#0A0F1A",
+                fontFamily: "var(--font-body)",
+              }}
+            >
+              Get the Bundle
+            </Link>
           </div>
-          <p className="text-center text-vault-text-dim text-sm mt-8">
-            Want to influence what we build?{" "}
-            <a href="#build" className="text-vault-accent hover:underline">Submit your idea below.</a>
-          </p>
         </div>
       </section>
 
-      {/* Bottom CTA */}
-      <section className="py-24 px-4 sm:px-6 border-t border-vault-border">
-        <div className="max-w-3xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 bg-vault-surface border border-vault-border rounded-full px-4 py-1.5 text-sm text-vault-text-dim mb-8">
-            <Lightbulb className="w-4 h-4 text-vault-accent" />
-            Subscribe to 3 or more bots and save 20% automatically.
-          </div>
-          <h2 className="font-display text-4xl sm:text-5xl font-bold mb-6">
-            Your business shouldn&apos;t stop when you do.
-          </h2>
-          <p className="text-vault-text-dim text-lg max-w-xl mx-auto mb-10">
-            Subscribe to the bots you need. Start with one. Add more as your business grows. Every bot has a free trial — no credit card required.
-          </p>
-          <Link href="/pricing" className="inline-flex items-center gap-2 bg-vault-accent text-vault-bg font-display font-bold px-8 py-4 rounded-xl text-lg hover:bg-vault-accent-dim transition-all hover:scale-105">
-            Explore the Bots <ArrowRight className="w-5 h-5" />
-          </Link>
-          <p className="text-vault-text-dim text-sm mt-4">
-            Subscribe to 3 or more bots and save 20% automatically.
-          </p>
-        </div>
-      </section>
-
-      {/* Wishlist / Build for me */}
-      <section id="build" className="py-24 px-4 sm:px-6 border-t border-vault-border">
+      {/* ── Wishlist / Build for me ──────────────────────────────────── */}
+      <section id="build" className="py-24 px-4 sm:px-6" style={{ borderBottom: "1px solid var(--border)" }}>
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">
-            <p className="text-vault-accent font-mono text-sm uppercase tracking-widest mb-3">Community-driven</p>
-            <h2 className="font-display text-4xl sm:text-5xl font-bold mb-4">What should we build next?</h2>
-            <p className="text-vault-text-dim text-lg max-w-2xl mx-auto">
-              Our roadmap is driven by what you actually need. Describe the automation or bot you wish existed,
-              and we&apos;ll factor it into our build queue. The most-requested ideas ship first.
+            <p
+              className="text-sm font-mono uppercase tracking-widest mb-3"
+              style={{ color: "var(--accent-blue)", fontFamily: "var(--font-mono)" }}
+            >
+              Community-driven
+            </p>
+            <h2
+              className="font-display font-extrabold text-4xl sm:text-5xl mb-4"
+              style={{ color: "var(--text-primary)" }}
+            >
+              What should we build next?
+            </h2>
+            <p className="text-lg max-w-2xl mx-auto" style={{ color: "var(--text-secondary)" }}>
+              Our roadmap is driven by what you actually need. Submit your idea below and we&apos;ll factor it in.
             </p>
           </div>
-          <div className="card-surface rounded-2xl p-8 max-w-xl mx-auto">
+          <div
+            className="rounded-xl p-8 max-w-xl mx-auto"
+            style={{ background: "var(--bg-surface)", border: "1px solid var(--border)", borderRadius: "12px" }}
+          >
             <WishlistForm />
           </div>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-vault-border py-12 px-4 sm:px-6">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-vault-text-dim text-sm">
-          <span className="font-display font-bold text-vault-text">
-            <span className="text-gradient-cyan">Bot</span> Vault Pro
+      {/* ── 6. Footer ──────────────────────────────────────────────────── */}
+      <footer
+        className="py-12 px-4 sm:px-6"
+        style={{ borderTop: "1px solid var(--border)" }}
+      >
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6">
+          {/* Brand */}
+          <div className="flex items-center gap-2">
+            <Image
+              src="/BVP_Bot_Tranparent.png"
+              alt="Bot Vault Pro"
+              width={24}
+              height={24}
+              className="object-contain"
+            />
+            <span className="font-display font-bold">
+              <span style={{ color: "var(--text-primary)" }}>Bot </span>
+              <span style={{ color: "var(--accent-blue)" }}>Vault</span>
+              <span style={{ color: "var(--text-primary)" }}> Pro</span>
+            </span>
+            <span className="text-xs ml-2" style={{ color: "var(--text-tertiary)" }}>
+              AI automation for real businesses.
+            </span>
+          </div>
+
+          <span className="text-xs" style={{ color: "var(--text-tertiary)" }}>
+            © 2026 Bot Vault Pro. All rights reserved.
           </span>
-          <span>© 2026 Bot Vault Pro. All rights reserved.</span>
-          <div className="flex flex-wrap justify-center gap-6">
-            <Link href="/pricing" className="hover:text-vault-accent transition-colors">Pricing</Link>
-            <Link href="/demo" className="hover:text-vault-accent transition-colors">Try Demo</Link>
-            <Link href="/blog" className="hover:text-vault-accent transition-colors">Blog</Link>
-            <Link href="/tools/free-contract-review" className="hover:text-vault-accent transition-colors">Contract Review</Link>
-            <Link href="/tools/ai-email-writer" className="hover:text-vault-accent transition-colors">Email Writer</Link>
-            <Link href="/affiliate" className="hover:text-vault-accent transition-colors">Affiliates</Link>
-            <Link href="/privacy" className="hover:text-vault-accent transition-colors">Privacy</Link>
-            <Link href="/terms" className="hover:text-vault-accent transition-colors">Terms</Link>
-            <a href="mailto:hello@botvaultpro.com" className="hover:text-vault-accent transition-colors">Contact</a>
+
+          <div className="flex items-center gap-6 text-sm" style={{ color: "var(--text-secondary)" }}>
+            <Link href="/pricing"  className="hover:text-white transition-colors">Pricing</Link>
+            <Link href="/privacy"  className="hover:text-white transition-colors">Privacy</Link>
+            <Link href="/terms"    className="hover:text-white transition-colors">Terms</Link>
+            <a href="mailto:hello@botvaultpro.com" className="hover:text-white transition-colors">Contact</a>
           </div>
         </div>
       </footer>

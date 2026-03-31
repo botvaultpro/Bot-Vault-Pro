@@ -2,44 +2,257 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── CSS Design Tokens ──────────────────────────────────────────── */
 :root {
+  --bg-primary:       #0A0F1A;
+  --bg-surface:       #111827;
+  --bg-elevated:      #1A2235;
+  --bg-input:         #151E2D;
+  --border:           #1F2E45;
+  --border-active:    #3B82F6;
+  --text-primary:     #F0F4FF;
+  --text-secondary:   #8899BB;
+  --text-tertiary:    #4A5A78;
+  --accent-blue:      #3B82F6;
+  --accent-blue-hover:#2563EB;
+  --accent-blue-glow: rgba(59,130,246,0.15);
+  --accent-green:     #10B981;
+  --accent-amber:     #F59E0B;
+  --accent-red:       #EF4444;
+  --accent-purple:    #8B5CF6;
+
+  /* Font families */
   --font-display: 'Syne', sans-serif;
-  --font-body: 'DM Sans', sans-serif;
-  --font-mono: 'DM Mono', monospace;
+  --font-body:    'DM Sans', sans-serif;
+  --font-mono:    'JetBrains Mono', 'DM Mono', monospace;
 }
 
+/* ── Base Reset ─────────────────────────────────────────────────── */
 * { box-sizing: border-box; }
 
+html { scroll-behavior: smooth; }
+
 body {
-  background-color: #07070E;
-  color: #E8E8F0;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  /* Dot-grid texture */
+  background-image: radial-gradient(circle, rgba(240,244,255,0.04) 1px, transparent 1px);
+  background-size: 20px 20px;
 }
 
-/* Scrollbar */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: #0F0F1A; }
-::-webkit-scrollbar-thumb { background: #1A1A2E; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #00E5FF33; }
+/* ── Typography ─────────────────────────────────────────────────── */
+h1, h2, h3 {
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
 
-/* Selection */
-::selection { background: #00E5FF22; color: #00E5FF; }
+h4, h5, h6 {
+  font-family: var(--font-display);
+  font-weight: 600;
+}
 
+body, p, span, label, button {
+  font-family: var(--font-body);
+}
+
+.mono, code, .price-display, pre {
+  font-family: var(--font-mono);
+}
+
+/* ── Custom Scrollbars ──────────────────────────────────────────── */
+::-webkit-scrollbar         { width: 5px; height: 5px; }
+::-webkit-scrollbar-track   { background: var(--border); }
+::-webkit-scrollbar-thumb   { background: var(--border-active); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--accent-blue-hover); }
+
+/* ── Selection ──────────────────────────────────────────────────── */
+::selection {
+  background: rgba(59,130,246,0.25);
+  color: #F0F4FF;
+}
+
+/* ── Page Entry Animations ──────────────────────────────────────── */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes statusPulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.35; }
+}
+
+/* Staggered fade-in for dashboard page children */
+.page-enter > *:nth-child(1)  { animation: slideUp 0.4s ease-out 0ms   forwards; opacity: 0; }
+.page-enter > *:nth-child(2)  { animation: slideUp 0.4s ease-out 75ms  forwards; opacity: 0; }
+.page-enter > *:nth-child(3)  { animation: slideUp 0.4s ease-out 150ms forwards; opacity: 0; }
+.page-enter > *:nth-child(4)  { animation: slideUp 0.4s ease-out 225ms forwards; opacity: 0; }
+.page-enter > *:nth-child(5)  { animation: slideUp 0.4s ease-out 300ms forwards; opacity: 0; }
+.page-enter > *:nth-child(6)  { animation: slideUp 0.4s ease-out 375ms forwards; opacity: 0; }
+.page-enter > *:nth-child(n+7){ animation: slideUp 0.4s ease-out 450ms forwards; opacity: 0; }
+
+/* ── Hero Typing Animation ──────────────────────────────────────── */
+@keyframes cycleWord {
+  0%,  20%  { content: "Invoicing";  }
+  25%, 45%  { content: "Reviewing";  }
+  50%, 70%  { content: "Writing";    }
+  75%, 95%  { content: "Analyzing";  }
+  100%      { content: "Invoicing";  }
+}
+
+.typing-cycle::after {
+  content: "Invoicing";
+  animation: cycleWord 8s steps(1) infinite;
+  color: var(--accent-blue);
+  font-style: italic;
+}
+
+/* ── Interactive States ─────────────────────────────────────────── */
+
+/* Button hover lift */
+.btn-primary {
+  background: var(--accent-blue);
+  color: #0A0F1A;
+  border-radius: 8px;
+  font-family: var(--font-body);
+  font-weight: 500;
+  transition: all 0.15s ease;
+}
+.btn-primary:hover {
+  background: var(--accent-blue-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px var(--accent-blue-glow);
+}
+
+.btn-ghost {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  border-radius: 8px;
+  transition: all 0.15s ease;
+}
+.btn-ghost:hover {
+  border-color: var(--border-active);
+  color: var(--text-primary);
+  transform: translateY(-1px);
+}
+
+/* Card hover */
+.card-hover {
+  transition: all 0.2s ease;
+}
+.card-hover:hover {
+  transform: translateY(-2px);
+  border-color: var(--border-active) !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+}
+
+/* Input focus glow */
+.input-bvp {
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-primary);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.input-bvp:focus {
+  outline: none;
+  border-color: var(--border-active);
+  box-shadow: 0 0 0 3px var(--accent-blue-glow);
+}
+.input-bvp::placeholder { color: var(--text-tertiary); }
+
+/* ── Component Utilities ────────────────────────────────────────── */
 @layer utilities {
   .font-display { font-family: var(--font-display); }
-  .font-body { font-family: var(--font-body); }
-  .font-mono { font-family: var(--font-mono); }
-  .text-gradient-cyan {
-    background: linear-gradient(135deg, #00E5FF, #00FF88);
+  .font-body    { font-family: var(--font-body); }
+  .font-mono    { font-family: var(--font-mono); }
+
+  /* Legacy gradient text (landing page) */
+  .text-gradient-blue {
+    background: linear-gradient(135deg, #3B82F6, #60A5FA);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
+
+  /* Keep old cyan gradient for backwards compat */
+  .text-gradient-cyan {
+    background: linear-gradient(135deg, #3B82F6, #60A5FA);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
   .border-glow {
-    border-color: #00E5FF44;
-    box-shadow: 0 0 20px #00E5FF11;
+    border-color: rgba(59,130,246,0.4);
+    box-shadow: 0 0 20px rgba(59,130,246,0.1);
   }
+
   .card-surface {
-    background: #0F0F1A;
-    border: 1px solid #1A1A2E;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
   }
+
+  .card-elevated {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+  }
+
+  /* Active/selected state */
+  .active-ring {
+    border-color: var(--border-active);
+    box-shadow: 0 0 0 3px var(--accent-blue-glow);
+  }
+
+  /* Status badge pulse */
+  .status-active::before {
+    content: '';
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent-green);
+    margin-right: 6px;
+    animation: statusPulse 2s ease-in-out infinite;
+  }
+
+  /* Sidebar active link */
+  .nav-active {
+    border-left: 2px solid var(--accent-blue);
+    background: var(--bg-elevated);
+    color: var(--text-primary);
+  }
+
+  /* Copy button success flash */
+  .copy-success {
+    color: var(--accent-green);
+    transition: color 0.3s ease;
+  }
+}
+
+/* ── Print Styles ───────────────────────────────────────────────── */
+@media print {
+  .no-print { display: none !important; }
+  .print-only { display: block !important; }
+  body {
+    background: white !important;
+    background-image: none !important;
+    color: black !important;
+  }
+}
+
+/* ── Mobile Responsive Typography ──────────────────────────────── */
+@media (max-width: 640px) {
+  h1 { font-size: 2rem !important; }
+  h2 { font-size: 1.5rem !important; }
 }

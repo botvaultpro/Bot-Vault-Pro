@@ -1,7 +1,10 @@
 "use client";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { BarChart2, Loader2, TrendingUp, TrendingDown, AlertCircle, CheckCircle2, Lock, ChevronDown, ChevronUp } from "lucide-react";
+import {
+  BarChart2, Loader2, TrendingUp, TrendingDown,
+  AlertCircle, CheckCircle2, Lock, ChevronDown, ChevronUp,
+} from "lucide-react";
 import Link from "next/link";
 
 type Report = {
@@ -20,24 +23,36 @@ type HistoryItem = {
   created_at: string;
 };
 
+const inputStyle = {
+  width: "100%",
+  background: "var(--bg-input)",
+  border: "1px solid var(--border)",
+  borderRadius: "8px",
+  padding: "12px 16px",
+  color: "var(--text-primary)",
+  fontSize: "14px",
+  outline: "none",
+  fontFamily: "var(--font-body)",
+};
+
 export default function WeeklyPulsePage() {
   const [form, setForm] = useState({
-    weekEnding: new Date().toISOString().split("T")[0],
-    revenue: "",
-    expenses: "",
-    newCustomers: "",
-    returningCustomers: "",
-    refunds: "",
-    topProduct: "",
-    biggestChallenge: "",
-    wins: "",
-    industry: "",
+    weekEnding:          new Date().toISOString().split("T")[0],
+    revenue:             "",
+    expenses:            "",
+    newCustomers:        "",
+    returningCustomers:  "",
+    refunds:             "",
+    topProduct:          "",
+    biggestChallenge:    "",
+    wins:                "",
+    industry:            "",
   });
-  const [generating, setGenerating] = useState(false);
-  const [report, setReport] = useState<Report | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [blocked, setBlocked] = useState(false);
-  const [history, setHistory] = useState<HistoryItem[]>([]);
+  const [generating, setGenerating]       = useState(false);
+  const [report, setReport]               = useState<Report | null>(null);
+  const [error, setError]                 = useState<string | null>(null);
+  const [blocked, setBlocked]             = useState(false);
+  const [history, setHistory]             = useState<HistoryItem[]>([]);
   const [expandedHistory, setExpandedHistory] = useState<string | null>(null);
 
   useEffect(() => { loadHistory(); }, []);
@@ -68,16 +83,16 @@ export default function WeeklyPulsePage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          weekEnding: form.weekEnding,
-          revenue: parseFloat(form.revenue) || 0,
-          expenses: parseFloat(form.expenses) || 0,
-          newCustomers: parseInt(form.newCustomers) || 0,
+          weekEnding:         form.weekEnding,
+          revenue:            parseFloat(form.revenue) || 0,
+          expenses:           parseFloat(form.expenses) || 0,
+          newCustomers:       parseInt(form.newCustomers) || 0,
           returningCustomers: parseInt(form.returningCustomers) || 0,
-          refunds: parseInt(form.refunds) || 0,
-          topProduct: form.topProduct,
-          biggestChallenge: form.biggestChallenge,
-          wins: form.wins,
-          industry: form.industry,
+          refunds:            parseInt(form.refunds) || 0,
+          topProduct:         form.topProduct,
+          biggestChallenge:   form.biggestChallenge,
+          wins:               form.wins,
+          industry:           form.industry,
         }),
       });
       const data = await res.json();
@@ -93,131 +108,264 @@ export default function WeeklyPulsePage() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8 animate-fade-in">
-      <div>
-        <h1 className="font-display text-3xl font-bold flex items-center gap-3">
-          <BarChart2 className="w-7 h-7 text-purple-400" />
-          WeeklyPulse
-        </h1>
-        <p className="text-vault-text-dim mt-1">Enter your weekly numbers and get an AI business health report.</p>
+    <div className="max-w-5xl mx-auto space-y-8 page-enter">
+      {/* Page Header */}
+      <div className="flex items-center gap-3">
+        <div
+          className="w-10 h-10 rounded-xl flex items-center justify-center"
+          style={{ background: "rgba(139,92,246,0.1)", border: "1px solid rgba(139,92,246,0.2)" }}
+        >
+          <BarChart2 className="w-5 h-5" style={{ color: "var(--accent-purple)" }} />
+        </div>
+        <div>
+          <h1
+            className="font-display font-extrabold text-3xl"
+            style={{ color: "var(--text-primary)", letterSpacing: "-0.02em" }}
+          >
+            WeeklyPulse
+          </h1>
+          <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
+            Enter your weekly numbers and get an AI business health report.
+          </p>
+        </div>
       </div>
 
+      {/* Blocked */}
       {blocked && (
-        <div className="rounded-xl border border-purple-400/30 bg-purple-400/5 px-5 py-5 flex flex-col sm:flex-row items-start sm:items-center gap-4">
-          <Lock className="w-6 h-6 text-purple-400 shrink-0" />
+        <div
+          className="rounded-xl px-5 py-5 flex flex-col sm:flex-row items-start sm:items-center gap-4"
+          style={{
+            background: "rgba(139,92,246,0.06)",
+            border: "1px solid rgba(139,92,246,0.25)",
+            borderRadius: "12px",
+          }}
+        >
+          <Lock className="w-5 h-5 shrink-0" style={{ color: "var(--accent-purple)" }} />
           <div>
-            <p className="font-semibold text-vault-text">You&apos;ve used your 3 free WeeklyPulse reports.</p>
-            <p className="text-sm text-vault-text-dim">Subscribe to keep generating weekly reports and enable Monday email delivery.</p>
+            <p className="font-semibold" style={{ color: "var(--text-primary)" }}>
+              You&apos;ve used your free WeeklyPulse reports.
+            </p>
+            <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
+              Subscribe to keep generating reports and enable Monday email delivery.
+            </p>
           </div>
-          <Link href="/dashboard/billing" className="sm:ml-auto bg-purple-400 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-purple-400/90 transition-colors whitespace-nowrap">
+          <Link
+            href="/dashboard/billing"
+            className="sm:ml-auto px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all hover:-translate-y-px"
+            style={{ background: "var(--accent-purple)", color: "white" }}
+          >
             Subscribe Now
           </Link>
         </div>
       )}
 
-      <div className="card-surface rounded-2xl p-6 space-y-6">
+      {/* Form */}
+      <div
+        className="rounded-xl p-6 space-y-6"
+        style={{ background: "var(--bg-surface)", border: "1px solid var(--border)", borderRadius: "12px" }}
+      >
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-vault-text mb-2">Week Ending Date</label>
-            <input type="date" value={form.weekEnding} onChange={(e) => update("weekEnding", e.target.value)}
-              className="w-full bg-vault-bg border border-vault-border rounded-xl px-4 py-3 text-sm text-vault-text focus:outline-none focus:border-vault-accent" />
+            <label className="block text-sm font-medium mb-2" style={{ color: "var(--text-secondary)" }}>
+              Week Ending Date
+            </label>
+            <input
+              type="date"
+              value={form.weekEnding}
+              onChange={(e) => update("weekEnding", e.target.value)}
+              style={inputStyle}
+              onFocus={(e) => {
+                e.target.style.borderColor = "var(--border-active)";
+                e.target.style.boxShadow = "0 0 0 3px var(--accent-blue-glow)";
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = "var(--border)";
+                e.target.style.boxShadow = "none";
+              }}
+            />
           </div>
           <div>
-            <label className="block text-sm font-medium text-vault-text mb-2">Industry / Business Type</label>
-            <input type="text" value={form.industry} onChange={(e) => update("industry", e.target.value)}
-              placeholder="e.g. Restaurant, SaaS, Retail..." className="w-full bg-vault-bg border border-vault-border rounded-xl px-4 py-3 text-sm text-vault-text placeholder:text-vault-text-dim focus:outline-none focus:border-vault-accent" />
+            <label className="block text-sm font-medium mb-2" style={{ color: "var(--text-secondary)" }}>
+              Industry / Business Type
+            </label>
+            <input
+              type="text"
+              value={form.industry}
+              onChange={(e) => update("industry", e.target.value)}
+              placeholder="e.g. Restaurant, SaaS, Retail..."
+              style={inputStyle}
+              onFocus={(e) => {
+                e.target.style.borderColor = "var(--border-active)";
+                e.target.style.boxShadow = "0 0 0 3px var(--accent-blue-glow)";
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = "var(--border)";
+                e.target.style.boxShadow = "none";
+              }}
+            />
           </div>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
           {[
-            { field: "revenue", label: "Total Revenue ($)", placeholder: "0.00" },
-            { field: "expenses", label: "Total Expenses ($)", placeholder: "0.00" },
-            { field: "newCustomers", label: "New Customers (#)", placeholder: "0" },
-            { field: "returningCustomers", label: "Returning Customers (#)", placeholder: "0" },
-            { field: "refunds", label: "Refunds / Cancellations (#)", placeholder: "0" },
+            { field: "revenue",            label: "Total Revenue ($)",            placeholder: "0.00" },
+            { field: "expenses",           label: "Total Expenses ($)",           placeholder: "0.00" },
+            { field: "newCustomers",       label: "New Customers (#)",            placeholder: "0" },
+            { field: "returningCustomers", label: "Returning Customers (#)",      placeholder: "0" },
+            { field: "refunds",            label: "Refunds / Cancellations (#)", placeholder: "0" },
           ].map(({ field, label, placeholder }) => (
             <div key={field}>
-              <label className="block text-sm font-medium text-vault-text mb-2">{label}</label>
-              <input type="number" value={form[field as keyof typeof form]} onChange={(e) => update(field, e.target.value)}
-                placeholder={placeholder} className="w-full bg-vault-bg border border-vault-border rounded-xl px-4 py-3 text-sm text-vault-text placeholder:text-vault-text-dim focus:outline-none focus:border-vault-accent" />
+              <label className="block text-sm font-medium mb-2" style={{ color: "var(--text-secondary)" }}>
+                {label}
+              </label>
+              <input
+                type="number"
+                value={form[field as keyof typeof form]}
+                onChange={(e) => update(field, e.target.value)}
+                placeholder={placeholder}
+                style={inputStyle}
+                onFocus={(e) => {
+                  e.target.style.borderColor = "var(--border-active)";
+                  e.target.style.boxShadow = "0 0 0 3px var(--accent-blue-glow)";
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = "var(--border)";
+                  e.target.style.boxShadow = "none";
+                }}
+              />
             </div>
           ))}
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {[
-            { field: "topProduct", label: "Top Selling Product / Service", placeholder: "e.g. Monthly retainer, Product X..." },
-            { field: "biggestChallenge", label: "Biggest Challenge This Week", placeholder: "e.g. Late deliveries, low traffic..." },
-            { field: "wins", label: "Wins or Highlights", placeholder: "e.g. Landed new client, hit revenue goal..." },
+            { field: "topProduct",        label: "Top Selling Product / Service", placeholder: "e.g. Monthly retainer..." },
+            { field: "biggestChallenge",  label: "Biggest Challenge This Week",   placeholder: "e.g. Late deliveries..." },
+            { field: "wins",              label: "Wins or Highlights",            placeholder: "e.g. Landed new client..." },
           ].map(({ field, label, placeholder }) => (
             <div key={field}>
-              <label className="block text-sm font-medium text-vault-text mb-2">{label}</label>
-              <input type="text" value={form[field as keyof typeof form]} onChange={(e) => update(field, e.target.value)}
-                placeholder={placeholder} className="w-full bg-vault-bg border border-vault-border rounded-xl px-4 py-3 text-sm text-vault-text placeholder:text-vault-text-dim focus:outline-none focus:border-vault-accent" />
+              <label className="block text-sm font-medium mb-2" style={{ color: "var(--text-secondary)" }}>
+                {label}
+              </label>
+              <input
+                type="text"
+                value={form[field as keyof typeof form]}
+                onChange={(e) => update(field, e.target.value)}
+                placeholder={placeholder}
+                style={inputStyle}
+                onFocus={(e) => {
+                  e.target.style.borderColor = "var(--border-active)";
+                  e.target.style.boxShadow = "0 0 0 3px var(--accent-blue-glow)";
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = "var(--border)";
+                  e.target.style.boxShadow = "none";
+                }}
+              />
             </div>
           ))}
         </div>
 
-        {error && <p className="text-sm text-red-400 bg-red-400/10 border border-red-400/20 rounded-lg px-4 py-3">{error}</p>}
+        {error && (
+          <p
+            className="text-sm px-4 py-3 rounded-lg"
+            style={{
+              background: "rgba(239,68,68,0.08)",
+              border: "1px solid rgba(239,68,68,0.25)",
+              color: "var(--accent-red)",
+            }}
+          >
+            {error}
+          </p>
+        )}
 
-        <button onClick={handleGenerate} disabled={generating || !form.revenue}
-          className="flex items-center gap-2 bg-purple-400 text-white px-6 py-3 rounded-xl font-display font-bold text-sm hover:bg-purple-400/90 transition-colors disabled:opacity-50">
+        <button
+          onClick={handleGenerate}
+          disabled={generating || !form.revenue}
+          className="flex items-center gap-2 px-6 py-3 rounded-lg font-medium text-sm transition-all hover:-translate-y-px disabled:opacity-50"
+          style={{ background: "var(--accent-purple)", color: "white", borderRadius: "8px" }}
+        >
           {generating ? <Loader2 className="w-4 h-4 animate-spin" /> : <BarChart2 className="w-4 h-4" />}
           {generating ? "Generating Report..." : "Generate Report"}
         </button>
       </div>
 
+      {/* Report output */}
       {report && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="md:col-span-2 card-surface rounded-2xl p-6">
-            <h3 className="font-display font-bold text-lg mb-3 flex items-center gap-2">
-              <BarChart2 className="w-5 h-5 text-purple-400" /> Weekly Snapshot
+          <div
+            className="md:col-span-2 rounded-xl p-6"
+            style={{ background: "var(--bg-surface)", border: "1px solid var(--border)", borderRadius: "12px" }}
+          >
+            <h3
+              className="font-display font-bold text-lg mb-3 flex items-center gap-2"
+              style={{ color: "var(--text-primary)" }}
+            >
+              <BarChart2 className="w-5 h-5" style={{ color: "var(--accent-purple)" }} />
+              Weekly Snapshot
             </h3>
-            <p className="text-vault-text-dim leading-relaxed">{report.weekly_snapshot}</p>
+            <p style={{ color: "var(--text-secondary)" }}>{report.weekly_snapshot}</p>
           </div>
 
-          <div className="card-surface rounded-2xl p-6">
-            <h3 className="font-display font-bold text-lg mb-4 flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-vault-green" /> What&apos;s Working
+          <div
+            className="rounded-xl p-6"
+            style={{ background: "var(--bg-surface)", border: "1px solid var(--border)", borderRadius: "12px" }}
+          >
+            <h3 className="font-display font-bold text-lg mb-4 flex items-center gap-2" style={{ color: "var(--text-primary)" }}>
+              <TrendingUp className="w-5 h-5" style={{ color: "var(--accent-green)" }} /> What&apos;s Working
             </h3>
             <ul className="space-y-2">
               {report.whats_working.map((item, i) => (
-                <li key={i} className="flex items-start gap-2 text-sm text-vault-text-dim">
-                  <CheckCircle2 className="w-4 h-4 text-vault-green mt-0.5 shrink-0" /> {item}
+                <li key={i} className="flex items-start gap-2 text-sm" style={{ color: "var(--text-secondary)" }}>
+                  <CheckCircle2 className="w-4 h-4 mt-0.5 shrink-0" style={{ color: "var(--accent-green)" }} />
+                  {item}
                 </li>
               ))}
             </ul>
           </div>
 
-          <div className="card-surface rounded-2xl p-6">
-            <h3 className="font-display font-bold text-lg mb-4 flex items-center gap-2">
-              <TrendingDown className="w-5 h-5 text-red-400" /> Needs Attention
+          <div
+            className="rounded-xl p-6"
+            style={{ background: "var(--bg-surface)", border: "1px solid var(--border)", borderRadius: "12px" }}
+          >
+            <h3 className="font-display font-bold text-lg mb-4 flex items-center gap-2" style={{ color: "var(--text-primary)" }}>
+              <TrendingDown className="w-5 h-5" style={{ color: "var(--accent-red)" }} /> Needs Attention
             </h3>
             <ul className="space-y-2">
               {report.needs_attention.map((item, i) => (
-                <li key={i} className="flex items-start gap-2 text-sm text-vault-text-dim">
-                  <AlertCircle className="w-4 h-4 text-red-400 mt-0.5 shrink-0" /> {item}
+                <li key={i} className="flex items-start gap-2 text-sm" style={{ color: "var(--text-secondary)" }}>
+                  <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" style={{ color: "var(--accent-red)" }} />
+                  {item}
                 </li>
               ))}
             </ul>
           </div>
 
-          <div className="card-surface rounded-2xl p-6 border border-purple-400/20 bg-purple-400/5">
-            <h3 className="font-display font-bold text-lg mb-3 flex items-center gap-2">
-              <CheckCircle2 className="w-5 h-5 text-purple-400" /> One Thing To Do This Week
+          <div
+            className="rounded-xl p-6"
+            style={{
+              background: "rgba(139,92,246,0.05)",
+              border: "1px solid rgba(139,92,246,0.2)",
+              borderRadius: "12px",
+            }}
+          >
+            <h3 className="font-display font-bold text-lg mb-3 flex items-center gap-2" style={{ color: "var(--text-primary)" }}>
+              <CheckCircle2 className="w-5 h-5" style={{ color: "var(--accent-purple)" }} /> One Thing To Do This Week
             </h3>
-            <p className="text-vault-text font-medium leading-relaxed">{report.one_thing_to_do}</p>
+            <p className="font-medium" style={{ color: "var(--text-primary)" }}>{report.one_thing_to_do}</p>
           </div>
 
-          <div className="card-surface rounded-2xl p-6">
-            <h3 className="font-display font-bold text-lg mb-4 flex items-center gap-2">
-              <AlertCircle className="w-5 h-5 text-yellow-400" /> Next Week Watch List
+          <div
+            className="rounded-xl p-6"
+            style={{ background: "var(--bg-surface)", border: "1px solid var(--border)", borderRadius: "12px" }}
+          >
+            <h3 className="font-display font-bold text-lg mb-4 flex items-center gap-2" style={{ color: "var(--text-primary)" }}>
+              <AlertCircle className="w-5 h-5" style={{ color: "var(--accent-amber)" }} /> Next Week Watch List
             </h3>
             <ul className="space-y-2">
               {report.next_week_watchlist.map((item, i) => (
-                <li key={i} className="flex items-start gap-2 text-sm text-vault-text-dim">
-                  <span className="text-yellow-400 mt-0.5 shrink-0">→</span> {item}
+                <li key={i} className="flex items-start gap-2 text-sm" style={{ color: "var(--text-secondary)" }}>
+                  <span style={{ color: "var(--accent-amber)" }}>→</span> {item}
                 </li>
               ))}
             </ul>
@@ -225,28 +373,61 @@ export default function WeeklyPulsePage() {
         </div>
       )}
 
+      {/* History */}
       {history.length > 0 && (
-        <div className="card-surface rounded-2xl p-6">
-          <h2 className="font-display text-lg font-bold mb-4">Report History</h2>
+        <div
+          className="rounded-xl p-6"
+          style={{ background: "var(--bg-surface)", border: "1px solid var(--border)", borderRadius: "12px" }}
+        >
+          <h2 className="font-display font-bold text-lg mb-4" style={{ color: "var(--text-primary)" }}>
+            Report History
+          </h2>
           <div className="space-y-2">
             {history.map((item) => {
               let parsedReport: Report | null = null;
               try { parsedReport = JSON.parse(item.report_content); } catch {}
               return (
-                <div key={item.id} className="border border-vault-border rounded-xl overflow-hidden">
+                <div
+                  key={item.id}
+                  className="rounded-xl overflow-hidden"
+                  style={{ border: "1px solid var(--border)" }}
+                >
                   <button
                     onClick={() => setExpandedHistory(expandedHistory === item.id ? null : item.id)}
-                    className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-vault-border/30 transition-colors"
+                    className="w-full flex items-center justify-between px-4 py-3 text-left transition-colors"
+                    onMouseEnter={(e) => (e.currentTarget.style.background = "var(--bg-elevated)")}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
                   >
                     <div className="flex items-center gap-3">
-                      <span className="text-sm font-medium text-vault-text">Week of {item.week_ending}</span>
-                      <span className="text-xs text-vault-text-dim bg-vault-border px-2 py-0.5 rounded-full">${item.revenue?.toLocaleString()}</span>
+                      <span className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
+                        Week of {item.week_ending}
+                      </span>
+                      <span
+                        className="text-xs px-2 py-0.5 rounded-full font-mono"
+                        style={{
+                          background: "var(--bg-elevated)",
+                          border: "1px solid var(--border)",
+                          color: "var(--text-secondary)",
+                          fontFamily: "var(--font-mono)",
+                        }}
+                      >
+                        ${item.revenue?.toLocaleString()}
+                      </span>
                     </div>
-                    {expandedHistory === item.id ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                    {expandedHistory === item.id ? (
+                      <ChevronUp className="w-4 h-4" style={{ color: "var(--text-tertiary)" }} />
+                    ) : (
+                      <ChevronDown className="w-4 h-4" style={{ color: "var(--text-tertiary)" }} />
+                    )}
                   </button>
                   {expandedHistory === item.id && parsedReport && (
-                    <div className="px-4 pb-4 border-t border-vault-border pt-3">
-                      <p className="text-sm text-vault-text-dim">{parsedReport.weekly_snapshot}</p>
+                    <div
+                      className="px-4 pb-4 border-t pt-3"
+                      style={{ borderColor: "var(--border)" }}
+                    >
+                      <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
+                        {parsedReport.weekly_snapshot}
+                      </p>
                     </div>
                   )}
                 </div>

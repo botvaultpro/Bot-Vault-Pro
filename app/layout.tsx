@@ -1,32 +1,32 @@
 import type { Metadata } from "next";
-import { Syne, DM_Sans, DM_Mono } from "next/font/google";
+import { Syne, DM_Sans, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
 const syne = Syne({
   subsets: ["latin"],
   variable: "--font-display",
   weight: ["400", "600", "700", "800"],
+  display: "swap",
 });
 
 const dmSans = DM_Sans({
   subsets: ["latin"],
   variable: "--font-body",
   weight: ["300", "400", "500", "600"],
+  display: "swap",
 });
 
-const dmMono = DM_Mono({
+const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
   variable: "--font-mono",
-  weight: ["400", "500"],
+  weight: ["400"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: {
-    default: "Bot Vault Pro — AI Business Automation",
-    template: "%s — Bot Vault Pro",
-  },
+  title: "Bot Vault Pro — AI Automation Bots",
   description:
-    "6 AI bots that automate your most painful business tasks — invoicing, email drafting, contract review, analytics, reviews, and client acquisition. Works 24/7 without you.",
+    "Six AI bots that run the parts of your business you're handling manually right now. Stop prompting. Start automating.",
   metadataBase: new URL("https://botvaultpro.com"),
   keywords: ["ai business automation", "ai tools for small business", "invoice automation", "contract review ai", "email ai", "business analytics"],
   openGraph: {
@@ -59,8 +59,13 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${syne.variable} ${dmSans.variable} ${dmMono.variable}`}>
-      <body className="bg-vault-bg text-vault-text font-body antialiased">{children}</body>
+    <html
+      lang="en"
+      className={`${syne.variable} ${dmSans.variable} ${jetbrainsMono.variable}`}
+    >
+      <body className="bg-vault-bg text-vault-text font-body antialiased">
+        {children}
+      </body>
     </html>
   );
 }

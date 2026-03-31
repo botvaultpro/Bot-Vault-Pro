@@ -3,29 +3,75 @@ import { useEffect, useState, Suspense } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import {
-  Globe, Star, FileText, Scale, BarChart2, Mail,
-  ArrowRight, CheckCircle2, Lock, Zap, Activity,
+  LayoutPanelLeft, Star, FileText, ShieldCheck, BarChart2, Mail,
+  ArrowRight, CheckCircle2, Lock, Zap, Activity, Calendar,
 } from "lucide-react";
 import clsx from "clsx";
 import ReferralWidget from "@/app/components/ReferralWidget";
 
 const BOT_GRID = [
-  { slug: "sitebuilder", name: "SiteBuilder Pro", icon: Globe, color: "text-vault-green", border: "border-vault-green/20", bg: "bg-vault-green/5", href: "/dashboard/bots/sitebuilder", description: "Generate AI websites & proposals" },
-  { slug: "reviewbot", name: "ReviewBot", icon: Star, color: "text-yellow-400", border: "border-yellow-400/20", bg: "bg-yellow-400/5", href: "/dashboard/reviewbot", description: "AI Google review replies" },
-  { slug: "invoiceforge", name: "InvoiceForge", icon: FileText, color: "text-blue-400", border: "border-blue-400/20", bg: "bg-blue-400/5", href: "/dashboard/invoiceforge", description: "Professional invoices & proposals" },
-  { slug: "clausecheck", name: "ClauseCheck", icon: Scale, color: "text-orange-400", border: "border-orange-400/20", bg: "bg-orange-400/5", href: "/dashboard/clausecheck", description: "AI contract risk scanner" },
-  { slug: "weeklypulse", name: "WeeklyPulse", icon: BarChart2, color: "text-purple-400", border: "border-purple-400/20", bg: "bg-purple-400/5", href: "/dashboard/weeklypulse", description: "Weekly business health report" },
-  { slug: "emailcoach", name: "EmailCoach", icon: Mail, color: "text-vault-accent", border: "border-vault-accent/20", bg: "bg-vault-accent/5", href: "/dashboard/emailcoach", description: "3 AI reply options per email" },
+  {
+    slug: "sitebuilder",
+    name: "SiteBuilder Pro",
+    icon: LayoutPanelLeft,
+    href: "/dashboard/bots/sitebuilder",
+    description: "Generate AI websites & proposals",
+  },
+  {
+    slug: "reviewbot",
+    name: "ReviewBot",
+    icon: Star,
+    href: "/dashboard/reviewbot",
+    description: "AI Google review replies",
+  },
+  {
+    slug: "weeklypulse",
+    name: "WeeklyPulse",
+    icon: BarChart2,
+    href: "/dashboard/weeklypulse",
+    description: "Weekly business health report",
+  },
+  {
+    slug: "emailcoach",
+    name: "EmailCoach",
+    icon: Mail,
+    href: "/dashboard/emailcoach",
+    description: "3 AI reply options per email",
+  },
+  {
+    slug: "clausecheck",
+    name: "ClauseCheck",
+    icon: ShieldCheck,
+    href: "/dashboard/clausecheck",
+    description: "AI contract risk scanner",
+  },
+  {
+    slug: "invoiceforge",
+    name: "InvoiceForge",
+    icon: FileText,
+    href: "/dashboard/invoiceforge",
+    description: "Professional invoices & tracking",
+  },
 ];
 
-type BotSub = { bot_slug: string; status: string };
+type BotSub = { bot_slug: string; status: string; current_period_end?: string };
 type ActivityItem = { id: string; bot_slug: string; action: string; detail: string | null; created_at: string };
 
+const BOT_LABELS: Record<string, string> = {
+  sitebuilder: "SiteBuilder Pro",
+  reviewbot:   "ReviewBot",
+  invoiceforge:"InvoiceForge",
+  clausecheck: "ClauseCheck",
+  weeklypulse: "WeeklyPulse",
+  emailcoach:  "EmailCoach",
+};
+
 function DashboardInner() {
-  const [subscriptions, setSubscriptions] = useState<BotSub[]>([]);
-  const [activity, setActivity] = useState<ActivityItem[]>([]);
-  const [name, setName] = useState("");
-  const [totalActivity, setTotalActivity] = useState(0);
+  const [subscriptions, setSubscriptions]   = useState<BotSub[]>([]);
+  const [activity, setActivity]             = useState<ActivityItem[]>([]);
+  const [name, setName]                     = useState("");
+  const [totalActivity, setTotalActivity]   = useState(0);
+  const [nextBilling, setNextBilling]       = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -35,13 +81,23 @@ function DashboardInner() {
 
       const [profileRes, subsRes, activityRes] = await Promise.all([
         supabase.from("profiles").select("full_name").eq("id", user.id).single(),
-        supabase.from("bot_subscriptions").select("bot_slug, status").eq("user_id", user.id),
+        supabase.from("bot_subscriptions").select("bot_slug, status, current_period_end").eq("user_id", user.id),
         supabase.from("activity_log").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(10),
       ]);
 
       if (profileRes.data?.full_name) setName(profileRes.data.full_name.split(" ")[0]);
-      setSubscriptions(subsRes.data ?? []);
+      const subs = subsRes.data ?? [];
+      setSubscriptions(subs);
       setActivity(activityRes.data ?? []);
+
+      // Next billing date
+      const activeSubs = subs.filter((s) => s.status === "active" && s.current_period_end);
+      if (activeSubs.length > 0) {
+        const earliest = activeSubs.sort((a, b) =>
+          new Date(a.current_period_end!).getTime() - new Date(b.current_period_end!).getTime()
+        )[0];
+        setNextBilling(earliest.current_period_end ?? null);
+      }
 
       // Count this month's activity
       const now = new Date();
@@ -61,89 +117,233 @@ function DashboardInner() {
     return sub?.status === "active" || sub?.status === "trialing";
   }
 
-  const activeCount = subscriptions.filter((s) => s.status === "active").length;
+  function getStatus(slug: string): "active" | "trial" | "locked" {
+    const sub = subscriptions.find((s) => s.bot_slug === slug);
+    if (!sub) return "locked";
+    if (sub.status === "active") return "active";
+    if (sub.status === "trialing") return "trial";
+    return "locked";
+  }
 
-  const BOT_LABELS: Record<string, string> = {
-    sitebuilder: "SiteBuilder Pro",
-    reviewbot: "ReviewBot",
-    invoiceforge: "InvoiceForge",
-    clausecheck: "ClauseCheck",
-    weeklypulse: "WeeklyPulse",
-    emailcoach: "EmailCoach",
-  };
+  const activeCount = subscriptions.filter((s) => s.status === "active").length;
+  const bundleActive = activeCount >= 3;
+  const botsUntilBundle = Math.max(0, 3 - activeCount);
+
+  const STAT_CARDS = [
+    {
+      label: "Active Bots",
+      value: `${activeCount}`,
+      sub: "of 6",
+      icon: Zap,
+      color: "var(--accent-blue)",
+      bg: "rgba(59,130,246,0.08)",
+      border: "rgba(59,130,246,0.2)",
+    },
+    {
+      label: "Uses This Month",
+      value: String(totalActivity),
+      sub: "actions",
+      icon: Activity,
+      color: "var(--accent-green)",
+      bg: "rgba(16,185,129,0.08)",
+      border: "rgba(16,185,129,0.2)",
+    },
+    {
+      label: "Next Billing",
+      value: nextBilling
+        ? new Date(nextBilling).toLocaleDateString("en-US", { month: "short", day: "numeric" })
+        : "—",
+      sub: nextBilling ? new Date(nextBilling).getFullYear().toString() : "No active sub",
+      icon: Calendar,
+      color: "var(--text-secondary)",
+      bg: "var(--bg-elevated)",
+      border: "var(--border)",
+    },
+    {
+      label: "Bundle Status",
+      value: bundleActive ? "20% Off" : botsUntilBundle > 0 ? `+${botsUntilBundle} bots` : "—",
+      sub: bundleActive ? "Bundle active" : "for 20% off",
+      icon: Zap,
+      color: bundleActive ? "var(--accent-green)" : "var(--accent-amber)",
+      bg: bundleActive ? "rgba(16,185,129,0.08)" : "rgba(245,158,11,0.08)",
+      border: bundleActive ? "rgba(16,185,129,0.2)" : "rgba(245,158,11,0.2)",
+    },
+  ];
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 animate-fade-in">
+    <div className="max-w-6xl mx-auto space-y-8 page-enter">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="font-display text-3xl font-bold">
-            {name ? `Hey, ${name} 👋` : "Dashboard"}
+          <h1
+            className="font-display font-extrabold text-3xl"
+            style={{ color: "var(--text-primary)", letterSpacing: "-0.02em" }}
+          >
+            {name ? `Hey, ${name}` : "Dashboard"}
           </h1>
-          <p className="text-vault-text-dim mt-1">Your AI automation hub.</p>
+          <p className="mt-1 text-sm" style={{ color: "var(--text-secondary)" }}>
+            Your AI automation command center.
+          </p>
         </div>
         <Link
           href="/dashboard/billing"
-          className="flex items-center gap-2 bg-vault-accent/10 border border-vault-accent/30 text-vault-accent px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-vault-accent/20 transition-colors"
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all hover:-translate-y-px"
+          style={{
+            background: "var(--accent-blue-glow)",
+            border: "1px solid rgba(59,130,246,0.3)",
+            color: "var(--accent-blue)",
+          }}
         >
-          <Zap className="w-4 h-4" /> Manage Subscriptions
+          <Zap className="w-4 h-4" />
+          Manage Subscriptions
         </Link>
       </div>
 
-      {/* Quick stats */}
-      <div className="grid grid-cols-3 gap-4">
-        <div className="card-surface rounded-xl p-4">
-          <p className="text-xs text-vault-text-dim mb-1 font-mono">Bots Active</p>
-          <p className="font-display text-3xl font-bold text-vault-accent">{activeCount}</p>
-          <p className="text-xs text-vault-text-dim">of 6</p>
-        </div>
-        <div className="card-surface rounded-xl p-4">
-          <p className="text-xs text-vault-text-dim mb-1 font-mono">Actions This Month</p>
-          <p className="font-display text-3xl font-bold text-vault-green">{totalActivity}</p>
-        </div>
-        <div className="card-surface rounded-xl p-4">
-          <p className="text-xs text-vault-text-dim mb-1 font-mono">Bundle Discount</p>
-          <p className="font-display text-3xl font-bold text-yellow-400">{activeCount >= 3 ? "20%" : "—"}</p>
-          {activeCount < 3 && <p className="text-xs text-vault-text-dim">{3 - activeCount} more for 20% off</p>}
-        </div>
+      {/* Stats row */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {STAT_CARDS.map((card) => {
+          const Icon = card.icon;
+          return (
+            <div
+              key={card.label}
+              className="rounded-xl p-5"
+              style={{
+                background: card.bg,
+                border: `1px solid ${card.border}`,
+                borderRadius: "12px",
+              }}
+            >
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-xs font-mono uppercase tracking-wider" style={{ color: "var(--text-tertiary)", fontFamily: "var(--font-mono)" }}>
+                  {card.label}
+                </p>
+                <Icon className="w-3.5 h-3.5" style={{ color: card.color }} />
+              </div>
+              <p
+                className="font-display font-extrabold text-3xl"
+                style={{ color: card.color, letterSpacing: "-0.02em" }}
+              >
+                {card.value}
+              </p>
+              <p className="text-xs mt-1" style={{ color: "var(--text-tertiary)" }}>{card.sub}</p>
+            </div>
+          );
+        })}
       </div>
 
       {/* My Bots grid */}
       <div>
-        <h2 className="font-display text-xl font-bold mb-4">My Bots</h2>
+        <h2
+          className="font-display font-bold text-xl mb-4"
+          style={{ color: "var(--text-primary)" }}
+        >
+          My Bots
+        </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {BOT_GRID.map((bot) => {
             const Icon = bot.icon;
-            const active = isActive(bot.slug);
+            const status = getStatus(bot.slug);
+            const active = status === "active" || status === "trial";
+
             return (
-              <div key={bot.slug} className={clsx(
-                "rounded-2xl border p-5 flex flex-col gap-3 transition-all",
-                active ? `${bot.border} ${bot.bg}` : "card-surface opacity-70"
-              )}>
+              <div
+                key={bot.slug}
+                className={clsx(
+                  "rounded-xl p-5 flex flex-col gap-4 transition-all",
+                  active ? "card-hover" : "opacity-60"
+                )}
+                style={{
+                  background: active ? "var(--bg-surface)" : "var(--bg-surface)",
+                  border: `1px solid ${active ? "var(--border)" : "var(--border)"}`,
+                  borderRadius: "12px",
+                }}
+              >
                 <div className="flex items-start justify-between">
-                  <div className={clsx("w-10 h-10 rounded-xl border flex items-center justify-center", bot.border, bot.bg)}>
-                    <Icon className={clsx("w-5 h-5", bot.color)} />
+                  <div
+                    className="w-10 h-10 rounded-lg flex items-center justify-center"
+                    style={{
+                      background: active ? "var(--accent-blue-glow)" : "var(--bg-elevated)",
+                      border: `1px solid ${active ? "rgba(59,130,246,0.25)" : "var(--border)"}`,
+                    }}
+                  >
+                    <Icon
+                      className="w-5 h-5"
+                      style={{ color: active ? "var(--accent-blue)" : "var(--text-tertiary)" }}
+                    />
                   </div>
-                  {active ? (
-                    <span className={clsx("flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full border", bot.border, bot.color, bot.bg)}>
+
+                  {status === "active" && (
+                    <span
+                      className="flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full"
+                      style={{
+                        background: "rgba(16,185,129,0.1)",
+                        border: "1px solid rgba(16,185,129,0.25)",
+                        color: "var(--accent-green)",
+                      }}
+                    >
                       <CheckCircle2 className="w-3 h-3" /> Active
                     </span>
-                  ) : (
-                    <span className="flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full border border-vault-border text-vault-text-dim">
+                  )}
+                  {status === "trial" && (
+                    <span
+                      className="flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full"
+                      style={{
+                        background: "rgba(245,158,11,0.1)",
+                        border: "1px solid rgba(245,158,11,0.25)",
+                        color: "var(--accent-amber)",
+                      }}
+                    >
+                      Trial
+                    </span>
+                  )}
+                  {status === "locked" && (
+                    <span
+                      className="flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full"
+                      style={{
+                        background: "var(--bg-elevated)",
+                        border: "1px solid var(--border)",
+                        color: "var(--text-tertiary)",
+                      }}
+                    >
                       <Lock className="w-3 h-3" /> Locked
                     </span>
                   )}
                 </div>
+
                 <div>
-                  <h3 className="font-display font-bold text-sm">{bot.name}</h3>
-                  <p className="text-xs text-vault-text-dim mt-0.5">{bot.description}</p>
+                  <h3
+                    className="font-display font-bold text-sm"
+                    style={{ color: "var(--text-primary)" }}
+                  >
+                    {bot.name}
+                  </h3>
+                  <p className="text-xs mt-0.5" style={{ color: "var(--text-secondary)" }}>
+                    {bot.description}
+                  </p>
                 </div>
+
                 {active ? (
-                  <Link href={bot.href} className={clsx("flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-bold transition-colors", bot.border, bot.color, bot.bg, "hover:opacity-90 border")}>
-                    Go To Bot <ArrowRight className="w-3 h-3" />
+                  <Link
+                    href={bot.href}
+                    className="flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-medium transition-all hover:-translate-y-px"
+                    style={{
+                      background: "var(--accent-blue-glow)",
+                      border: "1px solid rgba(59,130,246,0.3)",
+                      color: "var(--accent-blue)",
+                    }}
+                  >
+                    Open Bot <ArrowRight className="w-3 h-3" />
                   </Link>
                 ) : (
-                  <Link href="/dashboard/billing" className="flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-bold bg-vault-accent/10 text-vault-accent border border-vault-accent/20 hover:bg-vault-accent/20 transition-colors">
+                  <Link
+                    href="/dashboard/billing"
+                    className="flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-medium transition-all hover:-translate-y-px"
+                    style={{
+                      background: "var(--bg-elevated)",
+                      border: "1px solid var(--border)",
+                      color: "var(--text-secondary)",
+                    }}
+                  >
                     Subscribe
                   </Link>
                 )}
@@ -157,23 +357,54 @@ function DashboardInner() {
       <ReferralWidget />
 
       {/* Recent Activity */}
-      <div className="card-surface rounded-2xl p-6">
-        <h2 className="font-display text-xl font-bold mb-4 flex items-center gap-2">
-          <Activity className="w-5 h-5 text-vault-accent" /> Recent Activity
+      <div
+        className="rounded-xl p-6"
+        style={{ background: "var(--bg-surface)", border: "1px solid var(--border)", borderRadius: "12px" }}
+      >
+        <h2
+          className="font-display font-bold text-lg mb-5 flex items-center gap-2"
+          style={{ color: "var(--text-primary)" }}
+        >
+          <Activity className="w-5 h-5" style={{ color: "var(--accent-blue)" }} />
+          Recent Activity
         </h2>
+
         {activity.length === 0 ? (
-          <p className="text-vault-text-dim text-sm">No activity yet. Start using a bot to see your activity here.</p>
+          <div className="text-center py-8">
+            <Activity className="w-8 h-8 mx-auto mb-3" style={{ color: "var(--text-tertiary)" }} />
+            <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
+              No activity yet. Open a bot to get started.
+            </p>
+          </div>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-1">
             {activity.map((item) => (
-              <div key={item.id} className="flex items-center gap-3 py-2.5 border-b border-vault-border/50 last:border-0">
-                <div className="w-2 h-2 rounded-full bg-vault-accent shrink-0" />
+              <div
+                key={item.id}
+                className="flex items-center gap-3 py-2.5 border-b last:border-0"
+                style={{ borderColor: "rgba(31,46,69,0.5)" }}
+              >
+                <div
+                  className="w-2 h-2 rounded-full shrink-0"
+                  style={{ background: "var(--accent-blue)" }}
+                />
                 <div className="flex-1 min-w-0">
-                  <span className="text-xs font-mono text-vault-accent mr-2">{BOT_LABELS[item.bot_slug] ?? item.bot_slug}</span>
-                  <span className="text-sm text-vault-text">{item.action}</span>
-                  {item.detail && <span className="text-sm text-vault-text-dim ml-1">— {item.detail}</span>}
+                  <span
+                    className="text-xs font-mono mr-2"
+                    style={{ color: "var(--accent-blue)", fontFamily: "var(--font-mono)" }}
+                  >
+                    {BOT_LABELS[item.bot_slug] ?? item.bot_slug}
+                  </span>
+                  <span className="text-sm" style={{ color: "var(--text-primary)" }}>{item.action}</span>
+                  {item.detail && (
+                    <span className="text-sm ml-1" style={{ color: "var(--text-secondary)" }}>
+                      — {item.detail}
+                    </span>
+                  )}
                 </div>
-                <span className="text-xs text-vault-text-dim shrink-0">{new Date(item.created_at).toLocaleDateString()}</span>
+                <span className="text-xs shrink-0" style={{ color: "var(--text-tertiary)" }}>
+                  {new Date(item.created_at).toLocaleDateString()}
+                </span>
               </div>
             ))}
           </div>
