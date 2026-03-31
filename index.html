@@ -8,6 +8,235 @@
   <link rel="stylesheet" href="styles.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    /* ── ORANGE ACCENT ─────────────────────────── */
+    :root { --orange: #ff6b00; --orange-glow: rgba(255,107,0,0.25); --orange-dim: rgba(255,107,0,0.12); }
+
+    /* ── PRODUCTS SECTION ──────────────────────── */
+    .products-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+      margin-top: 3rem;
+    }
+    @media (max-width: 1024px) { .products-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 640px)  { .products-grid { grid-template-columns: 1fr; } }
+
+    .product-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+      position: relative;
+    }
+    .product-card::before {
+      content: '';
+      display: block;
+      height: 3px;
+      background: var(--orange);
+      width: 100%;
+      flex-shrink: 0;
+    }
+    .product-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 16px 48px var(--orange-glow), 0 4px 24px rgba(0,0,0,0.5);
+      border-color: rgba(255,107,0,0.35);
+    }
+    .product-card-body {
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+    .product-cat-badge {
+      display: inline-block;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--orange);
+      background: var(--orange-dim);
+      border: 1px solid rgba(255,107,0,0.25);
+      border-radius: 4px;
+      padding: 3px 8px;
+      margin-bottom: 0.75rem;
+      width: fit-content;
+    }
+    .product-card h3 {
+      font-family: var(--font-display);
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 0.6rem;
+      line-height: 1.3;
+    }
+    .product-card p {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      flex: 1;
+    }
+    .product-card-footer {
+      padding: 1rem 1.5rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+    .product-price {
+      font-size: 0.875rem;
+      font-weight: 700;
+      color: var(--orange);
+    }
+    .btn-orange {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--orange);
+      color: #fff;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      padding: 8px 16px;
+      border-radius: var(--radius-sm);
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+      white-space: nowrap;
+    }
+    .btn-orange:hover {
+      background: #ff8533;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px var(--orange-glow);
+    }
+    .products-cta-wrap {
+      text-align: center;
+      margin-top: 2.5rem;
+    }
+    .btn-outline-orange {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: transparent;
+      color: var(--orange);
+      font-size: 0.9rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      padding: 12px 28px;
+      border-radius: var(--radius-sm);
+      border: 2px solid var(--orange);
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .btn-outline-orange:hover {
+      background: var(--orange);
+      color: #fff;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px var(--orange-glow);
+    }
+
+    /* ── PIPELINE SECTION ──────────────────────── */
+    .pipeline-section {
+      background: var(--bg-surface);
+      padding: 6rem 0;
+    }
+    .pipeline-progress-bar {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      margin: 2.5rem 0 3rem;
+      border-radius: 999px;
+      overflow: hidden;
+      height: 10px;
+      background: var(--border);
+    }
+    .pipeline-bar-live   { background: #22c55e; flex: 2; height: 10px; }
+    .pipeline-bar-build  { background: var(--orange); flex: 1.5; height: 10px; }
+    .pipeline-bar-soon   { background: var(--text-muted); flex: 1; height: 10px; }
+
+    .pipeline-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+    }
+    @media (max-width: 900px) { .pipeline-grid { grid-template-columns: 1fr; } }
+
+    .pipeline-phase {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 1.75rem;
+    }
+    .phase-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1.25rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .phase-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.7rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 4px;
+    }
+    .phase-badge-live  { background: rgba(34,197,94,0.15); color: #22c55e; border: 1px solid rgba(34,197,94,0.3); }
+    .phase-badge-build { background: var(--orange-dim); color: var(--orange); border: 1px solid rgba(255,107,0,0.3); }
+    .phase-badge-soon  { background: rgba(100,100,120,0.15); color: var(--text-secondary); border: 1px solid var(--border); }
+
+    .phase-label {
+      font-family: var(--font-display);
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+    .pipeline-item-list { display: flex; flex-direction: column; gap: 0.6rem; }
+    .pipeline-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.6rem;
+      font-size: 0.865rem;
+      color: var(--text-secondary);
+      line-height: 1.4;
+    }
+    .pipeline-item .pi-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      margin-top: 6px;
+      flex-shrink: 0;
+    }
+    .pi-dot-live  { background: #22c55e; }
+    .pi-dot-build { background: var(--orange); }
+    .pi-dot-soon  { background: var(--text-muted); }
+    .pipeline-item strong { color: var(--text-primary); font-weight: 600; display: block; }
+    .pipeline-item span.pi-sub { font-size: 0.8rem; color: var(--text-muted); }
+
+    .pulse-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      background: var(--orange);
+      border-radius: 50%;
+      animation: pulseDot 1.5s ease-in-out infinite;
+      flex-shrink: 0;
+    }
+    @keyframes pulseDot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(1.6); }
+    }
+  </style>
 </head>
 <body>
 
@@ -19,8 +248,8 @@
         <span class="logo-text">Bot<span class="accent">Vault</span>Pro</span>
       </a>
       <ul class="nav-links">
-        <li><a href="#bots">Bots</a></li>
-        <li><a href="#industries">Industries</a></li>
+        <li><a href="#products">Products</a></li>
+        <li><a href="#pipeline">Pipeline</a></li>
         <li><a href="#wishlist">Wishlist</a></li>
         <li><a href="#waitlist" class="nav-cta">Join Waitlist</a></li>
       </ul>
@@ -123,162 +352,93 @@
     </div>
   </section>
 
-  <!-- BOTS SHOWCASE -->
-  <section class="bots section-pad" id="bots">
+  <!-- PRODUCTS -->
+  <section class="section-pad" id="products">
     <div class="container">
       <div class="section-header">
-        <div class="section-tag">Our Bot Vault</div>
-        <h2>Meet your new <span class="gradient-text">digital workforce</span></h2>
-        <p>A growing library of purpose-built bots, each designed to solve real business problems.</p>
+        <div class="section-tag">The Vault</div>
+        <h2>THE <span class="gradient-text">VAULT</span></h2>
+        <p>Tools built to recover money you're already losing — and save hours you can't get back. Every product ships instantly. Start using it today.</p>
       </div>
-      <div class="bots-grid" id="botsGrid">
 
-        <div class="bot-card" data-category="sales">
-          <div class="bot-card-header">
-            <div class="bot-icon">💬</div>
-            <div class="bot-badge badge-sales">Sales</div>
+      <div class="products-grid">
+
+        <div class="product-card fade-in-up">
+          <div class="product-card-body">
+            <div class="product-cat-badge">Assessment Tool</div>
+            <h3>BVP AI Readiness Assessment</h3>
+            <p>Find out exactly where your business stands with AI — and what to implement first. A structured audit that scores your operations across 5 key areas and gives you a prioritized action plan.</p>
           </div>
-          <h3>LeadGen Pro Bot</h3>
-          <p>Automatically scrapes, qualifies, and routes leads from LinkedIn, web forms, and cold outreach campaigns into your CRM.</p>
-          <ul class="bot-features">
-            <li>LinkedIn prospect scraping</li>
-            <li>Auto-email sequences</li>
-            <li>CRM sync & tagging</li>
-          </ul>
-          <div class="bot-footer">
-            <span class="bot-stat">Up to <strong>300%</strong> more leads</span>
+          <div class="product-card-footer">
+            <span class="product-price">Starting at $27</span>
+            <a href="https://botvaultpro.gumroad.com" target="_blank" rel="noopener noreferrer" class="btn-orange">Buy Now →</a>
           </div>
         </div>
 
-        <div class="bot-card" data-category="customer-service">
-          <div class="bot-card-header">
-            <div class="bot-icon">🤖</div>
-            <div class="bot-badge badge-cs">Customer Service</div>
+        <div class="product-card fade-in-up">
+          <div class="product-card-body">
+            <div class="product-cat-badge">Profit Tool</div>
+            <h3>BVP Profit Leak Audit</h3>
+            <p>The average trades business loses $40K–$120K per year to invisible profit leaks. This audit identifies every leak in your pricing, collections, follow-up, and scheduling — and shows you how to plug them.</p>
           </div>
-          <h3>SupportDesk Bot</h3>
-          <p>AI-powered support agent that resolves 70%+ of tickets automatically, escalating complex issues to your human team.</p>
-          <ul class="bot-features">
-            <li>24/7 instant responses</li>
-            <li>Multi-channel (chat, email, SMS)</li>
-            <li>Sentiment detection & escalation</li>
-          </ul>
-          <div class="bot-footer">
-            <span class="bot-stat">Reduce support costs by <strong>60%</strong></span>
+          <div class="product-card-footer">
+            <span class="product-price">Starting at $27</span>
+            <a href="https://botvaultpro.gumroad.com" target="_blank" rel="noopener noreferrer" class="btn-orange">Buy Now →</a>
           </div>
         </div>
 
-        <div class="bot-card" data-category="finance">
-          <div class="bot-card-header">
-            <div class="bot-icon">💰</div>
-            <div class="bot-badge badge-finance">Finance</div>
+        <div class="product-card fade-in-up">
+          <div class="product-card-body">
+            <div class="product-cat-badge">Sales Tool</div>
+            <h3>BVP Estimating &amp; Sales Audit</h3>
+            <p>Stop leaving money on the table. Audit your estimating process, close rate, and sales approach to find where you're losing jobs you should be winning — and fix it fast.</p>
           </div>
-          <h3>InvoiceFlow Bot</h3>
-          <p>Automates invoice creation, payment follow-ups, reconciliation, and financial reporting — end to end.</p>
-          <ul class="bot-features">
-            <li>Auto invoice generation</li>
-            <li>Payment reminders & dunning</li>
-            <li>QuickBooks / Xero integration</li>
-          </ul>
-          <div class="bot-footer">
-            <span class="bot-stat">Cut AR time by <strong>80%</strong></span>
+          <div class="product-card-footer">
+            <span class="product-price">Starting at $27</span>
+            <a href="https://botvaultpro.gumroad.com" target="_blank" rel="noopener noreferrer" class="btn-orange">Buy Now →</a>
           </div>
         </div>
 
-        <div class="bot-card" data-category="ecommerce">
-          <div class="bot-card-header">
-            <div class="bot-icon">🛒</div>
-            <div class="bot-badge badge-ecom">E-Commerce</div>
+        <div class="product-card fade-in-up">
+          <div class="product-card-body">
+            <div class="product-cat-badge">Business Tool</div>
+            <h3>BVP Business Health Scorecard</h3>
+            <p>A comprehensive scorecard that grades your business across operations, cash flow, customer experience, and growth — with specific recommendations to move from surviving to scaling.</p>
           </div>
-          <h3>StoreOps Bot</h3>
-          <p>Manages inventory, repricing, order fulfillment, and abandoned cart recovery across Shopify, Amazon, and more.</p>
-          <ul class="bot-features">
-            <li>Dynamic repricing engine</li>
-            <li>Low-stock alerts & reorders</li>
-            <li>Cart recovery sequences</li>
-          </ul>
-          <div class="bot-footer">
-            <span class="bot-stat">Recover <strong>25%</strong> of abandoned carts</span>
+          <div class="product-card-footer">
+            <span class="product-price">Starting at $27</span>
+            <a href="https://botvaultpro.gumroad.com" target="_blank" rel="noopener noreferrer" class="btn-orange">Buy Now →</a>
           </div>
         </div>
 
-        <div class="bot-card" data-category="marketing">
-          <div class="bot-card-header">
-            <div class="bot-icon">📣</div>
-            <div class="bot-badge badge-marketing">Marketing</div>
+        <div class="product-card fade-in-up">
+          <div class="product-card-body">
+            <div class="product-cat-badge">Setup Guide</div>
+            <h3>BVP AI Setup Guide</h3>
+            <p>Step-by-step guide to setting up your first AI agent for your trades business. No tech experience required. Get your AI running in an afternoon and start saving hours every week.</p>
           </div>
-          <h3>ContentBlast Bot</h3>
-          <p>Generates, schedules, and publishes SEO-optimized content across your blog, social media, and email channels.</p>
-          <ul class="bot-features">
-            <li>AI content generation</li>
-            <li>Multi-platform scheduling</li>
-            <li>Performance analytics</li>
-          </ul>
-          <div class="bot-footer">
-            <span class="bot-stat">10x your content output</span>
+          <div class="product-card-footer">
+            <span class="product-price">Starting at $47</span>
+            <a href="https://botvaultpro.gumroad.com" target="_blank" rel="noopener noreferrer" class="btn-orange">Buy Now →</a>
           </div>
         </div>
 
-        <div class="bot-card" data-category="hr">
-          <div class="bot-card-header">
-            <div class="bot-icon">👥</div>
-            <div class="bot-badge badge-hr">HR & Recruiting</div>
+        <div class="product-card fade-in-up">
+          <div class="product-card-body">
+            <div class="product-cat-badge">Advanced Guide</div>
+            <h3>BVP AI Agent Factory</h3>
+            <p>Build a fleet of AI agents that run your back office. This advanced guide walks you through creating, configuring, and deploying multiple AI agents for estimating, follow-up, invoicing, and more.</p>
           </div>
-          <h3>HireStream Bot</h3>
-          <p>Sources candidates, screens resumes, schedules interviews, and sends offer letters — automating your entire recruiting funnel.</p>
-          <ul class="bot-features">
-            <li>Job board posting & scraping</li>
-            <li>AI resume screening</li>
-            <li>Calendar scheduling & reminders</li>
-          </ul>
-          <div class="bot-footer">
-            <span class="bot-stat">Fill roles <strong>5x</strong> faster</span>
+          <div class="product-card-footer">
+            <span class="product-price">Starting at $97</span>
+            <a href="https://botvaultpro.gumroad.com" target="_blank" rel="noopener noreferrer" class="btn-orange">Buy Now →</a>
           </div>
         </div>
 
-        <div class="bot-card" data-category="real-estate">
-          <div class="bot-card-header">
-            <div class="bot-icon">🏠</div>
-            <div class="bot-badge badge-realestate">Real Estate</div>
-          </div>
-          <h3>PropFlow Bot</h3>
-          <p>Automates property listing syndication, lead follow-up, showing scheduling, and contract document management.</p>
-          <ul class="bot-features">
-            <li>MLS listing sync</li>
-            <li>Automated showing requests</li>
-            <li>Lead nurture sequences</li>
-          </ul>
-          <div class="bot-footer">
-            <span class="bot-stat">Close deals <strong>2x</strong> faster</span>
-          </div>
-        </div>
+      </div>
 
-        <div class="bot-card" data-category="healthcare">
-          <div class="bot-card-header">
-            <div class="bot-icon">🏥</div>
-            <div class="bot-badge badge-health">Healthcare</div>
-          </div>
-          <h3>PatientFlow Bot</h3>
-          <p>Handles appointment reminders, patient intake forms, insurance verification, and follow-up care instructions.</p>
-          <ul class="bot-features">
-            <li>Automated appointment reminders</li>
-            <li>Digital intake & consent forms</li>
-            <li>Insurance pre-auth automation</li>
-          </ul>
-          <div class="bot-footer">
-            <span class="bot-stat">Reduce no-shows by <strong>45%</strong></span>
-          </div>
-        </div>
-
-        <div class="bot-card bot-card-coming">
-          <div class="bot-card-header">
-            <div class="bot-icon">✨</div>
-            <div class="bot-badge badge-coming">Coming Soon</div>
-          </div>
-          <h3>More Bots in Development</h3>
-          <p>We're constantly engineering new bots. Have a specific automation need? Submit it to our Wishlist below and help us prioritize what to build next.</p>
-          <a href="#wishlist" class="btn btn-outline btn-sm">Suggest a Bot →</a>
-        </div>
-
+      <div class="products-cta-wrap">
+        <a href="https://botvaultpro.gumroad.com" target="_blank" rel="noopener noreferrer" class="btn-outline-orange">View All Products on Gumroad →</a>
       </div>
     </div>
   </section>
@@ -539,17 +699,128 @@
     </div>
   </section>
 
+  <!-- PRODUCT PIPELINE -->
+  <section class="pipeline-section" id="pipeline">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-tag">Product Pipeline</div>
+        <h2>BVP <span class="gradient-text">PRODUCT PIPELINE</span></h2>
+        <p>We build in public. Here's exactly what's coming and when.</p>
+      </div>
+
+      <div class="pipeline-progress-bar">
+        <div class="pipeline-bar-live"></div>
+        <div class="pipeline-bar-build"></div>
+        <div class="pipeline-bar-soon"></div>
+      </div>
+
+      <div class="pipeline-grid">
+
+        <div class="pipeline-phase fade-in-up">
+          <div class="phase-header">
+            <span class="phase-badge phase-badge-live">✓ Live Now</span>
+            <span class="phase-label">Phase 1</span>
+          </div>
+          <ul class="pipeline-item-list">
+            <li class="pipeline-item">
+              <span class="pi-dot pi-dot-live"></span>
+              <span><strong>BVP AI Readiness Assessment</strong></span>
+            </li>
+            <li class="pipeline-item">
+              <span class="pi-dot pi-dot-live"></span>
+              <span><strong>BVP Profit Leak Audit</strong></span>
+            </li>
+            <li class="pipeline-item">
+              <span class="pi-dot pi-dot-live"></span>
+              <span><strong>BVP Estimating &amp; Sales Audit</strong></span>
+            </li>
+            <li class="pipeline-item">
+              <span class="pi-dot pi-dot-live"></span>
+              <span><strong>BVP Business Health Scorecard</strong></span>
+            </li>
+            <li class="pipeline-item">
+              <span class="pi-dot pi-dot-live"></span>
+              <span><strong>BVP AI Setup Guide</strong></span>
+            </li>
+            <li class="pipeline-item">
+              <span class="pi-dot pi-dot-live"></span>
+              <span><strong>BVP AI Agent Factory</strong></span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="pipeline-phase fade-in-up">
+          <div class="phase-header">
+            <span class="phase-badge phase-badge-build"><span class="pulse-dot"></span> Building Now</span>
+            <span class="phase-label">Phase 2</span>
+          </div>
+          <ul class="pipeline-item-list">
+            <li class="pipeline-item">
+              <span class="pi-dot pi-dot-build"></span>
+              <div>
+                <strong>BVP Trades Bot</strong>
+                <span class="pi-sub">Autonomous AI agent for trades businesses — estimates, invoices, follow-up, 24/7</span>
+              </div>
+            </li>
+            <li class="pipeline-item">
+              <span class="pi-dot pi-dot-build"></span>
+              <div>
+                <strong>BVP Operations Toolkit</strong>
+                <span class="pi-sub">Full spreadsheet system for job costing, scheduling, and profit tracking</span>
+              </div>
+            </li>
+            <li class="pipeline-item">
+              <span class="pi-dot pi-dot-build"></span>
+              <div>
+                <strong>BVP Automation Playbook</strong>
+                <span class="pi-sub">30-day implementation roadmap for AI in your trades business</span>
+              </div>
+            </li>
+          </ul>
+        </div>
+
+        <div class="pipeline-phase fade-in-up">
+          <div class="phase-header">
+            <span class="phase-badge phase-badge-soon">Coming Soon</span>
+            <span class="phase-label">Phase 3</span>
+          </div>
+          <ul class="pipeline-item-list">
+            <li class="pipeline-item">
+              <span class="pi-dot pi-dot-soon"></span>
+              <span><strong>BVP Restaurant Bot</strong></span>
+            </li>
+            <li class="pipeline-item">
+              <span class="pi-dot pi-dot-soon"></span>
+              <span><strong>BVP Real Estate Bot</strong></span>
+            </li>
+            <li class="pipeline-item">
+              <span class="pi-dot pi-dot-soon"></span>
+              <span><strong>BVP Legal Bot</strong></span>
+            </li>
+            <li class="pipeline-item">
+              <span class="pi-dot pi-dot-soon"></span>
+              <div>
+                <strong>BVP AI Marketplace</strong>
+                <span class="pi-sub">Hire any AI agent for any business function</span>
+              </div>
+            </li>
+          </ul>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
   <!-- WAITLIST -->
   <section class="waitlist section-pad" id="waitlist">
     <div class="container">
       <div class="waitlist-inner">
         <div class="waitlist-left">
           <div class="section-tag">Join the Waitlist</div>
-          <h2>Be first in the <span class="gradient-text">vault</span></h2>
+          <h2>Be First. <span class="gradient-text">Get More.</span></h2>
           <p>
-            Bot Vault Pro is launching soon. Founding members get exclusive early
-            access, special pricing, and direct input on which bots we build.
-            Don't get left behind while your competitors automate.
+            Join the BVP waitlist to get early access to new products, launch pricing,
+            and first-look previews before anything goes public.
           </p>
           <div class="waitlist-perks">
             <div class="perk">
@@ -682,7 +953,7 @@
             </button>
 
             <p class="form-disclaimer">
-              🔒 Your data is secure. We never sell or share your information. Unsubscribe anytime.
+              No spam. Unsubscribe anytime. Early access pricing is locked for waitlist members.
             </p>
 
             <div class="form-success" id="waitlistSuccess" hidden>
@@ -788,21 +1059,24 @@
         </div>
         <div class="footer-links">
           <div class="footer-col">
-            <h5>Product</h5>
+            <h5>Products</h5>
             <ul>
-              <li><a href="#bots">Bot Catalog</a></li>
-              <li><a href="#industries">Industries</a></li>
-              <li><a href="#how">How It Works</a></li>
-              <li><a href="#faq">FAQ</a></li>
+              <li><a href="https://botvaultpro.gumroad.com" target="_blank" rel="noopener noreferrer">BVP AI Readiness Assessment</a></li>
+              <li><a href="https://botvaultpro.gumroad.com" target="_blank" rel="noopener noreferrer">BVP Profit Leak Audit</a></li>
+              <li><a href="https://botvaultpro.gumroad.com" target="_blank" rel="noopener noreferrer">BVP Estimating &amp; Sales Audit</a></li>
+              <li><a href="https://botvaultpro.gumroad.com" target="_blank" rel="noopener noreferrer">BVP Business Health Scorecard</a></li>
+              <li><a href="https://botvaultpro.gumroad.com" target="_blank" rel="noopener noreferrer">BVP AI Setup Guide</a></li>
+              <li><a href="https://botvaultpro.gumroad.com" target="_blank" rel="noopener noreferrer">BVP AI Agent Factory</a></li>
             </ul>
           </div>
           <div class="footer-col">
-            <h5>Company</h5>
+            <h5>Coming Soon</h5>
             <ul>
-              <li><a href="#">About Us</a></li>
-              <li><a href="#">Blog</a></li>
-              <li><a href="#">Careers</a></li>
-              <li><a href="#">Contact</a></li>
+              <li><a href="#pipeline">BVP Trades Bot</a></li>
+              <li><a href="#pipeline">BVP Operations Toolkit</a></li>
+              <li><a href="#pipeline">BVP Automation Playbook</a></li>
+              <li><a href="#pipeline">BVP Restaurant Bot</a></li>
+              <li><a href="#pipeline">BVP AI Marketplace</a></li>
             </ul>
           </div>
           <div class="footer-col">
@@ -810,14 +1084,14 @@
             <ul>
               <li><a href="#waitlist">Join Waitlist</a></li>
               <li><a href="#wishlist">Bot Wishlist</a></li>
-              <li><a href="#">Request a Demo</a></li>
-              <li><a href="#">Partner Program</a></li>
+              <li><a href="#pipeline">View Pipeline</a></li>
+              <li><a href="mailto:botvaultpro@outlook.com">Contact Us</a></li>
             </ul>
           </div>
         </div>
       </div>
       <div class="footer-bottom">
-        <p>&copy; 2026 Bot Vault Pro. All rights reserved. | botvaultpro.com</p>
+        <p>&copy; 2026 Bot Vault Pro. All rights reserved. | <a href="mailto:botvaultpro@outlook.com">botvaultpro@outlook.com</a></p>
         <div class="footer-legal">
           <a href="#">Privacy Policy</a>
           <a href="#">Terms of Service</a>

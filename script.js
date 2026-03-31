@@ -26,7 +26,7 @@ navLinks.querySelectorAll('a').forEach(link => {
 
 // ── SCROLL REVEAL ANIMATIONS ───────────────────
 const revealEls = document.querySelectorAll(
-  '.bot-card, .step-card, .industry-pill, .benefit-item, .faq-item, .wish-item'
+  '.bot-card, .step-card, .industry-pill, .benefit-item, .faq-item, .wish-item, .product-card, .pipeline-phase'
 );
 
 revealEls.forEach(el => el.classList.add('fade-in-up'));
