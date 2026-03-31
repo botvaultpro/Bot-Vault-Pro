@@ -140,6 +140,39 @@
       box-shadow: 0 8px 24px var(--orange-glow);
     }
 
+    /* ── FEATURED PRODUCT CARD ─────────────────── */
+    .product-card-featured {
+      border-color: rgba(255,107,0,0.4);
+      box-shadow: 0 0 0 1px rgba(255,107,0,0.15), inset 0 0 40px rgba(255,107,0,0.04);
+    }
+    .product-card-featured::before {
+      background: linear-gradient(90deg, var(--orange), #ffaa44);
+    }
+    .product-live-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.65rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #22c55e;
+      background: rgba(34,197,94,0.1);
+      border: 1px solid rgba(34,197,94,0.3);
+      border-radius: 4px;
+      padding: 2px 7px;
+      margin-bottom: 0.6rem;
+      width: fit-content;
+    }
+    .product-live-badge .live-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: #22c55e;
+      animation: pulseDot 1.5s ease-in-out infinite;
+      flex-shrink: 0;
+    }
+
     /* ── PIPELINE SECTION ──────────────────────── */
     .pipeline-section {
       background: var(--bg-surface);
@@ -235,6 +268,140 @@
     @keyframes pulseDot {
       0%, 100% { opacity: 1; transform: scale(1); }
       50% { opacity: 0.4; transform: scale(1.6); }
+    }
+
+    /* ── KANBAN PIPELINE ───────────────────────── */
+    .pipeline-kanban-wrap {
+      overflow-x: auto;
+      padding-bottom: 1rem;
+      margin-top: 2rem;
+    }
+    .pipeline-kanban-wrap::-webkit-scrollbar { height: 4px; }
+    .pipeline-kanban-wrap::-webkit-scrollbar-track { background: var(--bg-card); border-radius: 2px; }
+    .pipeline-kanban-wrap::-webkit-scrollbar-thumb { background: #2a2a4a; border-radius: 2px; }
+
+    .pipeline-kanban {
+      display: flex;
+      gap: 14px;
+      min-width: max-content;
+    }
+
+    .kb-col { width: 240px; flex-shrink: 0; }
+
+    .kb-col-hdr {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-top: 3px solid var(--col-accent, #444);
+      border-bottom: none;
+      border-radius: 8px 8px 0 0;
+    }
+    .kb-col-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--col-accent, #444);
+      flex-shrink: 0;
+    }
+    .kb-col-dot.glow { box-shadow: 0 0 8px #22c55e; }
+    .kb-col-title {
+      font-family: var(--font-display);
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--col-accent, #888);
+      flex: 1;
+    }
+    .kb-col-count {
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      padding: 1px 7px;
+      border-radius: 20px;
+    }
+
+    .kb-col-body {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-top: none;
+      border-radius: 0 0 8px 8px;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      min-height: 120px;
+    }
+
+    .kb-card {
+      background: var(--bg-base);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px;
+      transition: border-color 0.15s, transform 0.15s;
+    }
+    .kb-card:hover { border-color: #2a2a4a; transform: translateY(-1px); }
+
+    .kb-cat {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 5px;
+    }
+    .kb-cat-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+    .kb-name {
+      font-family: var(--font-display);
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      line-height: 1.25;
+      margin-bottom: 3px;
+    }
+    .kb-desc {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+      margin-bottom: 7px;
+    }
+    .kb-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .kb-price {
+      font-family: var(--font-display);
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #00b4ff;
+    }
+    .kb-live-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      font-size: 0.6rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #22c55e;
+      background: rgba(34,197,94,0.1);
+      border: 1px solid rgba(34,197,94,0.25);
+      padding: 2px 6px;
+      border-radius: 20px;
+    }
+    .kb-live-dot { width: 4px; height: 4px; border-radius: 50%; background: #22c55e; animation: pulseDot 1.5s ease-in-out infinite; }
+
+    .pipeline-view-cta {
+      text-align: center;
+      margin-top: 2rem;
     }
   </style>
 </head>
@@ -363,8 +530,9 @@
 
       <div class="products-grid">
 
-        <div class="product-card fade-in-up">
+        <div class="product-card product-card-featured fade-in-up">
           <div class="product-card-body">
+            <div class="product-live-badge"><span class="live-dot"></span> Live on Gumroad</div>
             <div class="product-cat-badge">Assessment Tool</div>
             <h3>BVP AI Readiness Assessment</h3>
             <p>Find out exactly where your business stands with AI — and what to implement first. A structured audit that scores your operations across 5 key areas and gives you a prioritized action plan.</p>
@@ -375,8 +543,9 @@
           </div>
         </div>
 
-        <div class="product-card fade-in-up">
+        <div class="product-card product-card-featured fade-in-up">
           <div class="product-card-body">
+            <div class="product-live-badge"><span class="live-dot"></span> Live on Gumroad</div>
             <div class="product-cat-badge">Profit Tool</div>
             <h3>BVP Profit Leak Audit</h3>
             <p>The average trades business loses $40K–$120K per year to invisible profit leaks. This audit identifies every leak in your pricing, collections, follow-up, and scheduling — and shows you how to plug them.</p>
@@ -399,8 +568,9 @@
           </div>
         </div>
 
-        <div class="product-card fade-in-up">
+        <div class="product-card product-card-featured fade-in-up">
           <div class="product-card-body">
+            <div class="product-live-badge"><span class="live-dot"></span> Live on Gumroad</div>
             <div class="product-cat-badge">Business Tool</div>
             <h3>BVP Business Health Scorecard</h3>
             <p>A comprehensive scorecard that grades your business across operations, cash flow, customer experience, and growth — with specific recommendations to move from surviving to scaling.</p>
@@ -703,110 +873,164 @@
   <section class="pipeline-section" id="pipeline">
     <div class="container">
       <div class="section-header">
-        <div class="section-tag">Product Pipeline</div>
-        <h2>BVP <span class="gradient-text">PRODUCT PIPELINE</span></h2>
-        <p>We build in public. Here's exactly what's coming and when.</p>
+        <div class="section-tag">Production Line</div>
+        <h2>BVP <span class="gradient-text">PRODUCTION LINE</span></h2>
+        <p>We build in public. Every product we're working on — from idea to live. Drop your email on anything coming soon to get notified first.</p>
       </div>
 
-      <div class="pipeline-progress-bar">
-        <div class="pipeline-bar-live"></div>
-        <div class="pipeline-bar-build"></div>
-        <div class="pipeline-bar-soon"></div>
+      <div class="pipeline-kanban-wrap">
+        <div class="pipeline-kanban">
+
+          <!-- PLANNED -->
+          <div class="kb-col">
+            <div class="kb-col-hdr" style="--col-accent:#3d4659">
+              <div class="kb-col-dot" style="background:#3d4659"></div>
+              <div class="kb-col-title" style="color:#8899bb">Planned</div>
+              <div class="kb-col-count">5</div>
+            </div>
+            <div class="kb-col-body">
+              <div class="kb-card">
+                <div class="kb-cat"><div class="kb-cat-dot" style="background:#00a8ff"></div><span style="color:#00a8ff">Prompt Pack</span></div>
+                <div class="kb-name">Real Estate Prompt Pack</div>
+                <div class="kb-desc">Close faster and communicate better. AI prompts for listings, client comms, and deal management.</div>
+                <div class="kb-footer"><div class="kb-price">$49</div></div>
+              </div>
+              <div class="kb-card">
+                <div class="kb-cat"><div class="kb-cat-dot" style="background:#00a8ff"></div><span style="color:#00a8ff">Prompt Pack</span></div>
+                <div class="kb-name">Law Firm Prompt Pack</div>
+                <div class="kb-desc">AI prompts for small law firms. Client intake, case summaries, billing, and professional comms.</div>
+                <div class="kb-footer"><div class="kb-price">$69</div></div>
+              </div>
+              <div class="kb-card">
+                <div class="kb-cat"><div class="kb-cat-dot" style="background:#7c4dff"></div><span style="color:#7c4dff">AI Tool</span></div>
+                <div class="kb-name">Business Operations AI</div>
+                <div class="kb-desc">Industry-agnostic AI tool for operations, scheduling, and customer management.</div>
+                <div class="kb-footer"><div class="kb-price">$49/mo</div></div>
+              </div>
+              <div class="kb-card">
+                <div class="kb-cat"><div class="kb-cat-dot" style="background:#7c4dff"></div><span style="color:#7c4dff">AI Tool</span></div>
+                <div class="kb-name">Marketing AI Tool</div>
+                <div class="kb-desc">Blogs, social content, email campaigns, ad copy — all generated on-brand in seconds.</div>
+                <div class="kb-footer"><div class="kb-price">$69/mo</div></div>
+              </div>
+              <div class="kb-card">
+                <div class="kb-cat"><div class="kb-cat-dot" style="background:#00e676"></div><span style="color:#00e676">Bundle</span></div>
+                <div class="kb-name">Full Prompt Pack Bundle</div>
+                <div class="kb-desc">All 6 prompt packs at 40% off. Massive value for multi-industry businesses or resellers.</div>
+                <div class="kb-footer"><div class="kb-price">$179</div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- IN DEVELOPMENT -->
+          <div class="kb-col">
+            <div class="kb-col-hdr" style="--col-accent:#00a8ff">
+              <div class="kb-col-dot" style="background:#00a8ff"></div>
+              <div class="kb-col-title" style="color:#00a8ff">In Development</div>
+              <div class="kb-col-count">3</div>
+            </div>
+            <div class="kb-col-body">
+              <div class="kb-card">
+                <div class="kb-cat"><div class="kb-cat-dot" style="background:#7c4dff"></div><span style="color:#7c4dff">AI Tool</span></div>
+                <div class="kb-name">Trades AI Tool — Pro</div>
+                <div class="kb-desc">Full automation suite. Estimates, follow-ups, collections, scheduling — all running on autopilot.</div>
+                <div class="kb-footer"><div class="kb-price">$99/mo</div></div>
+              </div>
+              <div class="kb-card">
+                <div class="kb-cat"><div class="kb-cat-dot" style="background:#00a8ff"></div><span style="color:#00a8ff">Prompt Pack</span></div>
+                <div class="kb-name">Restaurant Prompt Pack</div>
+                <div class="kb-desc">AI prompts for restaurant owners. Menu copy, review responses, staff comms, supplier negotiations.</div>
+                <div class="kb-footer"><div class="kb-price">$49</div></div>
+              </div>
+              <div class="kb-card">
+                <div class="kb-cat"><div class="kb-cat-dot" style="background:#e040fb"></div><span style="color:#e040fb">Bot</span></div>
+                <div class="kb-name">Trades Bot</div>
+                <div class="kb-desc">The flagship. Fully autonomous AI that estimates, invoices, follows up, and collects — 24/7.</div>
+                <div class="kb-footer"><div class="kb-price">$149/mo</div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- TESTING -->
+          <div class="kb-col">
+            <div class="kb-col-hdr" style="--col-accent:#ffd740">
+              <div class="kb-col-dot" style="background:#ffd740"></div>
+              <div class="kb-col-title" style="color:#ffd740">Testing</div>
+              <div class="kb-col-count">2</div>
+            </div>
+            <div class="kb-col-body">
+              <div class="kb-card">
+                <div class="kb-cat"><div class="kb-cat-dot" style="background:#7c4dff"></div><span style="color:#7c4dff">AI Tool</span></div>
+                <div class="kb-name">Trades AI Tool — Starter</div>
+                <div class="kb-desc">AI-powered assistant for job estimates, invoices, and customer messaging. Built for contractors.</div>
+                <div class="kb-footer"><div class="kb-price">$49/mo</div></div>
+              </div>
+              <div class="kb-card">
+                <div class="kb-cat"><div class="kb-cat-dot" style="background:#ffd740"></div><span style="color:#ffd740">Playbook</span></div>
+                <div class="kb-name">ChatGPT &amp; Claude Setup Guide</div>
+                <div class="kb-desc">Step-by-step guide to setting up AI tools for your trades business. No tech background needed.</div>
+                <div class="kb-footer"><div class="kb-price">$49</div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- COMING SOON -->
+          <div class="kb-col">
+            <div class="kb-col-hdr" style="--col-accent:#e040fb">
+              <div class="kb-col-dot" style="background:#e040fb"></div>
+              <div class="kb-col-title" style="color:#e040fb">Coming Soon</div>
+              <div class="kb-col-count">2</div>
+            </div>
+            <div class="kb-col-body">
+              <div class="kb-card">
+                <div class="kb-cat"><div class="kb-cat-dot" style="background:#00a8ff"></div><span style="color:#00a8ff">Prompt Pack</span></div>
+                <div class="kb-name">Trades Pro Prompt Pack</div>
+                <div class="kb-desc">150+ AI prompts for contractors. Estimates, proposals, invoices, collections, and customer comms.</div>
+                <div class="kb-footer"><div class="kb-price">$49</div></div>
+              </div>
+              <div class="kb-card">
+                <div class="kb-cat"><div class="kb-cat-dot" style="background:#00e676"></div><span style="color:#00e676">Bundle</span></div>
+                <div class="kb-name">Trades Starter Kit Bundle</div>
+                <div class="kb-desc">Prompt Pack + Profit Playbook + bonus templates. Biggest savings, best starting point.</div>
+                <div class="kb-footer"><div class="kb-price">$129</div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- LIVE -->
+          <div class="kb-col">
+            <div class="kb-col-hdr" style="--col-accent:#00e676">
+              <div class="kb-col-dot glow" style="background:#00e676"></div>
+              <div class="kb-col-title" style="color:#00e676">Live Now</div>
+              <div class="kb-col-count">2</div>
+            </div>
+            <div class="kb-col-body">
+              <div class="kb-card">
+                <div class="kb-cat"><div class="kb-cat-dot" style="background:#ffd740"></div><span style="color:#ffd740">Playbook</span></div>
+                <div class="kb-name">Trades Profit Playbook</div>
+                <div class="kb-desc">11-chapter guide to recovering lost revenue. Revenue Leak Audit, profit-first estimating, follow-up sequences, and more.</div>
+                <div class="kb-footer">
+                  <div class="kb-price">$99</div>
+                  <div class="kb-live-badge"><div class="kb-live-dot"></div> Live</div>
+                </div>
+              </div>
+              <div class="kb-card">
+                <div class="kb-cat"><div class="kb-cat-dot" style="background:#ff6e6e"></div><span style="color:#ff6e6e">Toolkit</span></div>
+                <div class="kb-name">Operations Toolkit</div>
+                <div class="kb-desc">Complete spreadsheet system: job tracker, estimating calculator, invoice log, and profit dashboard.</div>
+                <div class="kb-footer">
+                  <div class="kb-price">$49</div>
+                  <div class="kb-live-badge"><div class="kb-live-dot"></div> Live</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
       </div>
 
-      <div class="pipeline-grid">
-
-        <div class="pipeline-phase fade-in-up">
-          <div class="phase-header">
-            <span class="phase-badge phase-badge-live">✓ Live Now</span>
-            <span class="phase-label">Phase 1</span>
-          </div>
-          <ul class="pipeline-item-list">
-            <li class="pipeline-item">
-              <span class="pi-dot pi-dot-live"></span>
-              <span><strong>BVP AI Readiness Assessment</strong></span>
-            </li>
-            <li class="pipeline-item">
-              <span class="pi-dot pi-dot-live"></span>
-              <span><strong>BVP Profit Leak Audit</strong></span>
-            </li>
-            <li class="pipeline-item">
-              <span class="pi-dot pi-dot-live"></span>
-              <span><strong>BVP Estimating &amp; Sales Audit</strong></span>
-            </li>
-            <li class="pipeline-item">
-              <span class="pi-dot pi-dot-live"></span>
-              <span><strong>BVP Business Health Scorecard</strong></span>
-            </li>
-            <li class="pipeline-item">
-              <span class="pi-dot pi-dot-live"></span>
-              <span><strong>BVP AI Setup Guide</strong></span>
-            </li>
-            <li class="pipeline-item">
-              <span class="pi-dot pi-dot-live"></span>
-              <span><strong>BVP AI Agent Factory</strong></span>
-            </li>
-          </ul>
-        </div>
-
-        <div class="pipeline-phase fade-in-up">
-          <div class="phase-header">
-            <span class="phase-badge phase-badge-build"><span class="pulse-dot"></span> Building Now</span>
-            <span class="phase-label">Phase 2</span>
-          </div>
-          <ul class="pipeline-item-list">
-            <li class="pipeline-item">
-              <span class="pi-dot pi-dot-build"></span>
-              <div>
-                <strong>BVP Trades Bot</strong>
-                <span class="pi-sub">Autonomous AI agent for trades businesses — estimates, invoices, follow-up, 24/7</span>
-              </div>
-            </li>
-            <li class="pipeline-item">
-              <span class="pi-dot pi-dot-build"></span>
-              <div>
-                <strong>BVP Operations Toolkit</strong>
-                <span class="pi-sub">Full spreadsheet system for job costing, scheduling, and profit tracking</span>
-              </div>
-            </li>
-            <li class="pipeline-item">
-              <span class="pi-dot pi-dot-build"></span>
-              <div>
-                <strong>BVP Automation Playbook</strong>
-                <span class="pi-sub">30-day implementation roadmap for AI in your trades business</span>
-              </div>
-            </li>
-          </ul>
-        </div>
-
-        <div class="pipeline-phase fade-in-up">
-          <div class="phase-header">
-            <span class="phase-badge phase-badge-soon">Coming Soon</span>
-            <span class="phase-label">Phase 3</span>
-          </div>
-          <ul class="pipeline-item-list">
-            <li class="pipeline-item">
-              <span class="pi-dot pi-dot-soon"></span>
-              <span><strong>BVP Restaurant Bot</strong></span>
-            </li>
-            <li class="pipeline-item">
-              <span class="pi-dot pi-dot-soon"></span>
-              <span><strong>BVP Real Estate Bot</strong></span>
-            </li>
-            <li class="pipeline-item">
-              <span class="pi-dot pi-dot-soon"></span>
-              <span><strong>BVP Legal Bot</strong></span>
-            </li>
-            <li class="pipeline-item">
-              <span class="pi-dot pi-dot-soon"></span>
-              <div>
-                <strong>BVP AI Marketplace</strong>
-                <span class="pi-sub">Hire any AI agent for any business function</span>
-              </div>
-            </li>
-          </ul>
-        </div>
-
+      <div class="pipeline-view-cta">
+        <a href="bvp-production-line.html" class="btn-outline-orange" target="_blank" rel="noopener noreferrer">View Full Production Line →</a>
       </div>
     </div>
   </section>
