@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>BVP Production Line</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#07090f;color:#e8eaf0;font-family:'Barlow',sans-serif;min-height:100vh}
+
+/* HEADER */
+.hdr{background:#0d1017;border-bottom:1px solid #1e2433;padding:0 32px;display:flex;align-items:center;justify-content:space-between;height:64px;position:sticky;top:0;z-index:100}
+.logo{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:22px;letter-spacing:.04em;text-transform:uppercase}
+.logo span{color:#00a8ff}
+.abtn{background:#141820;border:1px solid #1e2433;color:#7a8599;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:8px 16px;border-radius:6px;cursor:pointer;transition:all .2s}
+.abtn:hover,.abtn.on{border-color:#00a8ff;color:#00a8ff;background:rgba(0,168,255,.1)}
+
+/* HERO */
+.hero{padding:56px 32px 32px;text-align:center}
+.hero-tag{display:inline-block;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:#00a8ff;border:1px solid rgba(0,168,255,.2);background:rgba(0,168,255,.1);padding:4px 14px;border-radius:4px;margin-bottom:20px}
+.hero h1{font-family:'Barlow Condensed',sans-serif;font-size:clamp(36px,6vw,68px);font-weight:900;text-transform:uppercase;letter-spacing:.02em;line-height:1;margin-bottom:14px}
+.hero h1 em{color:#00a8ff;font-style:normal}
+.hero p{color:#7a8599;font-size:15px;max-width:500px;margin:0 auto;line-height:1.6}
+
+/* STATS */
+.stats{display:flex;max-width:860px;margin:32px auto;border:1px solid #1e2433;border-radius:10px;overflow:hidden}
+.stat{flex:1;padding:16px;text-align:center;border-right:1px solid #1e2433;background:#0d1017}
+.stat:last-child{border-right:none}
+.stat-n{font-family:'Barlow Condensed',sans-serif;font-size:30px;font-weight:900;color:#00a8ff;line-height:1}
+.stat-l{font-size:10px;color:#3d4659;letter-spacing:.1em;text-transform:uppercase;margin-top:3px}
+
+/* ADMIN BAR */
+.abar{display:none;background:rgba(0,168,255,.08);border:1px solid rgba(0,168,255,.2);border-radius:10px;margin:0 24px 20px;padding:14px 18px;align-items:center;gap:12px;flex-wrap:wrap}
+.abar.on{display:flex}
+.abar-lbl{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#00a8ff}
+.aact{font-size:12px;font-weight:600;font-family:'Barlow Condensed',sans-serif;letter-spacing:.06em;text-transform:uppercase;background:#0d1017;border:1px solid #1e2433;color:#e8eaf0;padding:6px 14px;border-radius:6px;cursor:pointer;transition:all .2s}
+.aact:hover{border-color:#00a8ff;color:#00a8ff}
+.abar-note{font-size:11px;color:#7a8599;margin-left:auto}
+
+/* BOARD */
+.bwrap{overflow-x:auto;padding:0 24px 80px}
+.board{display:flex;gap:16px;width:max-content;margin:0 auto}
+
+/* COLUMN */
+.col{width:285px;flex-shrink:0}
+.col-hdr{display:flex;align-items:center;gap:10px;padding:13px 15px;border-radius:10px 10px 0 0;border:1px solid #1e2433;border-bottom:none;background:#0d1017}
+.col-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.col-ttl{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;letter-spacing:.1em;text-transform:uppercase}
+.col-cnt{margin-left:auto;background:#141820;border:1px solid #1e2433;color:#3d4659;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px}
+.col-body{background:#0d1017;border:1px solid #1e2433;border-top:none;border-radius:0 0 10px 10px;padding:10px;min-height:180px;display:flex;flex-direction:column;gap:9px;transition:background .2s}
+.col-body.over{background:#141820;border-color:#00a8ff}
+
+/* CARD */
+.card{background:#07090f;border:1px solid #1e2433;border-radius:8px;padding:13px;transition:border-color .15s,transform .15s,box-shadow .15s;position:relative;user-select:none}
+.card:hover{border-color:#2a3448;transform:translateY(-1px);box-shadow:0 4px 18px rgba(0,0,0,.5)}
+.card.drag{cursor:grab}.card.dragging{opacity:.45;cursor:grabbing}
+.ctype{font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;margin-bottom:7px;display:flex;align-items:center;gap:5px}
+.cdot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.cname{font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;line-height:1.2;margin-bottom:5px;color:#e8eaf0}
+.cdesc{font-size:12px;color:#7a8599;line-height:1.45;margin-bottom:11px}
+.cfoot{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.cprice{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;color:#00a8ff}
+.nbtn{font-size:11px;font-weight:600;font-family:'Barlow Condensed',sans-serif;letter-spacing:.07em;text-transform:uppercase;background:rgba(0,168,255,.1);border:1px solid rgba(0,168,255,.3);color:#00a8ff;padding:5px 11px;border-radius:5px;cursor:pointer;transition:all .2s;white-space:nowrap}
+.nbtn:hover{background:#00a8ff;color:#000}
+.nbtn.done{background:rgba(0,230,118,.1);border-color:rgba(0,230,118,.3);color:#00e676;cursor:default}
+.livebadge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#00e676;background:rgba(0,230,118,.1);border:1px solid rgba(0,230,118,.2);padding:3px 8px;border-radius:20px}
+.livedot{width:5px;height:5px;border-radius:50%;background:#00e676;animation:glow 2s infinite}
+@keyframes glow{0%,100%{box-shadow:0 0 5px #00e676}50%{box-shadow:0 0 14px #00e676}}
+
+/* ADMIN CARD CONTROLS */
+.cadmin{display:none;gap:5px;margin-bottom:7px}
+.admin-mode .cadmin{display:flex}
+.cedit,.cdel{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:3px 8px;border-radius:4px;cursor:pointer;border:1px solid;font-family:'Barlow Condensed',sans-serif;transition:all .15s}
+.cedit{background:rgba(0,168,255,.1);border-color:rgba(0,168,255,.25);color:#00a8ff}
+.cedit:hover{background:#00a8ff;color:#000}
+.cdel{background:rgba(255,50,50,.1);border-color:rgba(255,50,50,.25);color:#ff5050}
+.cdel:hover{background:#ff5050;color:#fff}
+.addbtn{display:none;width:100%;background:none;border:1px dashed #1e2433;border-radius:7px;color:#3d4659;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;padding:11px;cursor:pointer;transition:all .2s;margin-top:2px}
+.addbtn:hover{border-color:#00a8ff;color:#00a8ff}
+.admin-mode .addbtn{display:block}
+
+/* MODAL */
+.ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.87);z-index:200;align-items:center;justify-content:center;padding:20px}
+.ov.open{display:flex}
+.modal{background:#0d1017;border:1px solid #1e2433;border-radius:14px;width:100%;max-width:480px;padding:30px;position:relative;animation:mIn .18s ease}
+@keyframes mIn{from{transform:translateY(18px);opacity:0}to{transform:none;opacity:1}}
+.mclose{position:absolute;top:14px;right:14px;background:#141820;border:1px solid #1e2433;color:#7a8599;width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.mclose:hover{border-color:#00a8ff;color:#00a8ff}
+.mtitle{font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:900;text-transform:uppercase;margin-bottom:5px}
+.msub{font-size:13px;color:#7a8599;margin-bottom:22px;line-height:1.5}
+.hi{color:#00a8ff;font-weight:600}
+.fld{margin-bottom:14px}
+.fld label{display:block;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#7a8599;margin-bottom:5px}
+.fld input,.fld select,.fld textarea{width:100%;background:#141820;border:1px solid #1e2433;border-radius:7px;padding:9px 13px;color:#e8eaf0;font-family:'Barlow',sans-serif;font-size:14px;outline:none;transition:border-color .2s}
+.fld input:focus,.fld select:focus,.fld textarea:focus{border-color:#00a8ff}
+.fld textarea{resize:vertical;min-height:70px}
+.fld select option{background:#141820}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.msub-btn{width:100%;background:#00a8ff;border:none;color:#000;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:900;letter-spacing:.07em;text-transform:uppercase;padding:13px;border-radius:8px;cursor:pointer;margin-top:4px;transition:opacity .2s}
+.msub-btn:hover{opacity:.88}
+.msuccess{text-align:center;padding:18px 0}
+.msuccess-icon{font-size:44px;margin-bottom:10px}
+.msuccess-title{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:900;text-transform:uppercase;color:#00e676;margin-bottom:7px}
+.msuccess-msg{font-size:13px;color:#7a8599;line-height:1.5}
+
+/* FOOTER */
+.foot{text-align:center;padding:28px;border-top:1px solid #1e2433;color:#3d4659;font-size:12px;letter-spacing:.04em}
+.foot a{color:#00a8ff;text-decoration:none}
+::-webkit-scrollbar{height:5px;width:5px}
+::-webkit-scrollbar-track{background:#07090f}
+::-webkit-scrollbar-thumb{background:#1e2433;border-radius:3px}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="logo">Bot Vault <span>Pro</span></div>
+  <button class="abtn" id="atoggle" onclick="promptAdmin()">&#9881; Admin</button>
+</div>
+
+<div class="hero">
+  <div class="hero-tag">&#128296; Live Build Tracker</div>
+  <h1>BVP <em>Production</em> Line</h1>
+  <p>See everything we're building in real-time. Drop your email on any product to get notified the moment it goes live.</p>
+</div>
+
+<div class="stats" id="stats"></div>
+
+<div class="abar" id="abar">
+  <span class="abar-lbl">&#128274; Admin Mode</span>
+  <button class="aact" onclick="openAdd()">+ Add Product</button>
+  <button class="aact" onclick="saveAll()">Save Changes</button>
+  <button class="aact" onclick="doExport()">Export JSON</button>
+  <button class="aact" onclick="doReset()">Reset Defaults</button>
+  <span class="abar-note">Drag cards between columns to move them</span>
+</div>
+
+<div class="bwrap"><div class="board" id="board"></div></div>
+
+<div class="foot">Bot Vault Pro &nbsp;&middot;&nbsp; <a href="mailto:botvaultpro@outlook.com">botvaultpro@outlook.com</a> &nbsp;&middot;&nbsp; Building the AI layer for the trades.</div>
+
+<!-- NOTIFY MODAL -->
+<div class="ov" id="notifyOv">
+  <div class="modal">
+    <button class="mclose" onclick="closeOv('notifyOv')">&#10005;</button>
+    <div id="notifyForm">
+      <div class="mtitle">Get Notified</div>
+      <p class="msub">Drop your email and we'll hit you the moment <span class="hi" id="npName"></span> goes live. No spam.</p>
+      <div class="fld"><label>Email</label><input type="email" id="npEmail" placeholder="you@email.com"/></div>
+      <div class="fld"><label>Name <span style="color:#3d4659">(optional)</span></label><input type="text" id="npName2" placeholder="First name"/></div>
+      <button class="msub-btn" onclick="submitNotify()">Notify Me When It's Live &rarr;</button>
+    </div>
+    <div class="msuccess" id="notifyOk" style="display:none">
+      <div class="msuccess-icon">&#127919;</div>
+      <div class="msuccess-title">You're On The List</div>
+      <p class="msuccess-msg">We'll email you the moment <strong id="npOkName"></strong> launches. Early access pricing goes to the list first.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ADD/EDIT MODAL -->
+<div class="ov" id="cardOv">
+  <div class="modal" style="max-width:520px">
+    <button class="mclose" onclick="closeOv('cardOv')">&#10005;</button>
+    <div class="mtitle" id="cardOvTitle">Add Product</div>
+    <p class="msub" style="margin-bottom:16px">Fill in the product details.</p>
+    <div class="fld"><label>Product Name</label><input type="text" id="cName" placeholder="Trades Pro Prompt Pack"/></div>
+    <div class="fld"><label>Description</label><textarea id="cDesc" placeholder="Brief description..."></textarea></div>
+    <div class="frow">
+      <div class="fld"><label>Category</label>
+        <select id="cCat">
+          <option>Prompt Pack</option><option>Playbook</option><option>AI Tool</option>
+          <option>Bundle</option><option>Bot</option><option>Toolkit</option><option>Course</option>
+        </select>
+      </div>
+      <div class="fld"><label>Price</label><input type="text" id="cPrice" placeholder="$49 or $49/mo"/></div>
+    </div>
+    <div class="fld"><label>Column</label>
+      <select id="cCol">
+        <option value="planned">Planned</option><option value="dev">In Development</option>
+        <option value="testing">Testing</option><option value="soon">Coming Soon</option><option value="live">Live</option>
+      </select>
+    </div>
+    <button class="msub-btn" onclick="saveCard()">Save Product &rarr;</button>
+  </div>
+</div>
+
+<!-- ADMIN LOGIN MODAL -->
+<div class="ov" id="loginOv">
+  <div class="modal" style="max-width:360px">
+    <button class="mclose" onclick="closeOv('loginOv')">&#10005;</button>
+    <div class="mtitle">Admin Access</div>
+    <p class="msub">Enter your password to edit the production line.</p>
+    <div class="fld"><label>Password</label><input type="password" id="apw" placeholder="Password" onkeydown="if(event.key==='Enter')checkPw()"/></div>
+    <div id="apwErr" style="color:#ff5050;font-size:12px;margin-bottom:12px;display:none">Incorrect password.</div>
+    <button class="msub-btn" onclick="checkPw()">Unlock Admin Mode &rarr;</button>
+  </div>
+</div>
+
+<script>
+var PW = 'bvp2025';
+
+var COLORS = {
+  'Prompt Pack':'#00a8ff','Playbook':'#ffd740','AI Tool':'#7c4dff',
+  'Bundle':'#00e676','Bot':'#e040fb','Toolkit':'#ff6e6e','Course':'#64ffda'
+};
+
+var COLS = [
+  {id:'planned', label:'Planned',        accent:'#3d4659'},
+  {id:'dev',     label:'In Development', accent:'#00a8ff'},
+  {id:'testing', label:'Testing',        accent:'#ffd740'},
+  {id:'soon',    label:'Coming Soon',    accent:'#e040fb'},
+  {id:'live',    label:'Live',           accent:'#00e676'}
+];
+
+var DEFAULTS = [
+  {id:'p1', col:'live',    name:'Trades Profit Playbook',       cat:'Playbook',    price:'$99',     desc:'11-chapter guide to recovering lost revenue. Revenue Leak Audit, profit-first estimating, follow-up sequences, and more.'},
+  {id:'p2', col:'live',    name:'Operations Toolkit',           cat:'Toolkit',     price:'$49',     desc:'Complete spreadsheet system: job tracker, estimating calculator, invoice log, and profit dashboard.'},
+  {id:'p3', col:'soon',    name:'Trades Pro Prompt Pack',       cat:'Prompt Pack', price:'$49',     desc:'150+ AI prompts for contractors. Estimates, proposals, invoices, collections, and customer comms.'},
+  {id:'p4', col:'soon',    name:'Trades Starter Kit Bundle',    cat:'Bundle',      price:'$129',    desc:'Prompt Pack + Profit Playbook + bonus templates. Biggest savings, best starting point.'},
+  {id:'p5', col:'testing', name:'Trades AI Tool — Starter',     cat:'AI Tool',     price:'$49/mo',  desc:'AI-powered assistant for job estimates, invoices, and customer messaging. Built for contractors.'},
+  {id:'p6', col:'testing', name:'ChatGPT & Claude Setup Guide', cat:'Playbook',    price:'$49',     desc:'Step-by-step guide to setting up AI tools for your trades business. No tech background needed.'},
+  {id:'p7', col:'dev',     name:'Trades AI Tool — Pro',         cat:'AI Tool',     price:'$99/mo',  desc:'Full automation suite. Estimates, follow-ups, collections, scheduling — all running on autopilot.'},
+  {id:'p8', col:'dev',     name:'Restaurant Prompt Pack',       cat:'Prompt Pack', price:'$49',     desc:'AI prompts for restaurant owners. Menu copy, review responses, staff comms, supplier negotiations.'},
+  {id:'p9', col:'dev',     name:'Trades Bot',                   cat:'Bot',         price:'$149/mo', desc:'The flagship. Fully autonomous AI that estimates, invoices, follows up, and collects — 24/7.'},
+  {id:'p10',col:'planned', name:'Real Estate Prompt Pack',      cat:'Prompt Pack', price:'$49',     desc:'Close faster and communicate better. AI prompts for listings, client comms, and deal management.'},
+  {id:'p11',col:'planned', name:'Law Firm Prompt Pack',         cat:'Prompt Pack', price:'$69',     desc:'AI prompts for small law firms. Client intake, case summaries, billing, and professional comms.'},
+  {id:'p12',col:'planned', name:'Business Operations AI',       cat:'AI Tool',     price:'$49/mo',  desc:'Industry-agnostic AI tool for operations, scheduling, and customer management.'},
+  {id:'p13',col:'planned', name:'Marketing AI Tool',            cat:'AI Tool',     price:'$69/mo',  desc:'Blogs, social content, email campaigns, ad copy — all generated on-brand in seconds.'},
+  {id:'p14',col:'planned', name:'Full Prompt Pack Bundle',      cat:'Bundle',      price:'$179',    desc:'All 6 prompt packs at 40% off. Massive value for multi-industry businesses or resellers.'}
+];
+
+var items=[], notifyId=null, editId=null, admin=false, dragId=null;
+
+function load(){
+  try{ var s=localStorage.getItem('bvp2'); items=s?JSON.parse(s):clone(DEFAULTS); }
+  catch(e){ items=clone(DEFAULTS); }
+}
+function clone(x){ return JSON.parse(JSON.stringify(x)); }
+function saveAll(){ localStorage.setItem('bvp2',JSON.stringify(items)); toast('Saved'); }
+function doReset(){ if(!confirm('Reset to defaults?'))return; items=clone(DEFAULTS); localStorage.setItem('bvp2',JSON.stringify(items)); render(); }
+function doExport(){ var b=new Blob([JSON.stringify(items,null,2)],{type:'application/json'}); var a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='bvp-products.json'; a.click(); }
+
+function render(){
+  renderStats();
+  renderBoard();
+}
+
+function renderStats(){
+  var c={planned:0,dev:0,testing:0,soon:0,live:0};
+  items.forEach(function(p){ if(c[p.col]!==undefined)c[p.col]++; });
+  var lbls={planned:'Planned',dev:'In Dev',testing:'Testing',soon:'Coming Soon',live:'Live'};
+  document.getElementById('stats').innerHTML = COLS.map(function(col){
+    return '<div class="stat"><div class="stat-n">'+c[col.id]+'</div><div class="stat-l">'+lbls[col.id]+'</div></div>';
+  }).join('');
+}
+
+function renderBoard(){
+  var board=document.getElementById('board');
+  board.innerHTML='';
+  board.className = admin ? 'board admin-mode' : 'board';
+
+  COLS.forEach(function(col){
+    var ps=items.filter(function(p){return p.col===col.id;});
+
+    var hdr=document.createElement('div');
+    hdr.className='col-hdr';
+    hdr.style.borderTop='3px solid '+col.accent;
+    hdr.innerHTML='<div class="col-dot" style="background:'+col.accent+(col.id==='live'?';box-shadow:0 0 8px #00e676':'')+'"></div>'
+      +'<div class="col-ttl" style="color:'+col.accent+'">'+col.label+'</div>'
+      +'<div class="col-cnt">'+ps.length+'</div>';
+
+    var body=document.createElement('div');
+    body.className='col-body';
+    body.id='cb-'+col.id;
+
+    body.addEventListener('dragover',function(e){
+      if(!admin)return;
+      e.preventDefault();
+      document.querySelectorAll('.col-body').forEach(function(x){x.classList.remove('over');});
+      body.classList.add('over');
+    });
+    body.addEventListener('dragleave',function(){body.classList.remove('over');});
+    body.addEventListener('drop',function(e){
+      e.preventDefault();
+      body.classList.remove('over');
+      if(!dragId)return;
+      var p=items.find(function(x){return x.id===dragId;});
+      if(p)p.col=col.id;
+      dragId=null;
+      saveAll();
+      render();
+    });
+
+    ps.forEach(function(p){
+      body.appendChild(makeCard(p,col.id));
+    });
+
+    var ab=document.createElement('button');
+    ab.className='addbtn';
+    ab.textContent='+ Add Product';
+    ab.addEventListener('click',function(){openAdd(col.id);});
+    body.appendChild(ab);
+
+    var wrap=document.createElement('div');
+    wrap.className='col';
+    wrap.appendChild(hdr);
+    wrap.appendChild(body);
+    board.appendChild(wrap);
+  });
+}
+
+function makeCard(p,colId){
+  var cc=COLORS[p.cat]||'#888';
+  var isLive=colId==='live';
+  var noted=localStorage.getItem('noted_'+p.id)==='1';
+
+  var card=document.createElement('div');
+  card.className=admin?'card drag':'card';
+  card.id='card-'+p.id;
+  if(admin){
+    card.draggable=true;
+    card.addEventListener('dragstart',function(e){
+      dragId=p.id;
+      e.dataTransfer.effectAllowed='move';
+      setTimeout(function(){var el=document.getElementById('card-'+p.id);if(el)el.classList.add('dragging');},0);
+    });
+    card.addEventListener('dragend',function(){
+      document.querySelectorAll('.card').forEach(function(x){x.classList.remove('dragging');});
+    });
+  }
+
+  var ca=document.createElement('div'); ca.className='cadmin';
+  var eb=document.createElement('button'); eb.className='cedit'; eb.textContent='Edit';
+  eb.addEventListener('click',function(){openEdit(p.id);});
+  var db=document.createElement('button'); db.className='cdel'; db.textContent='Delete';
+  db.addEventListener('click',function(){if(confirm('Delete "'+p.name+'"?')){items=items.filter(function(x){return x.id!==p.id;}); saveAll(); render();}});
+  ca.appendChild(eb); ca.appendChild(db);
+
+  var tr=document.createElement('div'); tr.className='ctype';
+  tr.innerHTML='<div class="cdot" style="background:'+cc+'"></div><span style="color:'+cc+'">'+p.cat+'</span>';
+
+  var nm=document.createElement('div'); nm.className='cname'; nm.textContent=p.name;
+  var ds=document.createElement('div'); ds.className='cdesc'; ds.textContent=p.desc;
+
+  var ft=document.createElement('div'); ft.className='cfoot';
+  var pr=document.createElement('div'); pr.className='cprice'; pr.textContent=p.price;
+
+  var badge;
+  if(isLive){
+    badge=document.createElement('div'); badge.className='livebadge';
+    badge.innerHTML='<div class="livedot"></div> Live Now';
+  } else if(noted){
+    badge=document.createElement('button'); badge.className='nbtn done'; badge.disabled=true; badge.textContent='\u2713 Notified';
+  } else {
+    badge=document.createElement('button'); badge.className='nbtn'; badge.textContent='Notify Me';
+    badge.addEventListener('click',function(){openNotify(p.id);});
+  }
+
+  ft.appendChild(pr); ft.appendChild(badge);
+  card.appendChild(ca); card.appendChild(tr); card.appendChild(nm); card.appendChild(ds); card.appendChild(ft);
+  return card;
+}
+
+/* NOTIFY */
+function openNotify(id){
+  notifyId=id;
+  var p=items.find(function(x){return x.id===id;});
+  document.getElementById('npName').textContent=p.name;
+  document.getElementById('npEmail').value='';
+  document.getElementById('npName2').value='';
+  document.getElementById('notifyForm').style.display='';
+  document.getElementById('notifyOk').style.display='none';
+  openOv('notifyOv');
+}
+function submitNotify(){
+  var email=document.getElementById('npEmail').value.trim();
+  var ei=document.getElementById('npEmail');
+  if(!email||email.indexOf('@')<0){ei.style.borderColor='#ff5050';setTimeout(function(){ei.style.borderColor='';},1500);return;}
+  var name=document.getElementById('npName2').value.trim();
+  var p=items.find(function(x){return x.id===notifyId;});
+  fetch('https://YOUR_SUPABASE_URL/rest/v1/product_notifications',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','apikey':'YOUR_SUPABASE_ANON_KEY','Authorization':'Bearer YOUR_SUPABASE_ANON_KEY','Prefer':'return=minimal'},
+    body:JSON.stringify({email:email,name:name||null,product_id:p.id,product_name:p.name,category:p.cat})
+  }).catch(function(){});
+  localStorage.setItem('noted_'+notifyId,'1');
+  document.getElementById('npOkName').textContent=p.name;
+  document.getElementById('notifyForm').style.display='none';
+  document.getElementById('notifyOk').style.display='';
+  setTimeout(function(){closeOv('notifyOv');render();},3000);
+}
+
+/* ADD/EDIT */
+function openAdd(defaultCol){
+  editId=null;
+  document.getElementById('cardOvTitle').textContent='Add Product';
+  document.getElementById('cName').value='';
+  document.getElementById('cDesc').value='';
+  document.getElementById('cCat').value='Prompt Pack';
+  document.getElementById('cPrice').value='';
+  document.getElementById('cCol').value=defaultCol||'planned';
+  openOv('cardOv');
+}
+function openEdit(id){
+  var p=items.find(function(x){return x.id===id;});
+  if(!p)return;
+  editId=id;
+  document.getElementById('cardOvTitle').textContent='Edit Product';
+  document.getElementById('cName').value=p.name;
+  document.getElementById('cDesc').value=p.desc;
+  document.getElementById('cCat').value=p.cat;
+  document.getElementById('cPrice').value=p.price;
+  document.getElementById('cCol').value=p.col;
+  openOv('cardOv');
+}
+function saveCard(){
+  var name=document.getElementById('cName').value.trim();
+  if(!name){document.getElementById('cName').focus();return;}
+  var d={name:name,desc:document.getElementById('cDesc').value.trim(),cat:document.getElementById('cCat').value,price:document.getElementById('cPrice').value.trim(),col:document.getElementById('cCol').value};
+  if(editId){Object.assign(items.find(function(x){return x.id===editId;}),d);}
+  else{d.id='p'+Date.now();items.push(d);}
+  closeOv('cardOv'); saveAll(); render();
+}
+
+/* ADMIN */
+function promptAdmin(){
+  if(admin){admin=false;document.getElementById('atoggle').classList.remove('on');document.getElementById('abar').classList.remove('on');render();return;}
+  document.getElementById('apw').value='';
+  document.getElementById('apwErr').style.display='none';
+  openOv('loginOv');
+  setTimeout(function(){document.getElementById('apw').focus();},120);
+}
+function checkPw(){
+  if(document.getElementById('apw').value===PW){
+    admin=true; closeOv('loginOv');
+    document.getElementById('atoggle').classList.add('on');
+    document.getElementById('abar').classList.add('on');
+    render();
+  } else {
+    document.getElementById('apwErr').style.display='block';
+    document.getElementById('apw').value='';
+    document.getElementById('apw').focus();
+  }
+}
+
+/* OVERLAYS */
+function openOv(id){document.getElementById(id).classList.add('open');}
+function closeOv(id){document.getElementById(id).classList.remove('open');}
+document.querySelectorAll('.ov').forEach(function(el){
+  el.addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});
+});
+
+function toast(msg){
+  var t=document.createElement('div');
+  t.style.cssText='position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:#0d1017;border:1px solid #1e2433;color:#e8eaf0;font-family:"Barlow Condensed",sans-serif;font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:10px 22px;border-radius:8px;z-index:9999;box-shadow:0 6px 20px rgba(0,0,0,.6)';
+  t.textContent=msg;document.body.appendChild(t);
+  setTimeout(function(){t.remove();},2200);
+}
+
+load();
+render();
+</script>
+</body>
+</html>

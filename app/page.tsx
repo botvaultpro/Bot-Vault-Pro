@@ -69,6 +69,93 @@ const BOTS = [
   },
 ];
 
+const GUMROAD_PRODUCTS = [
+  {
+    name: "BVP AI Readiness Assessment",
+    category: "Assessment Tool",
+    description: "Find out exactly where your business stands with AI — and what to implement first. A structured audit that scores your operations across 5 key areas and gives you a prioritized action plan.",
+    price: "Starting at $27",
+    live: true,
+  },
+  {
+    name: "BVP Profit Leak Audit",
+    category: "Profit Tool",
+    description: "The average trades business loses $40K–$120K per year to invisible profit leaks. This audit identifies every leak in your pricing, collections, follow-up, and scheduling — and shows you how to plug them.",
+    price: "Starting at $27",
+    live: true,
+  },
+  {
+    name: "BVP Estimating & Sales Audit",
+    category: "Sales Tool",
+    description: "Stop leaving money on the table. Audit your estimating process, close rate, and sales approach to find where you're losing jobs you should be winning — and fix it fast.",
+    price: "Starting at $27",
+    live: false,
+  },
+  {
+    name: "BVP Business Health Scorecard",
+    category: "Business Tool",
+    description: "A comprehensive scorecard that grades your business across operations, cash flow, customer experience, and growth — with specific recommendations to move from surviving to scaling.",
+    price: "Starting at $27",
+    live: true,
+  },
+  {
+    name: "BVP AI Setup Guide",
+    category: "Setup Guide",
+    description: "Step-by-step guide to setting up your first AI agent for your trades business. No tech experience required. Get your AI running in an afternoon and start saving hours every week.",
+    price: "Starting at $47",
+    live: false,
+  },
+  {
+    name: "BVP AI Agent Factory",
+    category: "Advanced Guide",
+    description: "Build a fleet of AI agents that run your back office. This advanced guide walks you through creating, configuring, and deploying multiple AI agents for estimating, follow-up, invoicing, and more.",
+    price: "Starting at $97",
+    live: false,
+  },
+];
+
+const PIPELINE_COLS = [
+  {
+    id: "planned", label: "Planned", accent: "#4a5a7a",
+    items: [
+      { name: "Real Estate Prompt Pack",  cat: "Prompt Pack", cc: "#00a8ff", price: "$49",    desc: "AI prompts for listings, client comms, and deal management." },
+      { name: "Law Firm Prompt Pack",     cat: "Prompt Pack", cc: "#00a8ff", price: "$69",    desc: "Client intake, case summaries, billing, and professional comms." },
+      { name: "Business Operations AI",   cat: "AI Tool",     cc: "#7c4dff", price: "$49/mo", desc: "Operations, scheduling, and customer management — any industry." },
+      { name: "Marketing AI Tool",        cat: "AI Tool",     cc: "#7c4dff", price: "$69/mo", desc: "Blogs, social, email campaigns, ad copy — all on-brand in seconds." },
+      { name: "Full Prompt Pack Bundle",  cat: "Bundle",      cc: "#00e676", price: "$179",   desc: "All 6 prompt packs at 40% off. Best value for multi-industry use." },
+    ],
+  },
+  {
+    id: "dev", label: "In Development", accent: "#00a8ff",
+    items: [
+      { name: "Trades AI Tool — Pro",    cat: "AI Tool",  cc: "#7c4dff", price: "$99/mo",  desc: "Full automation suite — estimates, follow-ups, collections on autopilot." },
+      { name: "Restaurant Prompt Pack",  cat: "Prompt Pack", cc: "#00a8ff", price: "$49",  desc: "Menu copy, review responses, staff comms, supplier negotiations." },
+      { name: "Trades Bot",              cat: "Bot",      cc: "#e040fb", price: "$149/mo", desc: "The flagship. Autonomous AI — estimates, invoices, follows up 24/7." },
+    ],
+  },
+  {
+    id: "testing", label: "Testing", accent: "#ffd740",
+    items: [
+      { name: "Trades AI Tool — Starter",      cat: "AI Tool", cc: "#7c4dff", price: "$49/mo", desc: "AI assistant for job estimates, invoices, and customer messaging." },
+      { name: "ChatGPT & Claude Setup Guide",  cat: "Playbook", cc: "#ffd740", price: "$49",   desc: "Set up AI tools for your trades business — no tech background needed." },
+    ],
+  },
+  {
+    id: "soon", label: "Coming Soon", accent: "#e040fb",
+    items: [
+      { name: "Trades Pro Prompt Pack",    cat: "Prompt Pack", cc: "#00a8ff", price: "$49",  desc: "150+ AI prompts for contractors — estimates, proposals, collections." },
+      { name: "Trades Starter Kit Bundle", cat: "Bundle",      cc: "#00e676", price: "$129", desc: "Prompt Pack + Profit Playbook + bonus templates. Best starting point." },
+    ],
+  },
+  {
+    id: "live", label: "Live Now", accent: "#00e676",
+    items: [
+      { name: "Trades Profit Playbook", cat: "Playbook", cc: "#ffd740", price: "$99", desc: "11-chapter guide to recovering lost revenue — leak audit, estimating, follow-up." },
+      { name: "Operations Toolkit",     cat: "Toolkit",  cc: "#ff6e6e", price: "$49", desc: "Job tracker, estimating calculator, invoice log, and profit dashboard." },
+    ],
+  },
+];
+
 const HOW_IT_WORKS = [
   {
     step: "01",
@@ -124,9 +211,10 @@ export default function LandingPage() {
 
           {/* Center links */}
           <div className="hidden md:flex items-center gap-8 text-sm" style={{ color: "var(--text-secondary)" }}>
-            <a href="#features" className="hover:text-white transition-colors">Features</a>
-            <a href="#pricing"  className="hover:text-white transition-colors">Pricing</a>
-            <a href="#bots"     className="hover:text-white transition-colors">Bots</a>
+            <a href="#bots"      className="hover:text-white transition-colors">Bots</a>
+            <a href="#products"  className="hover:text-white transition-colors">Products</a>
+            <a href="#pipeline"  className="hover:text-white transition-colors">Pipeline</a>
+            <a href="#features"  className="hover:text-white transition-colors">How It Works</a>
           </div>
 
           {/* CTAs */}
@@ -318,7 +406,183 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── 4. How it Works ────────────────────────────────────────────── */}
+      {/* ── 4. Gumroad Products ────────────────────────────────────────── */}
+      <section
+        id="products"
+        className="py-24 px-4 sm:px-6"
+        style={{ borderBottom: "1px solid var(--border)" }}
+      >
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <p className="text-sm font-mono uppercase tracking-widest mb-3" style={{ color: "#ff6b00", fontFamily: "var(--font-mono)" }}>
+              The Vault
+            </p>
+            <h2 className="font-display font-extrabold text-4xl sm:text-5xl mb-4" style={{ color: "var(--text-primary)" }}>
+              Instant-Download Tools
+            </h2>
+            <p className="text-lg max-w-2xl mx-auto" style={{ color: "var(--text-secondary)" }}>
+              Tools built to recover money you&apos;re already losing — and save hours you can&apos;t get back. Every product ships instantly. Start using it today.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {GUMROAD_PRODUCTS.map((p) => (
+              <div
+                key={p.name}
+                className="flex flex-col rounded-xl overflow-hidden transition-all hover:-translate-y-1"
+                style={{
+                  background: "var(--bg-surface)",
+                  border: p.live ? "1px solid rgba(255,107,0,0.35)" : "1px solid var(--border)",
+                  borderRadius: "12px",
+                  boxShadow: p.live ? "0 0 0 1px rgba(255,107,0,0.1)" : "none",
+                }}
+              >
+                {/* Orange accent top bar */}
+                <div style={{ height: "3px", background: p.live ? "linear-gradient(90deg,#ff6b00,#ffaa44)" : "#ff6b00", flexShrink: 0 }} />
+                <div className="flex flex-col flex-1 p-6">
+                  {p.live && (
+                    <div className="inline-flex items-center gap-1.5 mb-2 w-fit rounded px-2 py-0.5 text-xs font-bold uppercase tracking-wider"
+                      style={{ background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.3)", color: "#22c55e" }}>
+                      <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#22c55e", animation: "statusPulse 2s ease-in-out infinite" }} />
+                      Live on Gumroad
+                    </div>
+                  )}
+                  <div className="inline-block mb-3 px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wider w-fit"
+                    style={{ background: "rgba(255,107,0,0.12)", border: "1px solid rgba(255,107,0,0.25)", color: "#ff6b00" }}>
+                    {p.category}
+                  </div>
+                  <h3 className="font-display font-bold text-lg mb-2" style={{ color: "var(--text-primary)" }}>{p.name}</h3>
+                  <p className="text-sm leading-relaxed flex-1" style={{ color: "var(--text-secondary)" }}>{p.description}</p>
+                </div>
+                <div className="px-6 pb-6 flex items-center justify-between">
+                  <span className="font-mono font-bold" style={{ color: "#ff6b00", fontFamily: "var(--font-mono)" }}>{p.price}</span>
+                  <a
+                    href="https://botvaultpro.gumroad.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-bold transition-all hover:-translate-y-px"
+                    style={{ background: "#ff6b00", color: "#fff" }}
+                  >
+                    Buy Now <ArrowRight className="w-3.5 h-3.5" />
+                  </a>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="text-center mt-10">
+            <a
+              href="https://botvaultpro.gumroad.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-bold transition-all hover:-translate-y-px"
+              style={{ border: "2px solid #ff6b00", color: "#ff6b00", background: "transparent" }}
+            >
+              View All Products on Gumroad <ArrowRight className="w-4 h-4" />
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* ── 5. Production Line ─────────────────────────────────────────── */}
+      <section
+        id="pipeline"
+        className="py-24 px-4 sm:px-6"
+        style={{ borderBottom: "1px solid var(--border)", background: "var(--bg-surface)" }}
+      >
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-12">
+            <p className="text-sm font-mono uppercase tracking-widest mb-3" style={{ color: "var(--accent-blue)", fontFamily: "var(--font-mono)" }}>
+              We build in public
+            </p>
+            <h2 className="font-display font-extrabold text-4xl sm:text-5xl mb-4" style={{ color: "var(--text-primary)" }}>
+              BVP Production Line
+            </h2>
+            <p className="text-lg max-w-2xl mx-auto" style={{ color: "var(--text-secondary)" }}>
+              Every product we&apos;re working on — from idea to live. Drop your email on anything coming soon to get notified first.
+            </p>
+          </div>
+
+          {/* Kanban board */}
+          <div className="overflow-x-auto pb-4" style={{ WebkitOverflowScrolling: "touch" }}>
+            <div className="flex gap-3" style={{ minWidth: "max-content" }}>
+              {PIPELINE_COLS.map((col) => (
+                <div key={col.id} style={{ width: "230px", flexShrink: 0 }}>
+                  {/* Column header */}
+                  <div
+                    className="flex items-center gap-2 px-3 py-2.5 rounded-t-lg"
+                    style={{
+                      background: "var(--bg-primary)",
+                      border: "1px solid var(--border)",
+                      borderTop: `3px solid ${col.accent}`,
+                      borderBottom: "none",
+                    }}
+                  >
+                    <span
+                      className="w-2 h-2 rounded-full flex-shrink-0"
+                      style={{
+                        background: col.accent,
+                        boxShadow: col.id === "live" ? `0 0 8px ${col.accent}` : "none",
+                        animation: col.id === "live" ? "statusPulse 2s ease-in-out infinite" : "none",
+                      }}
+                    />
+                    <span className="text-xs font-bold uppercase tracking-wider flex-1" style={{ color: col.accent }}>
+                      {col.label}
+                    </span>
+                    <span className="text-xs font-bold px-1.5 py-0.5 rounded-full" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid var(--border)", color: "var(--text-tertiary)" }}>
+                      {col.items.length}
+                    </span>
+                  </div>
+                  {/* Column body */}
+                  <div
+                    className="rounded-b-lg p-2 flex flex-col gap-2"
+                    style={{ background: "var(--bg-primary)", border: "1px solid var(--border)", borderTop: "none", minHeight: "120px" }}
+                  >
+                    {col.items.map((item) => (
+                      <div
+                        key={item.name}
+                        className="rounded-lg p-3 transition-all hover:-translate-y-px"
+                        style={{ background: "var(--bg-elevated)", border: "1px solid var(--border)" }}
+                      >
+                        <div className="flex items-center gap-1.5 mb-1.5">
+                          <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: item.cc }} />
+                          <span className="text-xs font-bold uppercase tracking-wider" style={{ color: item.cc }}>{item.cat}</span>
+                        </div>
+                        <p className="text-sm font-bold leading-snug mb-1" style={{ color: "var(--text-primary)", fontFamily: "var(--font-display)" }}>{item.name}</p>
+                        <p className="text-xs leading-relaxed mb-2" style={{ color: "var(--text-tertiary)" }}>{item.desc}</p>
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold" style={{ color: "#00b4ff", fontFamily: "var(--font-mono)" }}>{item.price}</span>
+                          {col.id === "live" && (
+                            <span className="inline-flex items-center gap-1 text-xs font-bold uppercase px-1.5 py-0.5 rounded-full"
+                              style={{ background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.25)", color: "#22c55e" }}>
+                              <span className="w-1 h-1 rounded-full" style={{ background: "#22c55e", animation: "statusPulse 2s ease-in-out infinite" }} />
+                              Live
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="text-center mt-8">
+            <a
+              href="/bvp-production-line.html"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-bold transition-all hover:-translate-y-px"
+              style={{ border: "1px solid var(--border)", color: "var(--text-secondary)", background: "transparent" }}
+            >
+              View Full Interactive Production Line <ArrowRight className="w-4 h-4" />
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* ── 6. How it Works ────────────────────────────────────────────── */}
       <section
         id="features"
         className="py-24 px-4 sm:px-6"
@@ -492,7 +756,8 @@ export default function LandingPage() {
             <Link href="/pricing"  className="hover:text-white transition-colors">Pricing</Link>
             <Link href="/privacy"  className="hover:text-white transition-colors">Privacy</Link>
             <Link href="/terms"    className="hover:text-white transition-colors">Terms</Link>
-            <a href="mailto:hello@botvaultpro.com" className="hover:text-white transition-colors">Contact</a>
+            <a href="https://botvaultpro.gumroad.com" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Shop</a>
+            <a href="mailto:botvaultpro@outlook.com" className="hover:text-white transition-colors">Contact</a>
           </div>
         </div>
       </footer>
