@@ -1,0 +1,1626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BVP CRM — Bot Vault Pro</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>" />
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; background: #09090a; }
+    #root { height: 100%; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef, useCallback } = React;
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // SUPABASE CONFIGURATION
+    // ─────────────────────────────────────────────────────────────────────
+    // 1. Create a free project at supabase.com
+    // 2. Run this SQL in your Supabase SQL Editor:
+    //
+    //   create table if not exists crm_data (
+    //     id uuid primary key default gen_random_uuid(),
+    //     user_id uuid references auth.users not null unique,
+    //     data jsonb not null default '{}',
+    //     updated_at timestamptz default now()
+    //   );
+    //   alter table crm_data enable row level security;
+    //   create policy "Users own their data" on crm_data
+    //     for all using (auth.uid() = user_id)
+    //     with check (auth.uid() = user_id);
+    //
+    // 3. Paste your Project URL and anon key below
+    //    (Supabase dashboard → Settings → API)
+    // ═══════════════════════════════════════════════════════════════════════
+    const SUPABASE_URL      = 'YOUR_SUPABASE_URL';
+    const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+    const SB_READY = !SUPABASE_URL.startsWith('YOUR_');
+    const sb = SB_READY ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+
+    const STORAGE_KEY = 'bvp_crm_saas';
+    const LEGACY_KEY  = 'bvp_crm_v2';
+
+    // ─────────────────────────────────────────────
+    // INDUSTRY CONFIGS
+    // ─────────────────────────────────────────────
+    const INDUSTRIES = {
+      hvac: {
+        label: "HVAC", icon: "❄️", color: "#00d4ff", colorDim: "rgba(0,212,255,0.12)",
+        clientWord: "Customer", projectWord: "Job",
+        jobTypes: ["AC Installation","Furnace Repair","Duct Cleaning","Tune-Up","Heat Pump Install","Emergency Service","Commercial HVAC","Indoor Air Quality"],
+        stages: ["New Lead","Estimate Sent","Scheduled","In Progress","Completed","Invoice Sent","Paid","Follow-Up"],
+        customFields: [{ key:"equipmentType", label:"Equipment Type" },{ key:"unitAge", label:"Unit Age (yrs)" },{ key:"serviceArea", label:"Service Area" },{ key:"lastService", label:"Last Service" }],
+        aiContext: "HVAC contractor",
+      },
+      electrical: {
+        label: "Electrical", icon: "⚡", color: "#ffc107", colorDim: "rgba(255,193,7,0.12)",
+        clientWord: "Customer", projectWord: "Job",
+        jobTypes: ["Panel Upgrade","EV Charger Install","Rewire","Outlet/Switch Repair","Generator Install","Lighting","Commercial Wiring","Code Inspection"],
+        stages: ["New Lead","Estimate Sent","Permit Filed","Scheduled","In Progress","Inspection","Completed","Invoice Sent","Paid"],
+        customFields: [{ key:"panelSize", label:"Panel Size (A)" },{ key:"permitRequired", label:"Permit Required?" },{ key:"propertyType", label:"Property Type" },{ key:"sqft", label:"Sq Footage" }],
+        aiContext: "electrical contractor",
+      },
+      plumbing: {
+        label: "Plumbing", icon: "🔧", color: "#00b4d8", colorDim: "rgba(0,180,216,0.12)",
+        clientWord: "Customer", projectWord: "Job",
+        jobTypes: ["Drain Cleaning","Water Heater Install","Pipe Repair","Fixture Install","Sewer Line","Leak Detection","Remodel Plumbing","Emergency"],
+        stages: ["New Lead","Estimate Sent","Parts Ordered","Scheduled","In Progress","Completed","Invoice Sent","Paid"],
+        customFields: [{ key:"homeAge", label:"Home Age (yrs)" },{ key:"waterSource", label:"Well or City?" },{ key:"lastSnaked", label:"Last Drain Service" },{ key:"accessNotes", label:"Access Notes" }],
+        aiContext: "plumbing contractor",
+      },
+      roofing: {
+        label: "Roofing", icon: "🏠", color: "#ff6b00", colorDim: "rgba(255,107,0,0.12)",
+        clientWord: "Customer", projectWord: "Job",
+        jobTypes: ["Full Replacement","Repair/Patch","Gutter Install","Inspection","Storm Damage","Flat Roof","Metal Roof","Insurance Claim"],
+        stages: ["New Lead","Inspection Done","Estimate Sent","Insurance Filed","Signed","Scheduled","In Progress","Completed","Invoice Sent","Paid"],
+        customFields: [{ key:"roofAge", label:"Roof Age (yrs)" },{ key:"roofMaterial", label:"Material" },{ key:"sqftRoof", label:"Sq Footage" },{ key:"insuranceClaim", label:"Insurance Claim?" }],
+        aiContext: "roofing contractor",
+      },
+      realestate: {
+        label: "Real Estate", icon: "🏡", color: "#a78bfa", colorDim: "rgba(167,139,250,0.12)",
+        clientWord: "Client", projectWord: "Listing",
+        jobTypes: ["Buyer Representation","Seller Listing","Investment Property","Commercial","Rental","Relocation","New Construction","Land Sale"],
+        stages: ["New Lead","Consultation","Active","Under Contract","Due Diligence","Closing","Closed","Post-Close Follow-Up"],
+        customFields: [{ key:"budget", label:"Budget / Price Range" },{ key:"preApproved", label:"Pre-Approved?" },{ key:"timeline", label:"Timeline" },{ key:"referralSource", label:"Referral Source" }],
+        aiContext: "real estate agent",
+      },
+      vehiclesales: {
+        label: "Vehicle Sales", icon: "🚗", color: "#f43f5e", colorDim: "rgba(244,63,94,0.12)",
+        clientWord: "Customer", projectWord: "Deal",
+        jobTypes: ["New Vehicle Sale","Used Vehicle Sale","Truck / SUV","Trade-In Evaluation","Lease","Finance Deal","Fleet Sale","Wholesale / Auction","Certified Pre-Owned","Powersport / RV"],
+        stages: ["New Lead","Contacted","Appointment Set","Test Drive","Negotiating","F&I","Deal Signed","Delivery Scheduled","Delivered","Funded","Lost Deal","Follow-Up"],
+        customFields: [{ key:"vehicleInterest", label:"Vehicle of Interest" },{ key:"tradeIn", label:"Trade-In Vehicle" },{ key:"financing", label:"Financing Type" },{ key:"budget", label:"Target Budget" }],
+        aiContext: "automotive dealership / car sales professional",
+      },
+      barbersalon: {
+        label: "Barber / Salon", icon: "✂️", color: "#f472b6", colorDim: "rgba(244,114,182,0.12)",
+        clientWord: "Client", projectWord: "Appointment",
+        jobTypes: ["Haircut","Color Treatment","Highlights","Keratin Treatment","Men's Cut","Kids Cut","Beard Trim","Blowout","Bridal"],
+        stages: ["New Client","Booked","Confirmed","Completed","Rebooking","VIP","Lapsed"],
+        customFields: [{ key:"hairType", label:"Hair Type" },{ key:"colorFormula", label:"Color Formula" },{ key:"frequency", label:"Visit Frequency" },{ key:"stylist", label:"Preferred Stylist" }],
+        aiContext: "barber shop / hair salon",
+      },
+      photography: {
+        label: "Photography", icon: "📷", color: "#34d399", colorDim: "rgba(52,211,153,0.12)",
+        clientWord: "Client", projectWord: "Shoot",
+        jobTypes: ["Wedding","Portrait","Newborn","Real Estate","Commercial","Event","Headshots","Family","Boudoir","Brand"],
+        stages: ["Inquiry","Proposal Sent","Booked","Deposit Paid","Shoot Done","Editing","Gallery Delivered","Final Payment","Completed"],
+        customFields: [{ key:"shootDate", label:"Shoot Date" },{ key:"location", label:"Location" },{ key:"packageType", label:"Package" },{ key:"deliverables", label:"Deliverables" }],
+        aiContext: "professional photographer",
+      },
+      freelancer: {
+        label: "Freelancer", icon: "💻", color: "#60a5fa", colorDim: "rgba(96,165,250,0.12)",
+        clientWord: "Client", projectWord: "Project",
+        jobTypes: ["Web Design","Copywriting","Graphic Design","Video Editing","Social Media","SEO","Consulting","Branding","App Development","Content Creation"],
+        stages: ["Inquiry","Proposal Sent","Contract Signed","Deposit Paid","In Progress","Review/Revisions","Final Delivery","Invoice Sent","Paid","Ongoing Retainer"],
+        customFields: [{ key:"platform", label:"Platform/Source" },{ key:"projectScope", label:"Project Scope" },{ key:"deadline", label:"Deadline" },{ key:"revisions", label:"Revisions Included" }],
+        aiContext: "freelance creative professional",
+      },
+      generalcontractor: {
+        label: "General Contractor", icon: "🏗️", color: "#fb923c", colorDim: "rgba(251,146,60,0.12)",
+        clientWord: "Client", projectWord: "Project",
+        jobTypes: ["Kitchen Remodel","Bath Remodel","Addition/ADU","Deck/Patio","Flooring","Drywall","Full Renovation","Basement Finish","New Build"],
+        stages: ["New Lead","Consultation","Estimate Sent","Contract Signed","Permit Filed","In Progress","Punch List","Completed","Invoice Sent","Paid"],
+        customFields: [{ key:"projectValue", label:"Project Value ($)" },{ key:"timelineWeeks", label:"Timeline (wks)" },{ key:"permitNeeded", label:"Permit Needed?" },{ key:"subcontractors", label:"Subs Involved" }],
+        aiContext: "general contractor",
+      },
+      landscaping: {
+        label: "Landscaping", icon: "🌿", color: "#4ade80", colorDim: "rgba(74,222,128,0.12)",
+        clientWord: "Customer", projectWord: "Job",
+        jobTypes: ["Lawn Maintenance","Landscape Design","Irrigation","Tree Service","Hardscape/Pavers","Sod Install","Seasonal Cleanup","Snow Removal"],
+        stages: ["New Lead","Site Visit","Estimate Sent","Scheduled","In Progress","Completed","Invoice Sent","Paid","Recurring"],
+        customFields: [{ key:"lotSize", label:"Lot Size (sqft)" },{ key:"irrigation", label:"Irrigation System?" },{ key:"contractType", label:"One-Time/Recurring" },{ key:"season", label:"Primary Season" }],
+        aiContext: "landscaping company",
+      },
+      lawfirm: {
+        label: "Law Firm", icon: "⚖️", color: "#c4b5fd", colorDim: "rgba(196,181,253,0.12)",
+        clientWord: "Client", projectWord: "Case",
+        jobTypes: ["Personal Injury","Business Law","Real Estate Law","Family Law","Estate Planning","Criminal Defense","Immigration","Contract Review","Consultation"],
+        stages: ["Inquiry","Consultation","Retained","Discovery","Active","Negotiation","Settlement","Closed","Follow-Up"],
+        customFields: [{ key:"caseType", label:"Case Type" },{ key:"retainerAmt", label:"Retainer ($)" },{ key:"opposingParty", label:"Opposing Party" },{ key:"courtDate", label:"Court Date" }],
+        aiContext: "law firm / attorney",
+      },
+    };
+
+    const STAGE_COLORS = {
+      "New Lead":"#00d4ff","Inquiry":"#00d4ff","New Client":"#00d4ff",
+      "Estimate Sent":"#ffc107","Proposal Sent":"#ffc107","Quoted":"#ffc107",
+      "Contacted":"#60a5fa","Appointment Set":"#a78bfa","Test Drive":"#818cf8",
+      "Negotiating":"#f97316","F&I":"#fb923c",
+      "Deal Signed":"#34d399","Delivery Scheduled":"#a78bfa",
+      "Delivered":"#4ade80","Funded":"#4ade80","Lost Deal":"#ef4444",
+      "In Progress":"#ff6b00","Active":"#ff6b00","Editing":"#ff6b00",
+      "Completed":"#4ade80","Paid":"#4ade80","Closed":"#4ade80","Final Payment":"#4ade80",
+      "Invoice Sent":"#fbbf24","Follow-Up":"#94a3b8","Lapsed":"#ef4444",
+      "Scheduled":"#a78bfa","Booked":"#a78bfa","Confirmed":"#a78bfa","Contract Signed":"#a78bfa",
+      "Deposit Paid":"#34d399","Retained":"#34d399",
+    };
+    const getStageColor = (s) => STAGE_COLORS[s] || "#71717a";
+
+    // ─────────────────────────────────────────────
+    // LEAD GENERATION SUGGESTIONS  (rotates daily)
+    // ─────────────────────────────────────────────
+    const LEAD_SUGGESTIONS = {
+      hvac: [
+        "Post a before/after photo of a recent job on Facebook or Nextdoor",
+        "Text your last 5 completed customers and ask for a Google review",
+        "Run a seasonal tune-up special — post it in local community groups",
+        "Partner with a local real estate agent for new-homeowner referrals",
+        "Check Nextdoor for homeowners complaining about heating/cooling issues",
+        "Set up a Google Local Services ad — HVAC is a top search category",
+      ],
+      electrical: [
+        "Offer free EV charger consultations — high-value lead right now",
+        "Post a panel upgrade before/after on Facebook",
+        "Reach out to local GCs who need a reliable electrical sub",
+        "Follow up with commercial clients about annual code inspections",
+        "Check Angi and Thumbtack for new leads in your area",
+        "Partner with solar installers — they always need an electrician",
+      ],
+      plumbing: [
+        "Post a drain cleaning tip on social — builds trust in local searches",
+        "Offer a spring pipe inspection special to your existing customer list",
+        "Partner with an HVAC or GC company for cross-referrals",
+        "Check Nextdoor for homeowners asking plumbing questions — answer them",
+        "Run a water heater promo — high average ticket, fast close",
+        "Text past customers about preventive maintenance packages",
+      ],
+      roofing: [
+        "Drive neighborhoods hit by recent weather — knock on visibly damaged roofs",
+        "Post storm damage photos on local Facebook groups",
+        "Call insurance agents in your area about referrals for storm claims",
+        "Follow up with every estimate you sent in the past 3 weeks",
+        "Offer a free roof inspection — leads love free, you see the upsell",
+        "Check local permit filings for recent home sales — new owners inspect everything",
+      ],
+      realestate: [
+        "Call 5 past clients today — ask if they know anyone buying or selling",
+        "Post a just-listed or just-sold on Instagram with local hashtags",
+        "Attend a local networking event or chamber of commerce meeting",
+        "Reach out to FSBOs in your market — offer a free CMA",
+        "Send a handwritten note to your top 10 referral sources",
+        "Host a free first-time homebuyer webinar and promote it locally",
+      ],
+      vehiclesales: [
+        "Post new arrivals on Facebook Marketplace and local community groups",
+        "Text customers from 3–4 years ago — they're in the upgrade window",
+        "Reach out to local businesses about fleet vehicle needs",
+        "Post a 'what can you get for your trade-in?' video on social media",
+        "Run a weekend event with free CarFax reports for walk-ins",
+        "Partner with local credit unions — they send members shopping for vehicles",
+      ],
+      barbersalon: [
+        "Post a transformation photo on Instagram with a local hashtag",
+        "Run a referral promo — clients get $10 off for each new person they bring",
+        "Ask satisfied clients to check in on Facebook and leave a Google review",
+        "Offer a first-visit discount and post it on Nextdoor",
+        "Create a loyalty card — 10 visits, 1 free — it increases return rate",
+        "DM local businesses about offering employee discount packages",
+      ],
+      photography: [
+        "Post a gallery sneak peek from a recent shoot — tag the client if permitted",
+        "Reach out to wedding venues about getting on their preferred vendor list",
+        "Offer a limited-run mini session for the current season",
+        "Ask 3 recent clients for a testimonial to post on your website",
+        "Partner with a branding agency for ongoing commercial photography",
+        "Run a giveaway on Instagram — free headshot session builds your email list",
+      ],
+      freelancer: [
+        "Post a case study or results screenshot from a recent project on LinkedIn",
+        "Reach out to 3 former clients about new projects or a monthly retainer",
+        "Check Contra, Toptal, or LinkedIn Jobs for inbound leads this week",
+        "Offer a free 30-minute audit (SEO, design, copy) as a lead magnet",
+        "Comment on 5 posts in your niche on LinkedIn — visibility compounds",
+        "Ask a happy client to introduce you to one person in their network",
+      ],
+      generalcontractor: [
+        "Post a project in-progress photo on Facebook — people love watching builds",
+        "Ask your last 3 clients for Google reviews — remodels are high-intent searches",
+        "Connect with real estate agents — they constantly refer work to GCs",
+        "Check local permit filings for new construction — those are warm leads",
+        "Run a seasonal promo on a high-demand service (decks, kitchens)",
+        "Partner with an interior designer for mutual referrals",
+      ],
+      landscaping: [
+        "Drive the neighborhood and leave flyers on doors with overgrown lawns",
+        "Post a before/after lawn transformation on Nextdoor",
+        "Offer a spring cleanup package to your existing customer list via text",
+        "Partner with a pool company or outdoor living contractor for referrals",
+        "Set up a Google Business Profile and ask every completed customer to review",
+        "Offer a seasonal maintenance contract — predictable revenue, loyal customers",
+      ],
+      lawfirm: [
+        "Post an educational legal tip on LinkedIn — builds authority and gets shared",
+        "Reach out to local accountants or financial advisors for referral partnerships",
+        "Follow up with anyone who inquired but didn't retain in the last 90 days",
+        "Ask 2 satisfied clients for a Google review this week",
+        "Host a free 1-hour community workshop on a common legal topic",
+        "Partner with real estate agents — closings constantly need legal work",
+      ],
+    };
+
+    // ─────────────────────────────────────────────
+    // DATE HELPER
+    // ─────────────────────────────────────────────
+    const todayISO = () => new Date().toISOString().split("T")[0];
+    const formatDate = (dateStr) => {
+      try {
+        const [y, m, d] = dateStr.split("-").map(Number);
+        return new Date(y, m - 1, d).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+      } catch { return dateStr; }
+    };
+    const addDays = (dateStr, n) => {
+      const [y, m, d] = dateStr.split("-").map(Number);
+      const dt = new Date(y, m - 1, d + n);
+      return dt.toISOString().split("T")[0];
+    };
+
+    // ─────────────────────────────────────────────
+    // TODAY'S REPORT GENERATOR
+    // ─────────────────────────────────────────────
+    const generateTodayReport = (clients, cfg, industryKey) => {
+      const today = todayISO();
+      const urgent = [], important = [], growth = [], leads = [];
+
+      // Due / overdue reminders
+      clients.forEach(c => {
+        (c.reminders || []).forEach(r => {
+          if (r.nextFire <= today) urgent.push(`${c.name} — ${r.description || "Reminder due"}`);
+        });
+      });
+
+      // New leads not yet contacted
+      const newLeads = clients.filter(c => c.stage === "New Lead");
+      if (newLeads.length > 0)
+        urgent.push(`Respond to ${newLeads.length} new lead${newLeads.length > 1 ? "s" : ""} — speed to lead wins deals`);
+
+      // Pending payments
+      const pendingPay = clients.filter(c =>
+        ["Invoice Sent","Completed","Gallery Delivered","Deal Signed","Delivery Scheduled"].includes(c.stage)
+      );
+      if (pendingPay.length > 0) {
+        const total = pendingPay.reduce((s, c) => s + Number(c.value || 0), 0);
+        urgent.push(`Collect payment from ${pendingPay.length} ${cfg.clientWord.toLowerCase()}${pendingPay.length > 1 ? "s" : ""} — $${total.toLocaleString()} outstanding`);
+      }
+
+      // Stale proposals / estimates
+      const staleProposals = clients.filter(c =>
+        ["Estimate Sent","Proposal Sent","Quoted","Contacted","Appointment Set"].includes(c.stage)
+      );
+      if (staleProposals.length > 0) {
+        const names = staleProposals.slice(0, 2).map(c => c.name).join(", ");
+        const extra = staleProposals.length > 2 ? ` +${staleProposals.length - 2} more` : "";
+        important.push(`Follow up on ${staleProposals.length} open estimate${staleProposals.length > 1 ? "s" : ""}/proposal${staleProposals.length > 1 ? "s" : ""}: ${names}${extra}`);
+      }
+
+      // Active jobs that can be progressed
+      const active = clients.filter(c =>
+        ["In Progress","Active","Negotiating","F&I","Test Drive","Editing"].includes(c.stage)
+      );
+      if (active.length > 0)
+        important.push(`Log progress on ${active.length} active ${cfg.projectWord.toLowerCase()}${active.length > 1 ? "s" : ""} — check if any are ready to advance to the next stage`);
+
+      // Follow-up stage clients
+      const followUp = clients.filter(c => c.stage === "Follow-Up");
+      if (followUp.length > 0)
+        important.push(`Re-engage ${followUp.length} ${cfg.clientWord.toLowerCase()}${followUp.length > 1 ? "s" : ""} sitting in Follow-Up — each is a potential reactivation`);
+
+      // Pipeline health
+      if (clients.length < 5) {
+        growth.push(`Pipeline is thin (${clients.length} ${cfg.clientWord.toLowerCase()}${clients.length !== 1 ? "s" : ""}) — make lead generation your #1 activity today`);
+      } else {
+        // Find bottleneck stage
+        const stageCounts = {};
+        cfg.stages.forEach(s => { stageCounts[s] = clients.filter(c => c.stage === s).length; });
+        const topStage = cfg.stages.reduce((a, b) => (stageCounts[a] > stageCounts[b] ? a : b));
+        if (stageCounts[topStage] > Math.max(3, clients.length * 0.4)) {
+          growth.push(`Bottleneck: ${stageCounts[topStage]} ${cfg.clientWord.toLowerCase()}s stuck in "${topStage}" — push them forward or disqualify`);
+        }
+        // Close rate hint
+        const closed = clients.filter(c =>
+          ["Paid","Closed","Funded","Delivered","Completed","Final Payment"].includes(c.stage)
+        ).length;
+        if (clients.length > 4 && closed / clients.length < 0.25) {
+          growth.push(`Close rate is low — review your ${staleProposals.length > 0 ? "open estimates and" : ""} follow-up cadence to tighten the pipeline`);
+        }
+      }
+
+      if (urgent.length === 0 && important.length === 0 && growth.length === 0)
+        growth.push("Pipeline looks healthy — focus on lead generation and delivering excellent work today");
+
+      // Lead suggestions — rotate daily, 2 per day
+      const all = LEAD_SUGGESTIONS[industryKey] || LEAD_SUGGESTIONS.freelancer;
+      const idx = new Date().getDate();
+      leads.push(all[idx % all.length]);
+      leads.push(all[(idx + 1) % all.length]);
+
+      return { urgent, important, growth, leads };
+    };
+
+    // ─────────────────────────────────────────────
+    // SAMPLE DATA
+    // ─────────────────────────────────────────────
+    const makeSamples = (industryKey) => {
+      const cfg = INDUSTRIES[industryKey];
+      const id1 = Date.now(), id2 = id1 + 1, id3 = id1 + 2;
+      return [
+        { id: id1, name: "Jordan Mitchell", phone: "555-201-4488", email: "jmitchell@gmail.com", address: "412 Crestview Ln", jobType: cfg.jobTypes[0], stage: cfg.stages[1], value: 3200, notes: `First contact via website. Interested in ${cfg.jobTypes[0]}. Prefers morning appointments.`, tags: ["new"], history: [], reminders: [], created: "2024-03-10", ...cfg.customFields.reduce((a,f)=>({...a,[f.key]:""}),{}) },
+        { id: id2, name: "Rivera & Sons LLC", phone: "555-847-9920", email: "ops@riverasons.com", address: "Commercial District, Suite 4", jobType: cfg.jobTypes[2]||cfg.jobTypes[0], stage: cfg.stages[4]||cfg.stages[2], value: 8500, notes: `Repeat ${cfg.clientWord.toLowerCase()}. Always pays on time. Referred 2 others.`, tags: ["vip","repeat"], history: [{ date:"2023-11-05", desc:`Completed ${cfg.jobTypes[0]}`, amount:4200 }], reminders: [], created: "2023-10-01", ...cfg.customFields.reduce((a,f)=>({...a,[f.key]:""}),{}) },
+        { id: id3, name: "Sarah Thornton", phone: "555-312-7741", email: "sarah.t@outlook.com", address: "88 Maple Grove Dr", jobType: cfg.jobTypes[1]||cfg.jobTypes[0], stage: cfg.stages[cfg.stages.length-2], value: 1100, notes: `${cfg.projectWord} completed. Waiting on final payment. Happy with work.`, tags: ["pending-payment"], history: [], reminders: [], created: "2024-02-20", ...cfg.customFields.reduce((a,f)=>({...a,[f.key]:""}),{}) },
+      ];
+    };
+
+    // ─────────────────────────────────────────────
+    // AI STREAMING  (reads key from localStorage)
+    // ─────────────────────────────────────────────
+    async function streamAI(systemPrompt, userPrompt, onChunk, onDone) {
+      const apiKey = localStorage.getItem("bvp_anthropic_key") || "";
+      if (!apiKey) {
+        onChunk("[No Anthropic API key found. Go to Settings → AI Settings to add your key.]");
+        onDone?.(); return;
+      }
+      try {
+        const res = await fetch("https://api.anthropic.com/v1/messages", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-api-key": apiKey,
+            "anthropic-version": "2023-06-01",
+            "anthropic-dangerous-direct-browser-access": "true",
+          },
+          body: JSON.stringify({
+            model: "claude-sonnet-4-20250514",
+            max_tokens: 800, stream: true,
+            system: systemPrompt,
+            messages: [{ role: "user", content: userPrompt }],
+          }),
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(()=>({error:{message:res.statusText}}));
+          onChunk(`[API Error: ${err?.error?.message || res.statusText}]`);
+          onDone?.(); return;
+        }
+        const reader = res.body.getReader();
+        const dec = new TextDecoder();
+        let buf = "";
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buf += dec.decode(value, { stream: true });
+          const lines = buf.split("\n"); buf = lines.pop();
+          for (const line of lines) {
+            if (!line.startsWith("data: ")) continue;
+            try {
+              const d = JSON.parse(line.slice(6));
+              if (d.type === "content_block_delta" && d.delta?.text) onChunk(d.delta.text);
+            } catch {}
+          }
+        }
+        onDone?.();
+      } catch(e) {
+        onChunk("\n[Generation failed — check your connection and API key]");
+        onDone?.();
+      }
+    }
+
+    // ─────────────────────────────────────────────
+    // LOADING SCREEN
+    // ─────────────────────────────────────────────
+    function LoadingScreen() {
+      return (
+        <div style={{ height:"100vh", background:"#09090a", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:20 }}>
+          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+          <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:24, color:"#ff6b00", letterSpacing:"0.12em" }}>BOT VAULT PRO</div>
+          <div style={{ width:36, height:36, border:"3px solid #27272a", borderTopColor:"#ff6b00", borderRadius:"50%", animation:"spin 0.75s linear infinite" }} />
+        </div>
+      );
+    }
+
+    // ─────────────────────────────────────────────
+    // AUTH SCREEN
+    // ─────────────────────────────────────────────
+    function AuthScreen() {
+      const [mode, setMode] = useState("signin");
+      const [email, setEmail] = useState("");
+      const [password, setPassword] = useState("");
+      const [confirmPw, setConfirmPw] = useState("");
+      const [error, setError] = useState("");
+      const [loading, setLoading] = useState(false);
+
+      const inp = { width:"100%", background:"#18181b", border:"1px solid #27272a", borderRadius:8, padding:"12px 14px", color:"#fff", fontSize:14, outline:"none", fontFamily:"inherit" };
+
+      const submit = async () => {
+        setError(""); setLoading(true);
+        try {
+          if (mode === "signin") {
+            const { error: e } = await sb.auth.signInWithPassword({ email, password });
+            if (e) throw e;
+          } else if (mode === "signup") {
+            if (password !== confirmPw) throw new Error("Passwords do not match");
+            if (password.length < 6) throw new Error("Password must be at least 6 characters");
+            const { data, error: e } = await sb.auth.signUp({ email, password });
+            if (e) throw e;
+            if (!data.session) setMode("sent");
+          } else if (mode === "forgot") {
+            const { error: e } = await sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.href });
+            if (e) throw e;
+            setMode("sent");
+          }
+        } catch(e) { setError(e.message || "Something went wrong"); }
+        setLoading(false);
+      };
+
+      if (mode === "sent") return (
+        <div style={{ height:"100vh", background:"#09090a", display:"flex", alignItems:"center", justifyContent:"center", padding:20, fontFamily:"'DM Sans',sans-serif" }}>
+          <style>{`@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800;900&family=DM+Sans:wght@400;500;600;700&display=swap');`}</style>
+          <div style={{ textAlign:"center", maxWidth:400 }}>
+            <div style={{ fontSize:48, marginBottom:16 }}>✉️</div>
+            <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:28, color:"#fff", marginBottom:10 }}>CHECK YOUR EMAIL</div>
+            <p style={{ color:"#71717a", fontSize:14, lineHeight:1.7, marginBottom:24 }}>We sent a link to <strong style={{ color:"#fff" }}>{email}</strong>.</p>
+            <button onClick={() => { setMode("signin"); setEmail(""); setPassword(""); setConfirmPw(""); }} style={{ background:"transparent", border:"1px solid #27272a", borderRadius:8, padding:"10px 24px", color:"#a1a1aa", fontSize:13, cursor:"pointer" }}>← Back to Sign In</button>
+          </div>
+        </div>
+      );
+
+      return (
+        <div style={{ minHeight:"100vh", background:"#09090a", display:"flex", alignItems:"center", justifyContent:"center", padding:20, fontFamily:"'DM Sans',sans-serif" }}>
+          <style>{`@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800;900&family=DM+Sans:wght@400;500;600;700&display=swap'); * { box-sizing:border-box; } input:focus { border-color:#ff6b00 !important; }`}</style>
+          <div style={{ width:"100%", maxWidth:420 }}>
+            <div style={{ textAlign:"center", marginBottom:32 }}>
+              <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:20, color:"#ff6b00", letterSpacing:"0.12em" }}>BOT VAULT PRO</div>
+              <div style={{ width:36, height:2, background:"#ff6b00", margin:"8px auto 16px" }} />
+              <h1 style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:34, color:"#fff", lineHeight:1.1, margin:0 }}>{mode === "forgot" ? "RESET PASSWORD" : "YOUR CRM,\nANYWHERE"}</h1>
+              {mode !== "forgot" && <p style={{ color:"#71717a", fontSize:13, marginTop:8 }}>Sign in to access your businesses and client data.</p>}
+            </div>
+            <div style={{ background:"#111113", border:"1px solid #27272a", borderRadius:14, overflow:"hidden" }}>
+              {mode !== "forgot" && (
+                <div style={{ display:"flex", borderBottom:"1px solid #27272a" }}>
+                  {[["signin","Sign In"],["signup","Create Account"]].map(([k,l]) => (
+                    <button key={k} onClick={() => { setMode(k); setError(""); }}
+                      style={{ flex:1, padding:"13px", background:"transparent", border:"none", borderBottom:`2px solid ${mode===k?"#ff6b00":"transparent"}`, color:mode===k?"#fff":"#71717a", fontSize:13, fontWeight:mode===k?600:400, cursor:"pointer", transition:"all 0.15s" }}>
+                      {l}
+                    </button>
+                  ))}
+                </div>
+              )}
+              <div style={{ padding:24, display:"flex", flexDirection:"column", gap:14 }}>
+                <div>
+                  <label style={{ fontSize:11, fontWeight:600, color:"#71717a", textTransform:"uppercase", letterSpacing:"0.08em", display:"block", marginBottom:5 }}>Email</label>
+                  <input style={inp} type="email" value={email} onChange={e=>setEmail(e.target.value)} onKeyDown={e=>e.key==="Enter"&&submit()} placeholder="you@example.com" autoFocus />
+                </div>
+                {mode !== "forgot" && (
+                  <div>
+                    <label style={{ fontSize:11, fontWeight:600, color:"#71717a", textTransform:"uppercase", letterSpacing:"0.08em", display:"block", marginBottom:5 }}>Password</label>
+                    <input style={inp} type="password" value={password} onChange={e=>setPassword(e.target.value)} onKeyDown={e=>e.key==="Enter"&&submit()} placeholder="••••••••" />
+                  </div>
+                )}
+                {mode === "signup" && (
+                  <div>
+                    <label style={{ fontSize:11, fontWeight:600, color:"#71717a", textTransform:"uppercase", letterSpacing:"0.08em", display:"block", marginBottom:5 }}>Confirm Password</label>
+                    <input style={inp} type="password" value={confirmPw} onChange={e=>setConfirmPw(e.target.value)} onKeyDown={e=>e.key==="Enter"&&submit()} placeholder="••••••••" />
+                  </div>
+                )}
+                {error && <div style={{ background:"rgba(239,68,68,0.12)", border:"1px solid rgba(239,68,68,0.3)", borderRadius:7, padding:"10px 12px", fontSize:12, color:"#f87171" }}>{error}</div>}
+                <button onClick={submit} disabled={loading}
+                  style={{ width:"100%", background:loading?"#27272a":"#ff6b00", color:"#fff", border:"none", borderRadius:8, padding:"13px", fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:15, letterSpacing:"0.08em", cursor:loading?"not-allowed":"pointer", marginTop:4 }}>
+                  {loading ? "PLEASE WAIT..." : mode==="signin" ? "SIGN IN" : mode==="signup" ? "CREATE ACCOUNT" : "SEND RESET LINK"}
+                </button>
+                {mode === "signin" && <button onClick={() => { setMode("forgot"); setError(""); }} style={{ background:"transparent", border:"none", color:"#71717a", fontSize:12, cursor:"pointer", padding:0, textAlign:"center" }}>Forgot your password?</button>}
+                {mode === "forgot" && <button onClick={() => { setMode("signin"); setError(""); }} style={{ background:"transparent", border:"none", color:"#71717a", fontSize:12, cursor:"pointer", padding:0, textAlign:"center" }}>← Back to Sign In</button>}
+              </div>
+            </div>
+            <p style={{ textAlign:"center", color:"#3f3f46", fontSize:11, marginTop:16 }}>Bot Vault Pro · botvaultpro.com · Your data is encrypted and private</p>
+          </div>
+        </div>
+      );
+    }
+
+    // ─────────────────────────────────────────────
+    // SETUP SCREEN
+    // ─────────────────────────────────────────────
+    function SetupScreen({ onComplete, onClose, isModal }) {
+      const [step, setStep] = useState(1);
+      const [industry, setIndustry] = useState("");
+      const [bizName, setBizName] = useState("");
+      const [ownerName, setOwnerName] = useState("");
+      const [city, setCity] = useState("");
+      const cfg = industry ? INDUSTRIES[industry] : null;
+      const canNext = !!industry;
+      const canFinish = bizName && ownerName && city;
+
+      const inner = (
+        <div style={{ width:"100%", maxWidth:560, position:"relative" }}>
+          {isModal && onClose && (
+            <button onClick={onClose} style={{ position:"absolute", top:-8, right:0, background:"transparent", border:"none", color:"#71717a", fontSize:22, cursor:"pointer" }}>✕</button>
+          )}
+          <div style={{ textAlign:"center", marginBottom:30 }}>
+            <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:20, color:"#ff6b00", letterSpacing:"0.1em", marginBottom:8 }}>BOT VAULT PRO</div>
+            <div style={{ width:36, height:2, background:"#ff6b00", margin:"0 auto 14px" }} />
+            {step === 1 && <>
+              <h1 style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:36, color:"#fff", margin:"0 0 8px", lineHeight:1.1 }}>{isModal ? "ADD A" : "CHOOSE YOUR"}<br/><span style={{ color:"#ff6b00" }}>BUSINESS</span></h1>
+              <p style={{ color:"#71717a", fontSize:13, margin:0 }}>The entire CRM configures itself to match your industry.</p>
+            </>}
+            {step === 2 && <>
+              <div style={{ fontSize:30, marginBottom:8 }}>{cfg.icon}</div>
+              <h1 style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:32, color:"#fff", margin:"0 0 8px" }}>YOUR <span style={{ color:cfg.color }}>{cfg.label.toUpperCase()}</span> CRM</h1>
+            </>}
+          </div>
+          {step === 1 && (
+            <div>
+              <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:10, marginBottom:18 }}>
+                {Object.entries(INDUSTRIES).map(([key, c]) => (
+                  <div key={key} onClick={() => setIndustry(key)}
+                    style={{ background:industry===key?c.colorDim:"#111113", border:`1.5px solid ${industry===key?c.color:"#27272a"}`, borderRadius:10, padding:"13px 10px", cursor:"pointer", textAlign:"center", transition:"all 0.15s" }}>
+                    <div style={{ fontSize:22, marginBottom:5 }}>{c.icon}</div>
+                    <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:12, color:industry===key?c.color:"#a1a1aa", textTransform:"uppercase", letterSpacing:"0.05em" }}>{c.label}</div>
+                  </div>
+                ))}
+              </div>
+              <button disabled={!canNext} onClick={() => setStep(2)}
+                style={{ width:"100%", background:canNext?"#ff6b00":"#27272a", color:canNext?"#fff":"#52525b", border:"none", borderRadius:10, padding:"14px", fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:15, letterSpacing:"0.08em", cursor:canNext?"pointer":"not-allowed" }}>
+                CONTINUE →
+              </button>
+            </div>
+          )}
+          {step === 2 && (
+            <div style={{ background:"#111113", border:"1px solid #27272a", borderRadius:12, padding:22 }}>
+              <div style={{ display:"flex", flexDirection:"column", gap:13 }}>
+                <div>
+                  <label style={{ fontSize:11, fontWeight:600, color:"#71717a", textTransform:"uppercase", letterSpacing:"0.08em", display:"block", marginBottom:5 }}>Business Name *</label>
+                  <input value={bizName} onChange={e=>setBizName(e.target.value)} placeholder="e.g. Apex HVAC Services" style={{ width:"100%", background:"#18181b", border:"1px solid #27272a", borderRadius:8, padding:"11px 14px", color:"#fff", fontSize:14, outline:"none" }} />
+                </div>
+                <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
+                  <div>
+                    <label style={{ fontSize:11, fontWeight:600, color:"#71717a", textTransform:"uppercase", letterSpacing:"0.08em", display:"block", marginBottom:5 }}>Your Name *</label>
+                    <input value={ownerName} onChange={e=>setOwnerName(e.target.value)} placeholder="Owner / Manager" style={{ width:"100%", background:"#18181b", border:"1px solid #27272a", borderRadius:8, padding:"11px 14px", color:"#fff", fontSize:14, outline:"none" }} />
+                  </div>
+                  <div>
+                    <label style={{ fontSize:11, fontWeight:600, color:"#71717a", textTransform:"uppercase", letterSpacing:"0.08em", display:"block", marginBottom:5 }}>City / Market *</label>
+                    <input value={city} onChange={e=>setCity(e.target.value)} placeholder="e.g. Phoenix, AZ" style={{ width:"100%", background:"#18181b", border:"1px solid #27272a", borderRadius:8, padding:"11px 14px", color:"#fff", fontSize:14, outline:"none" }} />
+                  </div>
+                </div>
+                <div style={{ display:"flex", gap:10, marginTop:4 }}>
+                  <button onClick={() => setStep(1)} style={{ flex:"0 0 auto", background:"transparent", border:"1px solid #27272a", borderRadius:8, padding:"11px 16px", color:"#71717a", fontSize:13, cursor:"pointer" }}>← Back</button>
+                  <button disabled={!canFinish} onClick={() => onComplete({ industry, bizName, ownerName, city })}
+                    style={{ flex:1, background:canFinish?cfg.color:"#27272a", color:canFinish?"#fff":"#52525b", border:"none", borderRadius:8, padding:"11px", fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:15, letterSpacing:"0.08em", cursor:canFinish?"pointer":"not-allowed" }}>
+                    LAUNCH CRM →
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+          {!isModal && <p style={{ textAlign:"center", color:"#3f3f46", fontSize:11, marginTop:14 }}>Bot Vault Pro · botvaultpro.com</p>}
+        </div>
+      );
+
+      if (isModal) return (
+        <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.92)", zIndex:500, display:"flex", alignItems:"center", justifyContent:"center", padding:20 }}>
+          <style>{`@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800;900&family=DM+Sans:wght@400;500;600;700&display=swap'); * { box-sizing:border-box; }`}</style>
+          {inner}
+        </div>
+      );
+      return (
+        <div style={{ minHeight:"100vh", background:"#09090a", display:"flex", alignItems:"center", justifyContent:"center", padding:20, fontFamily:"'DM Sans',sans-serif" }}>
+          <style>{`@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800;900&family=DM+Sans:wght@400;500;600;700&display=swap'); * { box-sizing:border-box; }`}</style>
+          {inner}
+        </div>
+      );
+    }
+
+    // ─────────────────────────────────────────────
+    // WORKSPACE SWITCHER
+    // ─────────────────────────────────────────────
+    function WorkspaceSwitcher({ workspaces, activeId, onSwitch, onAdd }) {
+      const [open, setOpen] = useState(false);
+      const ref = useRef(null);
+      useEffect(() => {
+        const h = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+        document.addEventListener("mousedown", h);
+        return () => document.removeEventListener("mousedown", h);
+      }, []);
+      const active = workspaces.find(w => w.id === activeId);
+      const activeCfg = active ? INDUSTRIES[active.industry] : null;
+      return (
+        <div ref={ref} style={{ position:"relative" }}>
+          <button onClick={() => setOpen(o => !o)}
+            style={{ display:"flex", alignItems:"center", gap:8, background:"#18181b", border:"1px solid #27272a", borderRadius:8, padding:"6px 12px", color:"#fff", cursor:"pointer", fontSize:13, fontWeight:600, maxWidth:220 }}>
+            <span style={{ fontSize:14 }}>{activeCfg?.icon || "🏢"}</span>
+            <span style={{ overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", flex:1, textAlign:"left" }}>{active?.bizName || "Select Business"}</span>
+            <span style={{ color:"#52525b", fontSize:10, flexShrink:0 }}>▾</span>
+          </button>
+          {open && (
+            <div style={{ position:"absolute", top:"calc(100% + 6px)", left:0, minWidth:240, background:"#111113", border:"1px solid #27272a", borderRadius:10, padding:"6px", zIndex:400, boxShadow:"0 12px 40px rgba(0,0,0,0.7)" }}>
+              <div style={{ fontSize:10, fontWeight:700, color:"#3f3f46", textTransform:"uppercase", letterSpacing:"0.08em", padding:"4px 10px 8px" }}>MY BUSINESSES</div>
+              {workspaces.map(w => {
+                const wCfg = INDUSTRIES[w.industry];
+                const isActive = w.id === activeId;
+                return (
+                  <div key={w.id} onClick={() => { onSwitch(w.id); setOpen(false); }}
+                    style={{ display:"flex", alignItems:"center", gap:10, padding:"9px 10px", borderRadius:7, cursor:"pointer", background:isActive?wCfg.colorDim:"transparent", transition:"background 0.1s" }}
+                    onMouseEnter={e => !isActive && (e.currentTarget.style.background="#18181b")}
+                    onMouseLeave={e => !isActive && (e.currentTarget.style.background="transparent")}>
+                    <span style={{ fontSize:18 }}>{wCfg.icon}</span>
+                    <div style={{ flex:1, minWidth:0 }}>
+                      <div style={{ fontSize:13, fontWeight:isActive?600:400, color:isActive?wCfg.color:"#e4e4e7", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{w.bizName}</div>
+                      <div style={{ fontSize:11, color:"#52525b" }}>{wCfg.label}</div>
+                    </div>
+                    {isActive && <span style={{ fontSize:12, color:wCfg.color }}>✓</span>}
+                  </div>
+                );
+              })}
+              <div style={{ margin:"6px 0", height:1, background:"#27272a" }} />
+              <div onClick={() => { onAdd(); setOpen(false); }}
+                style={{ display:"flex", alignItems:"center", gap:8, padding:"9px 10px", borderRadius:7, cursor:"pointer", color:"#ff6b00", fontSize:13, fontWeight:600 }}
+                onMouseEnter={e => e.currentTarget.style.background="#18181b"}
+                onMouseLeave={e => e.currentTarget.style.background="transparent"}>
+                <span style={{ fontSize:16 }}>+</span> Add Business
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // ─────────────────────────────────────────────
+    // REMINDER FORM  (inline in client detail)
+    // ─────────────────────────────────────────────
+    function ReminderForm({ cfg, onSave, onCancel }) {
+      const [description, setDescription] = useState("");
+      const [days, setDays] = useState("3");
+      const [repeat, setRepeat] = useState(false);
+      const inp = { background:"#0d0d0f", border:"1px solid #27272a", borderRadius:6, padding:"8px 10px", color:"#fff", fontSize:13, outline:"none", fontFamily:"inherit" };
+
+      const save = () => {
+        if (!description.trim()) return;
+        const n = Math.max(1, Number(days) || 1);
+        onSave({
+          id: Date.now(),
+          description: description.trim(),
+          daysInterval: n,
+          repeat,
+          nextFire: addDays(todayISO(), n),
+          createdAt: todayISO(),
+        });
+      };
+
+      return (
+        <div style={{ background:"#111113", border:`1px solid ${cfg.color}33`, borderRadius:8, padding:14, display:"flex", flexDirection:"column", gap:10, marginTop:8 }}>
+          <input style={{ ...inp, width:"100%" }} value={description} onChange={e=>setDescription(e.target.value)}
+            placeholder="What's this reminder for? (e.g. Follow up on estimate)"
+            autoFocus onKeyDown={e => e.key==="Enter" && save()} />
+          <div style={{ display:"flex", alignItems:"center", gap:14, flexWrap:"wrap" }}>
+            <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+              <span style={{ fontSize:12, color:"#71717a" }}>Remind in</span>
+              <input type="number" min="1" max="365" style={{ ...inp, width:56, textAlign:"center" }} value={days} onChange={e=>setDays(e.target.value)} />
+              <span style={{ fontSize:12, color:"#71717a" }}>days</span>
+            </div>
+            <label style={{ display:"flex", alignItems:"center", gap:7, cursor:"pointer", fontSize:12, color:"#a1a1aa", userSelect:"none" }}>
+              <input type="checkbox" checked={repeat} onChange={e=>setRepeat(e.target.checked)} style={{ accentColor:cfg.color, width:14, height:14 }} />
+              Repeat every {days||1} day{Number(days)!==1?"s":""}
+            </label>
+          </div>
+          <div style={{ display:"flex", gap:8 }}>
+            <button onClick={save} disabled={!description.trim()}
+              style={{ flex:1, background:description.trim()?cfg.color:"#27272a", color:description.trim()?"#fff":"#52525b", border:"none", borderRadius:6, padding:"9px", fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:13, letterSpacing:"0.06em", cursor:description.trim()?"pointer":"not-allowed" }}>
+              SET REMINDER
+            </button>
+            <button onClick={onCancel} style={{ background:"transparent", border:"1px solid #27272a", borderRadius:6, padding:"9px 14px", color:"#71717a", fontSize:12, cursor:"pointer" }}>Cancel</button>
+          </div>
+        </div>
+      );
+    }
+
+    // ─────────────────────────────────────────────
+    // AI PANEL
+    // ─────────────────────────────────────────────
+    function AIPanel({ client, cfg, biz, onClose }) {
+      const [activeType, setActiveType] = useState("followup");
+      const [output, setOutput] = useState("");
+      const [loading, setLoading] = useState(false);
+      const [copied, setCopied] = useState(false);
+      const outputRef = useRef(null);
+
+      const types = [
+        { key:"followup", label:"Follow-Up", icon:"✉️" },
+        { key:"payment",  label:"Payment Reminder", icon:"💰" },
+        { key:"estimate", label:"Estimate / Proposal", icon:"📋" },
+        { key:"review",   label:"Review Request", icon:"⭐" },
+      ];
+
+      const buildPrompt = (type) => {
+        const base = `Business: ${biz.bizName} (${cfg.aiContext}) in ${biz.city}. Owner: ${biz.ownerName}.
+${cfg.clientWord}: ${client.name} | ${client.phone} | ${client.email}
+${cfg.projectWord} Type: ${client.jobType} | Stage: ${client.stage} | Value: $${Number(client.value||0).toLocaleString()}
+${client.address ? `Address: ${client.address}` : ""}
+${cfg.customFields.map(f => client[f.key] ? `${f.label}: ${client[f.key]}` : "").filter(Boolean).join(" | ")}
+Notes: ${client.notes || "None"}
+${client.history?.length ? `Past work: ${client.history.map(h=>h.desc).join(", ")}` : ""}`;
+        return {
+          followup: `${base}\n\nWrite a short professional follow-up email (under 120 words). Include subject line. Warm but direct. Sign off as ${biz.ownerName}.`,
+          payment:  `${base}\n\nWrite a professional payment reminder email. Invoice: $${Number(client.value||0).toLocaleString()}. Include subject line. Firm but not aggressive. Sign off as ${biz.ownerName}.`,
+          estimate: `${base}\n\nWrite a professional estimate/proposal email. Include: scope, investment ($${Number(client.value||0).toLocaleString()}), payment terms, 30-day validity, clear CTA. Include subject line. Sign off as ${biz.ownerName}.`,
+          review:   `${base}\n\nWrite a short SMS review request (2-3 sentences). Sound human. End with [Your Google Review Link]. No "amazing" or "delighted".`,
+        }[type];
+      };
+
+      const generate = async (type) => {
+        setOutput(""); setLoading(true); setCopied(false);
+        const sys = `You are a professional business communication writer for a ${cfg.aiContext}. Write concise, human-sounding content. No corporate jargon.`;
+        await streamAI(sys, buildPrompt(type), (chunk) => {
+          setOutput(p => p + chunk);
+          if (outputRef.current) outputRef.current.scrollTop = outputRef.current.scrollHeight;
+        }, () => setLoading(false));
+      };
+
+      return (
+        <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.8)", zIndex:200, display:"flex", alignItems:"flex-end", justifyContent:"flex-end", padding:16 }}>
+          <style>{`@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }`}</style>
+          <div style={{ background:"#111113", border:`1px solid ${cfg.color}44`, borderRadius:14, width:"100%", maxWidth:500, maxHeight:"90vh", display:"flex", flexDirection:"column", overflow:"hidden" }}>
+            <div style={{ padding:"16px 20px", borderBottom:"1px solid #27272a", display:"flex", justifyContent:"space-between", alignItems:"center", flexShrink:0 }}>
+              <div>
+                <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:800, fontSize:18, color:"#fff" }}>AI Content Generator</div>
+                <div style={{ fontSize:12, color:"#71717a", marginTop:2 }}>{client.name} · {client.jobType}</div>
+              </div>
+              <button onClick={onClose} style={{ background:"#18181b", border:"1px solid #27272a", borderRadius:6, width:32, height:32, cursor:"pointer", color:"#a1a1aa", fontSize:16, display:"flex", alignItems:"center", justifyContent:"center" }}>✕</button>
+            </div>
+            <div style={{ display:"flex", borderBottom:"1px solid #27272a", flexShrink:0 }}>
+              {types.map(t => (
+                <button key={t.key} onClick={() => { setActiveType(t.key); setOutput(""); setCopied(false); }}
+                  style={{ flex:1, padding:"10px 4px", background:"transparent", border:"none", borderBottom:activeType===t.key?`2px solid ${cfg.color}`:"2px solid transparent", color:activeType===t.key?cfg.color:"#71717a", fontSize:11, fontWeight:600, cursor:"pointer", display:"flex", flexDirection:"column", alignItems:"center", gap:3, transition:"all 0.15s" }}>
+                  <span style={{ fontSize:16 }}>{t.icon}</span><span>{t.label}</span>
+                </button>
+              ))}
+            </div>
+            <div ref={outputRef} style={{ flex:1, overflow:"auto", padding:16, background:"#0d0d0f", minHeight:200, fontFamily:"monospace", fontSize:12.5, lineHeight:1.8, color:"#e4e4e7", whiteSpace:"pre-wrap", wordBreak:"break-word" }}>
+              {!output && !loading && <div style={{ display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", height:160, gap:10, color:"#3f3f46" }}><span style={{ fontSize:30 }}>{types.find(t=>t.key===activeType)?.icon}</span><span style={{ fontSize:13 }}>Click Generate to create content</span></div>}
+              {!output && loading && <div style={{ display:"flex", alignItems:"center", gap:10, color:"#71717a", padding:8 }}><span style={{ width:8, height:8, background:cfg.color, borderRadius:"50%", display:"inline-block", animation:"blink 0.8s infinite" }} />Writing...</div>}
+              {output}
+              {loading && output && <span style={{ color:cfg.color, animation:"blink 0.5s infinite" }}>▋</span>}
+            </div>
+            <div style={{ padding:14, borderTop:"1px solid #27272a", display:"flex", gap:8, flexShrink:0 }}>
+              <button onClick={() => generate(activeType)} disabled={loading}
+                style={{ flex:1, background:loading?"#27272a":cfg.color, color:"#fff", border:"none", borderRadius:8, padding:"11px", fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:14, letterSpacing:"0.06em", cursor:loading?"not-allowed":"pointer" }}>
+                {loading ? "GENERATING..." : output ? "REGENERATE" : "GENERATE"}
+              </button>
+              {output && !loading && (
+                <button onClick={() => navigator.clipboard.writeText(output).then(()=>{setCopied(true);setTimeout(()=>setCopied(false),2000);})}
+                  style={{ flex:1, background:copied?"#064e3b":"#18181b", color:copied?"#4ade80":"#fff", border:`1px solid ${copied?"#4ade80":"#27272a"}`, borderRadius:8, padding:"11px", fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:14, letterSpacing:"0.06em", cursor:"pointer", transition:"all 0.2s" }}>
+                  {copied ? "✓ COPIED" : "COPY"}
+                </button>
+              )}
+            </div>
+            <div style={{ padding:"0 14px 12px", fontSize:11, color:"#3f3f46" }}>Review before sending. You send it — AI just drafted it.</div>
+          </div>
+        </div>
+      );
+    }
+
+    // ─────────────────────────────────────────────
+    // CLIENT FORM MODAL
+    // ─────────────────────────────────────────────
+    function ClientForm({ client, cfg, onSave, onClose }) {
+      const blank = { name:"", phone:"", email:"", address:"", jobType:cfg.jobTypes[0], stage:cfg.stages[0], value:"", notes:"", tags:[], history:[], reminders:[], created:new Date().toISOString().split("T")[0], ...cfg.customFields.reduce((a,f)=>({...a,[f.key]:""}),{}) };
+      const [form, setForm] = useState(client ? { ...blank, ...client } : blank);
+      const set = (k,v) => setForm(f=>({...f,[k]:v}));
+      const inp = { width:"100%", background:"#18181b", border:"1px solid #27272a", borderRadius:8, padding:"10px 12px", color:"#fff", fontSize:13, outline:"none", fontFamily:"inherit" };
+      const lbl = { fontSize:10, fontWeight:600, color:"#71717a", textTransform:"uppercase", letterSpacing:"0.08em", display:"block", marginBottom:5 };
+      return (
+        <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.8)", zIndex:300, display:"flex", alignItems:"center", justifyContent:"center", padding:16 }}>
+          <div style={{ background:"#111113", border:"1px solid #27272a", borderRadius:14, width:"100%", maxWidth:580, maxHeight:"92vh", overflow:"auto" }}>
+            <div style={{ padding:"20px 24px", borderBottom:"1px solid #27272a", display:"flex", justifyContent:"space-between", alignItems:"center", position:"sticky", top:0, background:"#111113", zIndex:1 }}>
+              <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:800, fontSize:20, color:"#fff" }}>{client ? `Edit ${cfg.clientWord}` : `Add ${cfg.clientWord}`}</div>
+              <button onClick={onClose} style={{ background:"transparent", border:"none", color:"#71717a", fontSize:20, cursor:"pointer" }}>✕</button>
+            </div>
+            <div style={{ padding:24, display:"flex", flexDirection:"column", gap:13 }}>
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:13 }}>
+                <div style={{ gridColumn:"span 2" }}><label style={lbl}>Full Name *</label><input style={inp} value={form.name} onChange={e=>set("name",e.target.value)} placeholder={`${cfg.clientWord} name or company`} /></div>
+                <div><label style={lbl}>Phone</label><input style={inp} value={form.phone} onChange={e=>set("phone",e.target.value)} placeholder="555-000-0000" /></div>
+                <div><label style={lbl}>Email</label><input style={inp} value={form.email} onChange={e=>set("email",e.target.value)} placeholder="email@example.com" /></div>
+                <div style={{ gridColumn:"span 2" }}><label style={lbl}>Address / Location</label><input style={inp} value={form.address} onChange={e=>set("address",e.target.value)} placeholder="Street address or area" /></div>
+                <div><label style={lbl}>{cfg.projectWord} Type</label><select style={{ ...inp, cursor:"pointer" }} value={form.jobType} onChange={e=>set("jobType",e.target.value)}>{cfg.jobTypes.map(j=><option key={j}>{j}</option>)}</select></div>
+                <div><label style={lbl}>Stage</label><select style={{ ...inp, cursor:"pointer" }} value={form.stage} onChange={e=>set("stage",e.target.value)}>{cfg.stages.map(s=><option key={s}>{s}</option>)}</select></div>
+                <div><label style={lbl}>{cfg.projectWord} Value ($)</label><input style={inp} type="number" value={form.value} onChange={e=>set("value",e.target.value)} placeholder="0" /></div>
+                <div><label style={lbl}>Date Added</label><input style={inp} type="date" value={form.created} onChange={e=>set("created",e.target.value)} /></div>
+                {cfg.customFields.map(f => (<div key={f.key}><label style={lbl}>{f.label}</label><input style={inp} value={form[f.key]||""} onChange={e=>set(f.key,e.target.value)} /></div>))}
+                <div style={{ gridColumn:"span 2" }}><label style={lbl}>Notes</label><textarea style={{ ...inp, height:80, resize:"vertical" }} value={form.notes} onChange={e=>set("notes",e.target.value)} placeholder={`Details about this ${cfg.clientWord.toLowerCase()}...`} /></div>
+              </div>
+              <div style={{ display:"flex", gap:10 }}>
+                <button disabled={!form.name} onClick={() => onSave(form)}
+                  style={{ flex:1, background:form.name?cfg.color:"#27272a", color:form.name?"#fff":"#52525b", border:"none", borderRadius:8, padding:"12px", fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:14, letterSpacing:"0.06em", cursor:form.name?"pointer":"not-allowed" }}>
+                  {client ? "SAVE CHANGES" : `ADD ${cfg.clientWord.toUpperCase()}`}
+                </button>
+                <button onClick={onClose} style={{ background:"transparent", border:"1px solid #27272a", borderRadius:8, padding:"12px 20px", color:"#a1a1aa", fontSize:13, cursor:"pointer" }}>Cancel</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ─────────────────────────────────────────────
+    // MAIN CRM APP
+    // ─────────────────────────────────────────────
+    function CRMApp({ workspace, onWorkspaceUpdate, workspaces, onSwitchWorkspace, onAddWorkspace, user, onSignOut, demoMode }) {
+      const cfg = INDUSTRIES[workspace.industry];
+      const [clients, setClients] = useState(workspace.clients || []);
+      const [view, setView] = useState("clients");
+      const [selected, setSelected] = useState(null);
+      const [aiOpen, setAiOpen] = useState(false);
+      const [formOpen, setFormOpen] = useState(false);
+      const [editTarget, setEditTarget] = useState(null);
+      const [search, setSearch] = useState("");
+      const [stageFilter, setStageFilter] = useState("All");
+      const [sortBy, setSortBy] = useState("created");
+      const [showReminderForm, setShowReminderForm] = useState(false);
+      // Settings
+      const [apiKey, setApiKey] = useState(() => localStorage.getItem("bvp_anthropic_key") || "");
+      const [settingsBizName, setSettingsBizName] = useState(workspace.bizName);
+      const [settingsOwnerName, setSettingsOwnerName] = useState(workspace.ownerName);
+      const [settingsCity, setSettingsCity] = useState(workspace.city);
+      const [settingsSaved, setSettingsSaved] = useState(false);
+
+      // Close reminder form when selected client changes
+      useEffect(() => { setShowReminderForm(false); }, [selected?.id]);
+
+      const updateClients = useCallback((newClients) => {
+        setClients(newClients);
+        onWorkspaceUpdate({ ...workspace, clients: newClients });
+      }, [workspace, onWorkspaceUpdate]);
+
+      // ── Client CRUD ──
+      const saveClient = (form) => {
+        let newClients;
+        if (form.id) {
+          const updated = { ...form, reminders: form.reminders || [] };
+          newClients = clients.map(c => c.id === form.id ? updated : c);
+          setSelected(updated);
+        } else {
+          const newC = { ...form, id: Date.now(), history: [], reminders: [] };
+          newClients = [...clients, newC];
+        }
+        updateClients(newClients);
+        setFormOpen(false); setEditTarget(null);
+      };
+
+      const deleteClient = (id) => {
+        if (!confirm("Delete this record? This cannot be undone.")) return;
+        updateClients(clients.filter(c => c.id !== id));
+        setSelected(null);
+      };
+
+      const updateStage = (id, stage) => {
+        updateClients(clients.map(c => c.id===id ? {...c, stage} : c));
+        if (selected?.id === id) setSelected(s => ({...s, stage}));
+      };
+
+      // ── Reminder CRUD ──
+      const addReminder = (clientId, reminder) => {
+        const newClients = clients.map(c => c.id===clientId ? {...c, reminders:[...(c.reminders||[]),reminder]} : c);
+        updateClients(newClients);
+        if (selected?.id === clientId) setSelected(newClients.find(c=>c.id===clientId));
+      };
+
+      const dismissReminder = (clientId, reminderId) => {
+        const newClients = clients.map(c => {
+          if (c.id !== clientId) return c;
+          const r = (c.reminders||[]).find(r=>r.id===reminderId);
+          if (!r) return c;
+          const newReminders = r.repeat
+            ? (c.reminders||[]).map(rem => rem.id===reminderId ? {...rem, nextFire: addDays(todayISO(), rem.daysInterval)} : rem)
+            : (c.reminders||[]).filter(rem => rem.id!==reminderId);
+          return { ...c, reminders: newReminders };
+        });
+        updateClients(newClients);
+        if (selected?.id === clientId) setSelected(newClients.find(c=>c.id===clientId));
+      };
+
+      const deleteReminder = (clientId, reminderId) => {
+        const newClients = clients.map(c => c.id===clientId ? {...c, reminders:(c.reminders||[]).filter(r=>r.id!==reminderId)} : c);
+        updateClients(newClients);
+        if (selected?.id === clientId) setSelected(newClients.find(c=>c.id===clientId));
+      };
+
+      // ── Settings ──
+      const saveSettings = () => {
+        localStorage.setItem("bvp_anthropic_key", apiKey);
+        onWorkspaceUpdate({ ...workspace, clients, bizName:settingsBizName, ownerName:settingsOwnerName, city:settingsCity });
+        setSettingsSaved(true); setTimeout(() => setSettingsSaved(false), 2200);
+      };
+
+      const deleteWorkspace = () => {
+        if (workspaces.length < 2) { alert("You can't delete your only business. Add another first."); return; }
+        if (!confirm(`Delete "${workspace.bizName}" and all its data? This is permanent.`)) return;
+        const remaining = workspaces.filter(w => w.id !== workspace.id);
+        onSwitchWorkspace(remaining[0].id, true);
+      };
+
+      // ── Derived data ──
+      const today = todayISO();
+
+      const dueReminders = [];
+      clients.forEach(c => {
+        (c.reminders||[]).forEach(r => { if (r.nextFire <= today) dueReminders.push({ client:c, reminder:r }); });
+      });
+      const totalReminders = clients.reduce((s,c) => s + (c.reminders||[]).length, 0);
+
+      const report = generateTodayReport(clients, cfg, workspace.industry);
+
+      const filtered = clients.filter(c => {
+        const q = search.toLowerCase();
+        const matchQ = !q || c.name.toLowerCase().includes(q) || c.email?.toLowerCase().includes(q) || c.jobType?.toLowerCase().includes(q) || c.phone?.includes(q);
+        const matchS = stageFilter==="All" || c.stage===stageFilter;
+        return matchQ && matchS;
+      }).sort((a,b) => {
+        if (sortBy==="value") return Number(b.value||0)-Number(a.value||0);
+        if (sortBy==="name") return a.name.localeCompare(b.name);
+        return new Date(b.created||0)-new Date(a.created||0);
+      });
+
+      const totalPipeline = clients.reduce((s,c)=>s+Number(c.value||0),0);
+      const activeCount = clients.filter(c=>["In Progress","Active","Scheduled","Booked","Confirmed","Negotiating","F&I","Test Drive"].includes(c.stage)).length;
+      const paidCount = clients.filter(c=>["Paid","Closed","Completed","Final Payment","Funded","Delivered"].includes(c.stage)).length;
+      const pendingPayment = clients.filter(c=>["Invoice Sent","Completed","Gallery Delivered","Deal Signed","Delivery Scheduled"].includes(c.stage));
+      const needsFollowUp = clients.filter(c=>["Estimate Sent","Proposal Sent","Quoted","Follow-Up","New Lead","Inquiry","Contacted","Appointment Set"].includes(c.stage));
+
+      const NAV = [
+        { key:"dashboard", label:"Dashboard", icon:"◈" },
+        { key:"clients",   label:cfg.clientWord+"s", icon:"⊕" },
+        { key:"pipeline",  label:"Pipeline", icon:"▦" },
+        { key:"settings",  label:"Settings", icon:"⚙" },
+      ];
+
+      const inp = { background:"#111113", border:"1px solid #27272a", borderRadius:8, padding:"9px 12px", color:"#fff", fontSize:13, outline:"none", fontFamily:"inherit" };
+      const lbl = { fontSize:10, fontWeight:600, color:"#52525b", textTransform:"uppercase", letterSpacing:"0.08em", display:"block", marginBottom:6 };
+      const settInp = { width:"100%", background:"#18181b", border:"1px solid #27272a", borderRadius:8, padding:"10px 12px", color:"#fff", fontSize:13, outline:"none", fontFamily:"inherit" };
+
+      return (
+        <div style={{ display:"flex", flexDirection:"column", height:"100vh", fontFamily:"'DM Sans','Helvetica Neue',sans-serif", background:"#09090a", color:"#fff", overflow:"hidden" }}>
+          <style>{`
+            @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800;900&family=DM+Sans:wght@400;500;600;700&display=swap');
+            * { box-sizing:border-box; }
+            ::-webkit-scrollbar{width:4px;height:4px} ::-webkit-scrollbar-track{background:#09090a} ::-webkit-scrollbar-thumb{background:#27272a;border-radius:4px}
+            .row-hover:hover { background:#111113 !important; }
+            .card-hover:hover { border-color:${cfg.color}66 !important; }
+            .nav-item:hover { color:#fff !important; background:#111113 !important; }
+            select option { background:#18181b; }
+            input:focus, select:focus, textarea:focus { border-color:${cfg.color}88 !important; }
+            .report-row { padding:7px 0; border-bottom:1px solid #1a1a1e; display:flex; gap:10; align-items:flex-start; }
+            .report-row:last-child { border-bottom:none; }
+          `}</style>
+
+          {demoMode && (
+            <div style={{ background:"rgba(255,107,0,0.1)", borderBottom:"1px solid rgba(255,107,0,0.25)", padding:"5px 20px", fontSize:11, color:"#fb923c", textAlign:"center", flexShrink:0 }}>
+              🔧 Demo Mode — Supabase not configured. Data saves locally only.
+            </div>
+          )}
+
+          {/* ── Topbar ── */}
+          <div style={{ height:52, background:"#0d0d0f", borderBottom:"1px solid #1f1f23", display:"flex", alignItems:"center", justifyContent:"space-between", padding:"0 16px", flexShrink:0, gap:10 }}>
+            <div style={{ display:"flex", alignItems:"center", gap:12, minWidth:0 }}>
+              <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:17, color:"#ff6b00", letterSpacing:"0.08em", flexShrink:0 }}>BVP</span>
+              <span style={{ width:1, height:18, background:"#27272a", flexShrink:0 }} />
+              <WorkspaceSwitcher workspaces={workspaces} activeId={workspace.id} onSwitch={onSwitchWorkspace} onAdd={onAddWorkspace} />
+            </div>
+            <div style={{ display:"flex", gap:8, alignItems:"center", flexShrink:0 }}>
+              {dueReminders.length > 0 && (
+                <button onClick={() => setView("dashboard")}
+                  style={{ background:"rgba(251,191,36,0.12)", border:"1px solid rgba(251,191,36,0.3)", borderRadius:6, padding:"4px 10px", color:"#fbbf24", fontSize:11, fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", gap:5 }}>
+                  📅 {dueReminders.length} due
+                </button>
+              )}
+              <span style={{ background:cfg.colorDim, color:cfg.color, border:`1px solid ${cfg.color}44`, borderRadius:6, padding:"3px 9px", fontSize:11, fontWeight:700, letterSpacing:"0.06em" }}>{cfg.icon} {cfg.label.toUpperCase()}</span>
+              <button onClick={() => { setEditTarget(null); setFormOpen(true); }}
+                style={{ background:cfg.color, border:"none", borderRadius:8, padding:"6px 14px", color:"#fff", fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:13, letterSpacing:"0.06em", cursor:"pointer" }}>
+                + ADD {cfg.clientWord.toUpperCase()}
+              </button>
+              {!demoMode && user && (
+                <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                  <span style={{ fontSize:11, color:"#52525b", maxWidth:140, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{user.email}</span>
+                  <button onClick={onSignOut} style={{ background:"transparent", border:"1px solid #27272a", borderRadius:7, padding:"5px 11px", color:"#71717a", fontSize:11, cursor:"pointer" }}>Sign Out</button>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div style={{ display:"flex", flex:1, overflow:"hidden" }}>
+            {/* ── Sidebar ── */}
+            <div style={{ width:176, background:"#0d0d0f", borderRight:"1px solid #1f1f23", display:"flex", flexDirection:"column", flexShrink:0, padding:"10px 0" }}>
+              {NAV.map(n => (
+                <button key={n.key} className="nav-item" onClick={() => setView(n.key)}
+                  style={{ display:"flex", alignItems:"center", gap:10, padding:"9px 16px", background:view===n.key?cfg.colorDim:"transparent", borderLeft:`2px solid ${view===n.key?cfg.color:"transparent"}`, border:"none", color:view===n.key?cfg.color:"#71717a", fontSize:13, fontWeight:view===n.key?600:400, cursor:"pointer", textAlign:"left", width:"100%", transition:"all 0.12s" }}>
+                  <span style={{ fontFamily:"monospace", fontSize:14 }}>{n.icon}</span>
+                  {n.label}
+                  {n.key==="dashboard" && dueReminders.length > 0 && <span style={{ marginLeft:"auto", background:"#fbbf24", color:"#09090a", borderRadius:"50%", width:16, height:16, fontSize:9, fontWeight:800, display:"flex", alignItems:"center", justifyContent:"center" }}>{dueReminders.length}</span>}
+                </button>
+              ))}
+              <div style={{ margin:"10px 16px", height:1, background:"#1f1f23" }} />
+              {[["Total",clients.length,"#a1a1aa"],["Active",activeCount,cfg.color],["Pipeline",`$${totalPipeline>=1000?(totalPipeline/1000).toFixed(1)+"k":totalPipeline.toLocaleString()}`,"#4ade80"],["Paid",paidCount,"#4ade80"]].map(([l,v,c])=>(
+                <div key={l} style={{ display:"flex", justifyContent:"space-between", padding:"3px 16px" }}>
+                  <span style={{ fontSize:11, color:"#52525b" }}>{l}</span>
+                  <span style={{ fontSize:11, fontWeight:700, color:c }}>{v}</span>
+                </div>
+              ))}
+              {totalReminders > 0 && (
+                <div style={{ display:"flex", justifyContent:"space-between", padding:"3px 16px" }}>
+                  <span style={{ fontSize:11, color:"#52525b" }}>Reminders</span>
+                  <span style={{ fontSize:11, fontWeight:700, color: dueReminders.length > 0 ? "#fbbf24" : "#71717a" }}>{dueReminders.length > 0 ? `${dueReminders.length} due` : totalReminders}</span>
+                </div>
+              )}
+              <div style={{ flex:1 }} />
+              <div style={{ padding:"10px 16px", borderTop:"1px solid #1f1f23" }}>
+                <div style={{ fontSize:9, color:"#3f3f46", marginBottom:1 }}>Powered by</div>
+                <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:12, color:"#ff6b00" }}>BOT VAULT PRO</div>
+              </div>
+            </div>
+
+            {/* ── Main Content ── */}
+            <div style={{ flex:1, overflow:"auto", padding:20, display:"flex", flexDirection:"column", gap:18 }}>
+
+              {/* ═══ DASHBOARD ═══ */}
+              {view==="dashboard" && (
+                <div style={{ display:"flex", flexDirection:"column", gap:16 }}>
+                  <div>
+                    <h2 style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:26, margin:"0 0 2px" }}>Hey, {workspace.ownerName} 👋</h2>
+                    <p style={{ color:"#71717a", margin:0, fontSize:13 }}>{workspace.bizName} · {workspace.city} · {new Date().toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric"})}</p>
+                  </div>
+
+                  {/* Stat cards */}
+                  <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:12 }}>
+                    {[
+                      { label:`Total ${cfg.clientWord}s`, val:clients.length, color:cfg.color, sub:"in your CRM" },
+                      { label:"Pipeline Value", val:`$${totalPipeline.toLocaleString()}`, color:"#4ade80", sub:"open + active" },
+                      { label:"Active", val:activeCount, color:cfg.color, sub:`${cfg.projectWord}s in progress` },
+                      { label:"Closed / Paid", val:paidCount, color:"#4ade80", sub:"completed" },
+                    ].map(({label,val,color,sub})=>(
+                      <div key={label} className="card-hover" style={{ background:"#111113", border:"1px solid #1f1f23", borderRadius:10, padding:"14px 16px" }}>
+                        <div style={{ fontSize:24, fontWeight:800, color, fontFamily:"'Barlow Condensed',sans-serif", marginBottom:2 }}>{val}</div>
+                        <div style={{ fontSize:13, fontWeight:600, color:"#e4e4e7" }}>{label}</div>
+                        <div style={{ fontSize:11, color:"#52525b", marginTop:2 }}>{sub}</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Follow-Up + Awaiting Payment */}
+                  <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:14 }}>
+                    <div style={{ background:"#111113", border:"1px solid #1f1f23", borderRadius:10, padding:16 }}>
+                      <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:14, color:"#ffc107", marginBottom:12 }}>⚡ NEEDS FOLLOW-UP ({needsFollowUp.length})</div>
+                      {needsFollowUp.length===0 && <div style={{ color:"#52525b", fontSize:13 }}>All caught up 🎉</div>}
+                      {needsFollowUp.slice(0,5).map(c=>(
+                        <div key={c.id} className="row-hover" onClick={() => { setSelected(c); setView("clients"); }} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"7px 6px", borderBottom:"1px solid #1f1f23", cursor:"pointer" }}>
+                          <div><div style={{ fontSize:13, fontWeight:600 }}>{c.name}</div><div style={{ fontSize:11, color:"#71717a" }}>{c.jobType}</div></div>
+                          <span style={{ background:`${getStageColor(c.stage)}18`, color:getStageColor(c.stage), border:`1px solid ${getStageColor(c.stage)}33`, borderRadius:5, padding:"2px 7px", fontSize:10, fontWeight:700 }}>{c.stage}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div style={{ background:"#111113", border:"1px solid #1f1f23", borderRadius:10, padding:16 }}>
+                      <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:14, color:"#f87171", marginBottom:12 }}>💰 AWAITING PAYMENT ({pendingPayment.length})</div>
+                      {pendingPayment.length===0 && <div style={{ color:"#52525b", fontSize:13 }}>No outstanding invoices</div>}
+                      {pendingPayment.slice(0,5).map(c=>(
+                        <div key={c.id} className="row-hover" onClick={() => { setSelected(c); setView("clients"); }} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"7px 6px", borderBottom:"1px solid #1f1f23", cursor:"pointer" }}>
+                          <div><div style={{ fontSize:13, fontWeight:600 }}>{c.name}</div><div style={{ fontSize:11, color:"#71717a" }}>{c.jobType}</div></div>
+                          <span style={{ fontSize:13, fontWeight:700, color:"#4ade80" }}>${Number(c.value||0).toLocaleString()}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* ── REMINDERS DUE TODAY ── */}
+                  {dueReminders.length > 0 && (
+                    <div style={{ background:"rgba(251,191,36,0.05)", border:"1px solid rgba(251,191,36,0.22)", borderRadius:10, padding:16 }}>
+                      <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:14, color:"#fbbf24", marginBottom:12 }}>📅 REMINDERS DUE TODAY ({dueReminders.length})</div>
+                      <div style={{ display:"flex", flexDirection:"column", gap:1 }}>
+                        {dueReminders.map(({ client: c, reminder: r }) => (
+                          <div key={`${c.id}-${r.id}`} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"8px 6px", borderBottom:"1px solid rgba(251,191,36,0.1)" }}>
+                            <div style={{ flex:1, minWidth:0, cursor:"pointer" }} onClick={() => { setSelected(c); setView("clients"); }}>
+                              <div style={{ fontSize:13, fontWeight:600 }}>{c.name}</div>
+                              <div style={{ fontSize:11, color:"#a1a1aa" }}>{r.description || "Reminder"}{r.repeat ? ` · repeats every ${r.daysInterval}d` : ""}</div>
+                            </div>
+                            <button onClick={() => dismissReminder(c.id, r.id)}
+                              style={{ background:"rgba(74,222,128,0.1)", border:"1px solid rgba(74,222,128,0.3)", borderRadius:5, padding:"4px 10px", color:"#4ade80", fontSize:11, fontWeight:700, cursor:"pointer", flexShrink:0 }}>
+                              ✓ Done
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ── TODAY'S REPORT ── */}
+                  <div style={{ background:"#111113", border:"1px solid #1f1f23", borderRadius:10, padding:18 }}>
+                    <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16 }}>
+                      <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:15, color:"#e4e4e7" }}>📊 TODAY'S ACTION REPORT</div>
+                      <span style={{ fontSize:11, color:"#52525b" }}>{new Date().toLocaleDateString("en-US",{month:"short",day:"numeric"})}</span>
+                    </div>
+
+                    {report.urgent.length > 0 && (
+                      <div style={{ marginBottom:14 }}>
+                        <div style={{ fontSize:10, fontWeight:700, color:"#f87171", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:6, display:"flex", alignItems:"center", gap:6 }}>
+                          <span style={{ width:8, height:8, background:"#f87171", borderRadius:"50%", display:"inline-block" }}/>URGENT — Do These First
+                        </div>
+                        {report.urgent.map((item, i) => (
+                          <div key={i} className="report-row">
+                            <span style={{ color:"#f87171", fontSize:13, flexShrink:0, marginTop:1 }}>→</span>
+                            <span style={{ fontSize:13, color:"#e4e4e7", lineHeight:1.5 }}>{item}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {report.important.length > 0 && (
+                      <div style={{ marginBottom:14 }}>
+                        <div style={{ fontSize:10, fontWeight:700, color:"#fbbf24", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:6, display:"flex", alignItems:"center", gap:6 }}>
+                          <span style={{ width:8, height:8, background:"#fbbf24", borderRadius:"50%", display:"inline-block" }}/>IMPORTANT — Progress These Today
+                        </div>
+                        {report.important.map((item, i) => (
+                          <div key={i} className="report-row">
+                            <span style={{ color:"#fbbf24", fontSize:13, flexShrink:0, marginTop:1 }}>→</span>
+                            <span style={{ fontSize:13, color:"#a1a1aa", lineHeight:1.5 }}>{item}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {report.growth.length > 0 && (
+                      <div style={{ marginBottom:14 }}>
+                        <div style={{ fontSize:10, fontWeight:700, color:"#60a5fa", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:6, display:"flex", alignItems:"center", gap:6 }}>
+                          <span style={{ width:8, height:8, background:"#60a5fa", borderRadius:"50%", display:"inline-block" }}/>PIPELINE — Strategic Moves
+                        </div>
+                        {report.growth.map((item, i) => (
+                          <div key={i} className="report-row">
+                            <span style={{ color:"#60a5fa", fontSize:13, flexShrink:0, marginTop:1 }}>→</span>
+                            <span style={{ fontSize:13, color:"#a1a1aa", lineHeight:1.5 }}>{item}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {report.leads.length > 0 && (
+                      <div>
+                        <div style={{ fontSize:10, fontWeight:700, color:"#34d399", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:6, display:"flex", alignItems:"center", gap:6 }}>
+                          <span style={{ width:8, height:8, background:"#34d399", borderRadius:"50%", display:"inline-block" }}/>LEAD GENERATION — Find New Business
+                        </div>
+                        {report.leads.map((item, i) => (
+                          <div key={i} className="report-row">
+                            <span style={{ color:"#34d399", fontSize:13, flexShrink:0, marginTop:1 }}>→</span>
+                            <span style={{ fontSize:13, color:"#a1a1aa", lineHeight:1.5 }}>{item}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Pipeline Breakdown */}
+                  <div style={{ background:"#111113", border:"1px solid #1f1f23", borderRadius:10, padding:16 }}>
+                    <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:14, color:"#a1a1aa", marginBottom:12 }}>PIPELINE BREAKDOWN</div>
+                    <div style={{ display:"flex", flexWrap:"wrap", gap:8 }}>
+                      {cfg.stages.map(stage => {
+                        const count = clients.filter(c=>c.stage===stage).length;
+                        const color = getStageColor(stage);
+                        return (
+                          <div key={stage} onClick={() => { setStageFilter(stage); setView("clients"); }} style={{ background:`${color}12`, border:`1px solid ${color}33`, borderRadius:8, padding:"7px 12px", cursor:"pointer", transition:"all 0.15s" }}>
+                            <div style={{ fontSize:18, fontWeight:800, color, fontFamily:"'Barlow Condensed',sans-serif" }}>{count}</div>
+                            <div style={{ fontSize:11, color:"#71717a" }}>{stage}</div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* ═══ CLIENTS LIST ═══ */}
+              {view==="clients" && (
+                <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
+                  <div style={{ display:"flex", gap:10, flexWrap:"wrap", alignItems:"center" }}>
+                    <input value={search} onChange={e=>setSearch(e.target.value)} placeholder={`Search ${cfg.clientWord.toLowerCase()}s...`} style={{ ...inp, flex:"1 1 200px", minWidth:160 }} />
+                    <select value={stageFilter} onChange={e=>setStageFilter(e.target.value)} style={{ ...inp, cursor:"pointer" }}>
+                      <option value="All">All Stages</option>
+                      {cfg.stages.map(s=><option key={s}>{s}</option>)}
+                    </select>
+                    <select value={sortBy} onChange={e=>setSortBy(e.target.value)} style={{ ...inp, cursor:"pointer" }}>
+                      <option value="created">Sort: Recent</option>
+                      <option value="value">Sort: Value ↓</option>
+                      <option value="name">Sort: Name A-Z</option>
+                    </select>
+                    <span style={{ fontSize:12, color:"#52525b", marginLeft:"auto" }}>{filtered.length} {cfg.clientWord.toLowerCase()}s</span>
+                  </div>
+
+                  <div style={{ background:"#111113", border:"1px solid #1f1f23", borderRadius:10, overflow:"hidden" }}>
+                    <div style={{ display:"grid", gridTemplateColumns:"1fr 120px 140px 90px 100px", padding:"9px 16px", borderBottom:"1px solid #1f1f23", background:"#0d0d0f" }}>
+                      {[cfg.clientWord, cfg.projectWord+" Type", "Stage", "Value", "Actions"].map(h=>(
+                        <div key={h} style={{ fontSize:10, fontWeight:700, color:"#52525b", textTransform:"uppercase", letterSpacing:"0.08em" }}>{h}</div>
+                      ))}
+                    </div>
+                    {filtered.length===0 && (
+                      <div style={{ padding:"48px", textAlign:"center" }}>
+                        <div style={{ fontSize:32, marginBottom:10 }}>{cfg.icon}</div>
+                        <div style={{ fontWeight:600, marginBottom:6 }}>No {cfg.clientWord.toLowerCase()}s found</div>
+                        <div style={{ color:"#71717a", fontSize:13, marginBottom:18 }}>{search ? "Try a different search" : `Add your first ${cfg.clientWord.toLowerCase()} to get started`}</div>
+                        <button onClick={() => setFormOpen(true)} style={{ background:cfg.color, border:"none", borderRadius:8, padding:"9px 20px", color:"#fff", fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:13, letterSpacing:"0.06em", cursor:"pointer" }}>+ ADD {cfg.clientWord.toUpperCase()}</button>
+                      </div>
+                    )}
+                    {filtered.map((c,i) => {
+                      const sc = getStageColor(c.stage);
+                      const hasReminders = (c.reminders||[]).length > 0;
+                      const hasDueReminder = (c.reminders||[]).some(r => r.nextFire <= today);
+                      return (
+                        <div key={c.id} className="row-hover" style={{ display:"grid", gridTemplateColumns:"1fr 120px 140px 90px 100px", padding:"11px 16px", borderBottom:i<filtered.length-1?"1px solid #1a1a1e":"none", alignItems:"center", cursor:"pointer", background:selected?.id===c.id?"#141418":"transparent", transition:"all 0.1s" }}
+                          onClick={() => { setSelected(selected?.id===c.id ? null : c); setShowReminderForm(false); }}>
+                          <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+                            <div style={{ width:30, height:30, borderRadius:"50%", background:`${cfg.color}22`, display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Barlow Condensed',sans-serif", fontWeight:800, fontSize:13, color:cfg.color, flexShrink:0 }}>{c.name.charAt(0).toUpperCase()}</div>
+                            <div>
+                              <div style={{ fontSize:13, fontWeight:600, display:"flex", alignItems:"center", gap:6 }}>
+                                {c.name}
+                                {hasDueReminder && <span style={{ fontSize:9, background:"rgba(251,191,36,0.2)", color:"#fbbf24", borderRadius:3, padding:"1px 4px", fontWeight:700 }}>REMINDER</span>}
+                              </div>
+                              <div style={{ fontSize:11, color:"#71717a" }}>{c.phone||c.email||c.address}</div>
+                            </div>
+                          </div>
+                          <div style={{ fontSize:12, color:"#a1a1aa" }}>{c.jobType}</div>
+                          <div><span style={{ background:`${sc}18`, color:sc, border:`1px solid ${sc}33`, borderRadius:5, padding:"3px 8px", fontSize:10, fontWeight:700, letterSpacing:"0.04em" }}>{c.stage}</span></div>
+                          <div style={{ fontSize:13, fontWeight:700, color:["Paid","Closed","Funded","Delivered"].includes(c.stage)?"#4ade80":"#e4e4e7" }}>${Number(c.value||0).toLocaleString()}</div>
+                          <div style={{ display:"flex", gap:6 }} onClick={e=>e.stopPropagation()}>
+                            <button onClick={()=>{setEditTarget(c);setFormOpen(true);}} title="Edit" style={{ background:"#18181b", border:"1px solid #27272a", borderRadius:6, width:28, height:28, cursor:"pointer", color:"#a1a1aa", fontSize:12, display:"flex", alignItems:"center", justifyContent:"center" }}>✎</button>
+                            <button onClick={()=>{setSelected(c);setAiOpen(true);}} title="AI Actions" style={{ background:cfg.colorDim, border:`1px solid ${cfg.color}44`, borderRadius:6, width:28, height:28, cursor:"pointer", color:cfg.color, fontSize:12, display:"flex", alignItems:"center", justifyContent:"center" }}>⚡</button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* ── EXPANDED CLIENT DETAIL ── */}
+                  {selected && (
+                    <div style={{ background:"#111113", border:`1px solid ${cfg.color}44`, borderRadius:12, padding:20 }}>
+                      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:16 }}>
+                        <div>
+                          <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:22, marginBottom:6 }}>{selected.name}</div>
+                          <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
+                            <span style={{ background:`${getStageColor(selected.stage)}18`, color:getStageColor(selected.stage), border:`1px solid ${getStageColor(selected.stage)}33`, borderRadius:5, padding:"3px 9px", fontSize:11, fontWeight:700 }}>{selected.stage}</span>
+                            <span style={{ background:cfg.colorDim, color:cfg.color, border:`1px solid ${cfg.color}33`, borderRadius:5, padding:"3px 9px", fontSize:11, fontWeight:700 }}>{selected.jobType}</span>
+                            {selected.value > 0 && <span style={{ background:"rgba(74,222,128,0.1)", color:"#4ade80", border:"1px solid rgba(74,222,128,0.3)", borderRadius:5, padding:"3px 9px", fontSize:11, fontWeight:700 }}>${Number(selected.value).toLocaleString()}</span>}
+                          </div>
+                        </div>
+                        <div style={{ display:"flex", gap:8 }}>
+                          <button onClick={()=>{setEditTarget(selected);setFormOpen(true);}} style={{ background:"#18181b", border:"1px solid #27272a", borderRadius:7, padding:"6px 13px", color:"#a1a1aa", fontSize:12, cursor:"pointer" }}>Edit</button>
+                          <button onClick={()=>deleteClient(selected.id)} style={{ background:"rgba(255,68,68,0.1)", border:"1px solid rgba(255,68,68,0.3)", borderRadius:7, padding:"6px 13px", color:"#f87171", fontSize:12, cursor:"pointer" }}>Delete</button>
+                          <button onClick={()=>{setSelected(null);setShowReminderForm(false);}} style={{ background:"transparent", border:"none", color:"#71717a", fontSize:18, cursor:"pointer", padding:"3px 7px" }}>✕</button>
+                        </div>
+                      </div>
+
+                      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:16, marginBottom:16 }}>
+                        <div>
+                          <div style={lbl}>Contact</div>
+                          {[["📞",selected.phone],["✉️",selected.email],["📍",selected.address]].filter(([,v])=>v).map(([icon,val])=>(
+                            <div key={val} style={{ display:"flex", gap:8, marginBottom:5 }}><span style={{ fontSize:12 }}>{icon}</span><span style={{ fontSize:12, color:"#a1a1aa" }}>{val}</span></div>
+                          ))}
+                        </div>
+                        <div>
+                          <div style={lbl}>Details</div>
+                          <div style={{ fontSize:12, color:"#a1a1aa", marginBottom:3 }}>Added: {selected.created}</div>
+                          {cfg.customFields.filter(f=>selected[f.key]).map(f=>(
+                            <div key={f.key} style={{ fontSize:12, color:"#a1a1aa", marginBottom:3 }}>{f.label}: <span style={{ color:"#e4e4e7" }}>{selected[f.key]}</span></div>
+                          ))}
+                        </div>
+                        <div>
+                          <div style={lbl}>Update Stage</div>
+                          <select value={selected.stage} onChange={e=>updateStage(selected.id,e.target.value)}
+                            style={{ width:"100%", background:"#18181b", border:"1px solid #27272a", borderRadius:7, padding:"9px 10px", color:"#fff", fontSize:13, outline:"none", cursor:"pointer", fontFamily:"inherit" }}>
+                            {cfg.stages.map(s=><option key={s}>{s}</option>)}
+                          </select>
+                        </div>
+                      </div>
+
+                      {selected.notes && <div style={{ background:"#0d0d0f", borderRadius:8, padding:"11px 13px", fontSize:12, color:"#a1a1aa", lineHeight:1.7, marginBottom:14 }}>{selected.notes}</div>}
+
+                      {/* AI Actions */}
+                      <div style={{ background:cfg.colorDim, border:`1px solid ${cfg.color}33`, borderRadius:10, padding:14, marginBottom:14 }}>
+                        <div style={{ fontSize:11, fontWeight:700, color:cfg.color, textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:10 }}>⚡ AI Actions — Generate &amp; Copy to Send</div>
+                        <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:8 }}>
+                          {[["followup","Follow-Up Email","✉️"],["payment","Payment Reminder","💰"],["estimate","Estimate Email","📋"],["review","Review Request","⭐"]].map(([key,label,icon])=>(
+                            <button key={key} onClick={()=>setAiOpen(true)}
+                              style={{ background:"#111113", border:"1px solid #27272a", borderRadius:8, padding:"10px 6px", cursor:"pointer", color:"#fff", fontSize:11, fontWeight:600, display:"flex", flexDirection:"column", alignItems:"center", gap:5 }}>
+                              <span style={{ fontSize:18 }}>{icon}</span>
+                              <span style={{ color:"#a1a1aa", textAlign:"center", lineHeight:1.3 }}>{label}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* ── REMINDERS ── */}
+                      <div style={{ borderTop:"1px solid #1f1f23", paddingTop:14 }}>
+                        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
+                          <div style={{ fontSize:11, fontWeight:700, color:"#52525b", textTransform:"uppercase", letterSpacing:"0.08em" }}>📅 Reminders {(selected.reminders||[]).length > 0 && <span style={{ color:"#71717a", fontWeight:400 }}>({(selected.reminders||[]).length})</span>}</div>
+                          {!showReminderForm && (
+                            <button onClick={() => setShowReminderForm(true)}
+                              style={{ background:"transparent", border:`1px solid ${cfg.color}44`, borderRadius:5, padding:"3px 10px", color:cfg.color, fontSize:11, fontWeight:600, cursor:"pointer" }}>
+                              + Add Reminder
+                            </button>
+                          )}
+                        </div>
+
+                        {showReminderForm && (
+                          <ReminderForm
+                            cfg={cfg}
+                            onSave={r => { addReminder(selected.id, r); setShowReminderForm(false); }}
+                            onCancel={() => setShowReminderForm(false)}
+                          />
+                        )}
+
+                        {(selected.reminders||[]).length === 0 && !showReminderForm && (
+                          <div style={{ fontSize:12, color:"#3f3f46", padding:"4px 0 2px" }}>No reminders set — add one to stay on top of this {cfg.clientWord.toLowerCase()}.</div>
+                        )}
+
+                        <div style={{ display:"flex", flexDirection:"column", gap:6, marginTop:(selected.reminders||[]).length>0 && showReminderForm ? 10 : 4 }}>
+                          {(selected.reminders||[]).map(r => {
+                            const isDue = r.nextFire <= today;
+                            const isOverdue = r.nextFire < today;
+                            return (
+                              <div key={r.id} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"9px 12px", background:isDue?"rgba(251,191,36,0.05)":"#0d0d0f", border:`1px solid ${isDue?"rgba(251,191,36,0.22)":"#1f1f23"}`, borderRadius:7 }}>
+                                <div style={{ flex:1, minWidth:0, paddingRight:10 }}>
+                                  <div style={{ fontSize:12, fontWeight:600, color:isDue?"#fbbf24":"#e4e4e7" }}>{r.description || "Reminder"}</div>
+                                  <div style={{ fontSize:10, color:isDue?"#fbbf24":"#52525b", marginTop:2 }}>
+                                    {isOverdue ? "⚡ OVERDUE" : isDue ? "⚡ DUE TODAY" : `Due ${formatDate(r.nextFire)}`}
+                                    {r.repeat && ` · Repeats every ${r.daysInterval}d`}
+                                  </div>
+                                </div>
+                                <div style={{ display:"flex", gap:5, flexShrink:0 }}>
+                                  <button onClick={() => dismissReminder(selected.id, r.id)}
+                                    style={{ background:"rgba(74,222,128,0.1)", border:"1px solid rgba(74,222,128,0.3)", borderRadius:5, padding:"4px 9px", color:"#4ade80", fontSize:11, fontWeight:700, cursor:"pointer", whiteSpace:"nowrap" }}>
+                                    ✓ Done
+                                  </button>
+                                  <button onClick={() => deleteReminder(selected.id, r.id)}
+                                    style={{ background:"transparent", border:"1px solid #27272a", borderRadius:5, width:24, height:24, cursor:"pointer", color:"#52525b", fontSize:11, display:"flex", alignItems:"center", justifyContent:"center" }}>
+                                    ✕
+                                  </button>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* ═══ PIPELINE ═══ */}
+              {view==="pipeline" && (
+                <div>
+                  <div style={{ marginBottom:16 }}>
+                    <h2 style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:24, margin:"0 0 2px" }}>Pipeline</h2>
+                    <p style={{ color:"#71717a", margin:0, fontSize:13 }}>Total value: <span style={{ color:"#4ade80", fontWeight:700 }}>${totalPipeline.toLocaleString()}</span></p>
+                  </div>
+                  <div style={{ display:"flex", gap:12, overflowX:"auto", paddingBottom:12 }}>
+                    {cfg.stages.map(stage => {
+                      const col = clients.filter(c=>c.stage===stage);
+                      const stageVal = col.reduce((s,c)=>s+Number(c.value||0),0);
+                      const sc = getStageColor(stage);
+                      return (
+                        <div key={stage} style={{ minWidth:190, flexShrink:0 }}>
+                          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:7 }}>
+                            <div style={{ fontSize:11, fontWeight:700, color:sc, textTransform:"uppercase", letterSpacing:"0.06em" }}>{stage}</div>
+                            <span style={{ background:`${sc}18`, color:sc, border:`1px solid ${sc}33`, borderRadius:4, padding:"1px 6px", fontSize:10, fontWeight:700 }}>{col.length}</span>
+                          </div>
+                          {stageVal > 0 && <div style={{ fontSize:11, color:"#52525b", marginBottom:7 }}>${stageVal.toLocaleString()}</div>}
+                          <div style={{ display:"flex", flexDirection:"column", gap:7 }}>
+                            {col.map(c=>(
+                              <div key={c.id} onClick={()=>{setSelected(c);setView("clients");}} style={{ background:"#111113", borderLeft:`3px solid ${sc}`, borderRight:"1px solid #1f1f23", borderTop:"1px solid #1f1f23", borderBottom:"1px solid #1f1f23", borderRadius:8, padding:"10px 12px", cursor:"pointer" }}>
+                                <div style={{ fontWeight:600, fontSize:13, marginBottom:2, display:"flex", alignItems:"center", gap:5 }}>
+                                  {c.name}
+                                  {(c.reminders||[]).some(r=>r.nextFire<=today) && <span style={{ fontSize:9, color:"#fbbf24" }}>📅</span>}
+                                </div>
+                                <div style={{ fontSize:11, color:"#71717a", marginBottom:c.value?5:0 }}>{c.jobType}</div>
+                                {c.value > 0 && <div style={{ fontSize:12, fontWeight:700, color:"#4ade80" }}>${Number(c.value).toLocaleString()}</div>}
+                              </div>
+                            ))}
+                            {col.length===0 && <div style={{ color:"#3f3f46", fontSize:12, textAlign:"center", padding:"14px 0" }}>—</div>}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* ═══ SETTINGS ═══ */}
+              {view==="settings" && (
+                <div style={{ display:"flex", flexDirection:"column", gap:20, maxWidth:560 }}>
+                  <div>
+                    <h2 style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:24, margin:"0 0 4px" }}>Settings</h2>
+                    <p style={{ color:"#71717a", fontSize:13, margin:0 }}>{workspace.bizName} · {INDUSTRIES[workspace.industry].label}</p>
+                  </div>
+                  <div style={{ background:"#111113", border:"1px solid #1f1f23", borderRadius:10, padding:20 }}>
+                    <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:15, color:"#e4e4e7", marginBottom:16 }}>🏢 Business Info</div>
+                    <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
+                      <div><label style={lbl}>Business Name</label><input style={settInp} value={settingsBizName} onChange={e=>setSettingsBizName(e.target.value)} /></div>
+                      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
+                        <div><label style={lbl}>Your Name</label><input style={settInp} value={settingsOwnerName} onChange={e=>setSettingsOwnerName(e.target.value)} /></div>
+                        <div><label style={lbl}>City / Market</label><input style={settInp} value={settingsCity} onChange={e=>setSettingsCity(e.target.value)} /></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{ background:"#111113", border:"1px solid #1f1f23", borderRadius:10, padding:20 }}>
+                    <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:15, color:"#e4e4e7", marginBottom:6 }}>⚡ AI Configuration</div>
+                    <p style={{ color:"#52525b", fontSize:12, marginBottom:14, lineHeight:1.6 }}>Enter your Anthropic API key to enable AI content generation. Stored only in your browser — never shared.</p>
+                    <label style={lbl}>Anthropic API Key</label>
+                    <input type="password" style={{ ...settInp, fontFamily:"monospace" }} value={apiKey} onChange={e=>setApiKey(e.target.value)} placeholder="sk-ant-..." />
+                    <p style={{ fontSize:11, color:"#3f3f46", marginTop:8 }}>Get your key at <span style={{ color:"#71717a" }}>console.anthropic.com</span> → API Keys.</p>
+                  </div>
+                  <button onClick={saveSettings}
+                    style={{ background:settingsSaved?"#064e3b":cfg.color, color:settingsSaved?"#4ade80":"#fff", border:settingsSaved?"1px solid #4ade80":"none", borderRadius:8, padding:"12px", fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:14, letterSpacing:"0.06em", cursor:"pointer", transition:"all 0.2s", alignSelf:"flex-start", minWidth:160 }}>
+                    {settingsSaved ? "✓ SAVED" : "SAVE CHANGES"}
+                  </button>
+                  {!demoMode && user && (
+                    <div style={{ background:"#111113", border:"1px solid #1f1f23", borderRadius:10, padding:20 }}>
+                      <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:15, color:"#e4e4e7", marginBottom:12 }}>👤 Account</div>
+                      <div style={{ fontSize:13, color:"#a1a1aa", marginBottom:14 }}>Signed in as <span style={{ color:"#fff" }}>{user.email}</span></div>
+                      <button onClick={onSignOut} style={{ background:"transparent", border:"1px solid #27272a", borderRadius:7, padding:"8px 16px", color:"#71717a", fontSize:12, cursor:"pointer" }}>Sign Out</button>
+                    </div>
+                  )}
+                  <div style={{ background:"rgba(239,68,68,0.05)", border:"1px solid rgba(239,68,68,0.2)", borderRadius:10, padding:20 }}>
+                    <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:15, color:"#f87171", marginBottom:8 }}>⚠️ Danger Zone</div>
+                    <p style={{ fontSize:12, color:"#71717a", marginBottom:14 }}>Permanently delete this business and all associated client data. Cannot be undone.</p>
+                    <button onClick={deleteWorkspace} style={{ background:"rgba(239,68,68,0.1)", border:"1px solid rgba(239,68,68,0.3)", borderRadius:7, padding:"8px 16px", color:"#f87171", fontSize:12, cursor:"pointer" }}>Delete "{workspace.bizName}"</button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {aiOpen && selected && <AIPanel client={selected} cfg={cfg} biz={workspace} onClose={() => setAiOpen(false)} />}
+          {formOpen && <ClientForm client={editTarget} cfg={cfg} onSave={saveClient} onClose={() => { setFormOpen(false); setEditTarget(null); }} />}
+        </div>
+      );
+    }
+
+    // ─────────────────────────────────────────────
+    // ROOT APP  —  auth + data management
+    // ─────────────────────────────────────────────
+    function App() {
+      const [authState, setAuthState] = useState(SB_READY ? "loading" : "demo");
+      const [user, setUser] = useState(null);
+      const [userData, setUserData] = useState(null);
+      const [showSetup, setShowSetup] = useState(false);
+      const saveTimer = useRef(null);
+
+      const migrateFromLegacy = () => {
+        try {
+          const raw = localStorage.getItem(LEGACY_KEY);
+          if (!raw) return null;
+          const old = JSON.parse(raw);
+          if (!old.industry || !old.clients) return null;
+          const id = String(Date.now());
+          return { workspaces:[{ id, industry:old.industry, bizName:"My Business", ownerName:"Owner", city:"", clients:old.clients.map(c=>({...c,reminders:c.reminders||[]})), createdAt:new Date().toISOString() }], activeWorkspaceId:id };
+        } catch { return null; }
+      };
+
+      const persistData = useCallback((newData) => {
+        setUserData(newData);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(newData));
+        if (sb && user) {
+          clearTimeout(saveTimer.current);
+          saveTimer.current = setTimeout(async () => {
+            try { await sb.from("crm_data").upsert({ user_id:user.id, data:newData, updated_at:new Date().toISOString() }, { onConflict:"user_id" }); }
+            catch(e) { console.warn("Supabase save failed:", e); }
+          }, 900);
+        }
+      }, [user]);
+
+      const loadUserData = useCallback(async (uid) => {
+        if (sb && uid) {
+          try {
+            const { data, error } = await sb.from("crm_data").select("data").eq("user_id",uid).single();
+            if (!error && data?.data?.workspaces?.length) { setUserData(data.data); return; }
+          } catch {}
+        }
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (raw) { const parsed = JSON.parse(raw); if (parsed?.workspaces?.length) { setUserData(parsed); return; } }
+        } catch {}
+        const migrated = migrateFromLegacy();
+        if (migrated) { setUserData(migrated); return; }
+        setUserData({ workspaces:[], activeWorkspaceId:null });
+      }, []);
+
+      useEffect(() => {
+        if (!SB_READY) { loadUserData(null); return; }
+        sb.auth.getSession().then(({ data: { session } }) => {
+          if (session) { setUser(session.user); setAuthState("authed"); loadUserData(session.user.id); }
+          else { setAuthState("unauthed"); }
+        });
+        const { data: { subscription } } = sb.auth.onAuthStateChange((event, session) => {
+          if (session) { setUser(session.user); setAuthState("authed"); loadUserData(session.user.id); }
+          else { setUser(null); setUserData(null); setAuthState("unauthed"); }
+        });
+        return () => subscription.unsubscribe();
+      }, []);
+
+      const handleFirstSetup = (biz) => {
+        const id = String(Date.now());
+        persistData({ workspaces:[{ id, ...biz, clients:makeSamples(biz.industry), createdAt:new Date().toISOString() }], activeWorkspaceId:id });
+      };
+
+      const handleAddWorkspace = (biz) => {
+        const id = String(Date.now());
+        persistData({ workspaces:[...(userData?.workspaces||[]), { id, ...biz, clients:makeSamples(biz.industry), createdAt:new Date().toISOString() }], activeWorkspaceId:id });
+        setShowSetup(false);
+      };
+
+      const handleSwitchWorkspace = (id, deleteCurrent) => {
+        let ws = userData.workspaces;
+        if (deleteCurrent) ws = ws.filter(w => w.id !== userData.activeWorkspaceId);
+        const newId = deleteCurrent ? (ws[0]?.id || id) : id;
+        persistData({ workspaces:ws, activeWorkspaceId:newId });
+      };
+
+      const handleWorkspaceUpdate = useCallback((updated) => {
+        if (!userData) return;
+        persistData({ ...userData, workspaces:userData.workspaces.map(w => w.id===updated.id ? updated : w) });
+      }, [userData, persistData]);
+
+      const handleSignOut = async () => {
+        if (sb) await sb.auth.signOut();
+        setUser(null); setUserData(null); setAuthState("unauthed");
+      };
+
+      if (authState === "loading") return <LoadingScreen />;
+      if (SB_READY && authState === "unauthed") return <AuthScreen />;
+
+      const demoMode = !SB_READY;
+
+      if (!userData || userData.workspaces.length === 0)
+        return <SetupScreen onComplete={handleFirstSetup} />;
+
+      const activeWorkspace = userData.workspaces.find(w => w.id === userData.activeWorkspaceId) || userData.workspaces[0];
+
+      return (
+        <>
+          <CRMApp
+            key={activeWorkspace.id}
+            workspace={activeWorkspace}
+            onWorkspaceUpdate={handleWorkspaceUpdate}
+            workspaces={userData.workspaces}
+            onSwitchWorkspace={handleSwitchWorkspace}
+            onAddWorkspace={() => setShowSetup(true)}
+            user={user}
+            onSignOut={handleSignOut}
+            demoMode={demoMode}
+          />
+          {showSetup && <SetupScreen isModal={true} onComplete={handleAddWorkspace} onClose={() => setShowSetup(false)} />}
+        </>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(App));
+  </script>
+</body>
+</html>

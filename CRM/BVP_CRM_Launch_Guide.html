@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BVP CRM — Launch & Operations Guide</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 13.5px;
+    line-height: 1.7;
+    color: #1a1a2e;
+    background: #fff;
+    padding: 48px 64px;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  /* ── Cover block ── */
+  .cover {
+    text-align: center;
+    padding: 48px 0 40px;
+    border-bottom: 2px solid #e2e2f0;
+    margin-bottom: 40px;
+  }
+  .cover .logo-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, #a78bfa, #818cf8);
+    color: #fff;
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 4px 14px;
+    border-radius: 20px;
+    margin-bottom: 18px;
+  }
+  .cover h1 {
+    font-size: 32px;
+    font-weight: 700;
+    color: #0f0f23;
+    letter-spacing: -0.5px;
+    margin-bottom: 8px;
+  }
+  .cover .subtitle {
+    color: #6b7280;
+    font-size: 14px;
+  }
+
+  /* ── Section headings ── */
+  h2 {
+    font-size: 17px;
+    font-weight: 700;
+    color: #0f0f23;
+    margin: 36px 0 12px;
+    padding-bottom: 6px;
+    border-bottom: 1.5px solid #e2e2f0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  h2 .section-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    background: #a78bfa;
+    color: #fff;
+    border-radius: 50%;
+    font-size: 10px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  h3 {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #374151;
+    margin: 20px 0 8px;
+  }
+
+  p { margin: 8px 0; color: #374151; }
+
+  /* ── Tables ── */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 14px 0;
+    font-size: 13px;
+  }
+  thead tr {
+    background: #f3f0ff;
+  }
+  th {
+    text-align: left;
+    padding: 8px 12px;
+    font-weight: 600;
+    color: #4b5563;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    border: 1px solid #e5e7eb;
+  }
+  td {
+    padding: 7px 12px;
+    border: 1px solid #e5e7eb;
+    color: #374151;
+    vertical-align: top;
+  }
+  tr:nth-child(even) td { background: #fafafa; }
+
+  /* Tier highlight row */
+  .tier-free   td:first-child { color: #71717a; font-weight: 600; }
+  .tier-starter td:first-child { color: #d97706; font-weight: 600; }
+  .tier-pro     td:first-child { color: #7c3aed; font-weight: 600; }
+  .tier-ent     td:first-child { color: #db2777; font-weight: 600; }
+
+  /* ── Code blocks ── */
+  pre {
+    background: #0f172a;
+    color: #e2e8f0;
+    border-radius: 8px;
+    padding: 16px 18px;
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    font-size: 12px;
+    line-height: 1.6;
+    overflow-x: auto;
+    margin: 12px 0;
+    page-break-inside: avoid;
+  }
+  code {
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    font-size: 12px;
+    background: #f0edff;
+    color: #5b21b6;
+    padding: 1px 5px;
+    border-radius: 4px;
+  }
+  pre code {
+    background: transparent;
+    color: inherit;
+    padding: 0;
+    border-radius: 0;
+  }
+
+  /* ── Info card ── */
+  .info-card {
+    background: #f8f7ff;
+    border: 1px solid #ddd6fe;
+    border-left: 4px solid #a78bfa;
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin: 14px 0;
+  }
+  .info-card table {
+    margin: 0;
+  }
+  .info-card th, .info-card td {
+    border: none;
+    padding: 4px 8px;
+  }
+  .info-card th {
+    background: transparent;
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: 13px;
+    color: #6b7280;
+  }
+  .info-card td {
+    background: transparent;
+    font-weight: 500;
+  }
+
+  /* ── Step lists ── */
+  ol, ul {
+    padding-left: 20px;
+    margin: 8px 0;
+    color: #374151;
+  }
+  li { margin: 4px 0; }
+
+  /* ── Key table (test keys) ── */
+  .key-table td:first-child {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: #1d4ed8;
+  }
+
+  /* ── Badge ── */
+  .badge {
+    display: inline-block;
+    padding: 1px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .badge-active   { background: #dcfce7; color: #15803d; }
+  .badge-free     { background: #f3f4f6; color: #374151; }
+  .badge-starter  { background: #fef3c7; color: #92400e; }
+  .badge-pro      { background: #ede9fe; color: #5b21b6; }
+  .badge-ent      { background: #fce7f3; color: #9d174d; }
+
+  /* ── Print ── */
+  @media print {
+    body { padding: 32px 48px; font-size: 12.5px; }
+    pre  { font-size: 11px; }
+    h2   { page-break-after: avoid; }
+    .cover { page-break-after: always; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Cover -->
+<div class="cover">
+  <div class="logo-badge">Bot Vault Pro</div>
+  <h1>BVP CRM — Launch &amp; Operations Guide</h1>
+  <p class="subtitle">Internal reference · Single-file SaaS CRM · v1.0</p>
+</div>
+
+<!-- 1. Overview -->
+<h2><span class="section-num">1</span> Overview</h2>
+<p><strong>BVP CRM</strong> is a single-file SaaS CRM sold via Gumroad monthly subscriptions, hosted on GitHub Pages, with Supabase as the backend. No build process, no Node.js — just one HTML file.</p>
+
+<div class="info-card">
+  <table>
+    <tr><th>Live App</th><td><code>https://botvaultpro.github.io/BVP-CRM</code></td></tr>
+    <tr><th>GitHub Repo</th><td><code>https://github.com/botvaultpro/BVP-CRM</code></td></tr>
+    <tr><th>Supabase Project</th><td><code>https://supabase.com/dashboard/project/qqewwlcowmalbhfbcvgx</code></td></tr>
+    <tr><th>Supabase URL</th><td><code>https://qqewwlcowmalbhfbcvgx.supabase.co</code></td></tr>
+    <tr><th>Supabase Key</th><td><code>sb_publishable_AZG8nkyLVVd1qaWbCK69oQ_LWmQhrHv</code></td></tr>
+    <tr><th>Gumroad Profile</th><td><code>https://botvaultpro.gumroad.com</code></td></tr>
+  </table>
+</div>
+
+<!-- 2. Architecture -->
+<h2><span class="section-num">2</span> Architecture</h2>
+<table>
+  <thead><tr><th>Layer</th><th>Technology</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Frontend</strong></td><td>Single <code>index.html</code> — vanilla HTML/CSS/JS, no build process</td></tr>
+    <tr><td><strong>Backend</strong></td><td>Supabase (Postgres + Auth + Row Level Security)</td></tr>
+    <tr><td><strong>Hosting</strong></td><td>GitHub Pages — deploy from <code>main</code> branch, <code>/</code> (root) folder</td></tr>
+    <tr><td><strong>Payments</strong></td><td>Gumroad monthly subscriptions with license key generation</td></tr>
+    <tr><td><strong>AI</strong></td><td>User's own Anthropic API key — they pay Anthropic directly</td></tr>
+  </tbody>
+</table>
+
+<!-- 3. Subscription Tiers -->
+<h2><span class="section-num">3</span> Subscription Tiers</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Plan</th><th>Price</th><th>Clients</th><th>Pipeline</th>
+      <th>Reminders</th><th>Daily Report</th><th>AI Generator</th><th>CSV Export</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr class="tier-free">
+      <td>Free</td><td>$0</td><td>5</td>
+      <td>❌</td><td>❌</td><td>❌</td><td>❌</td><td>❌</td>
+    </tr>
+    <tr class="tier-starter">
+      <td>Starter</td><td>$25/mo</td><td>20</td>
+      <td>✅</td><td>✅</td><td>✅</td><td>✅ 15/mo</td><td>❌</td>
+    </tr>
+    <tr class="tier-pro">
+      <td>Pro</td><td>$50/mo</td><td>50</td>
+      <td>✅</td><td>✅ unlimited</td><td>✅</td><td>✅ unlimited</td><td>✅</td>
+    </tr>
+    <tr class="tier-ent">
+      <td>Enterprise</td><td>$200/mo</td><td>250</td>
+      <td>✅</td><td>✅ unlimited</td><td>✅</td><td>✅ unlimited</td><td>✅</td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- 4. Database -->
+<h2><span class="section-num">4</span> Supabase Database Tables</h2>
+<table>
+  <thead><tr><th>Table</th><th>Purpose</th></tr></thead>
+  <tbody>
+    <tr><td><code>profiles</code></td><td>User account, business info, industry, AI API key, plan, usage tracking</td></tr>
+    <tr><td><code>customers</code></td><td>All CRM client data (name, phone, email, stage, pipeline value, notes, custom fields)</td></tr>
+    <tr><td><code>reminders</code></td><td>Per-customer reminders with <code>remind_at</code> timestamp</td></tr>
+    <tr><td><code>email_drafts</code></td><td>AI-generated email drafts saved per customer</td></tr>
+    <tr><td><code>activity_log</code></td><td>Action tracking per customer</td></tr>
+    <tr><td><code>license_keys</code></td><td>Gumroad license key management — key, user_id, plan, status, activated_at</td></tr>
+  </tbody>
+</table>
+
+<h3>Key columns for subscriptions</h3>
+<ul>
+  <li><code>profiles.plan</code> — <code>free</code> | <code>starter</code> | <code>pro</code> | <code>enterprise</code> (default: <code>free</code>)</li>
+  <li><code>profiles.ai_generations_used</code> — monthly AI usage counter</li>
+  <li><code>profiles.ai_generations_reset_at</code> — tracks the monthly reset window</li>
+  <li><code>license_keys.plan</code> — determines what tier a key grants when activated</li>
+</ul>
+
+<!-- 5. Deploying -->
+<h2><span class="section-num">5</span> Deploying Updates</h2>
+<p>The CRM is a single file. To deploy any change, edit <code>CRM/index.html</code> locally, then run:</p>
+<pre>rm -rf /tmp/bvp-crm-deploy &amp;&amp; mkdir /tmp/bvp-crm-deploy
+cd /tmp/bvp-crm-deploy
+git init &amp;&amp; git checkout -b main
+cp "/path/to/Bot-Vault-Pro/CRM/index.html" .
+git config user.email "deploy@botvaultpro.com"
+git config user.name "Bot Vault Pro"
+git add index.html
+git commit -m "your commit message"
+git remote add origin "https://YOUR_GITHUB_TOKEN@github.com/botvaultpro/BVP-CRM.git"
+git push -f origin main
+rm -rf /tmp/bvp-crm-deploy</pre>
+<p>GitHub Pages rebuilds automatically within ~60 seconds.</p>
+
+<h3>GitHub Pages Settings</h3>
+<ul>
+  <li>Repo: <code>botvaultpro/BVP-CRM</code></li>
+  <li>Settings → Pages → Source: <strong>Deploy from branch</strong></li>
+  <li>Branch: <code>main</code> | Folder: <code>/ (root)</code></li>
+</ul>
+
+<!-- 6. Gumroad -->
+<h2><span class="section-num">6</span> Gumroad Setup</h2>
+<p>Create 3 products in <strong>Gumroad Dashboard → New Product → Membership</strong>:</p>
+
+<table>
+  <thead><tr><th>Product</th><th>Price</th><th>Permalink</th><th>Direct URL</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><strong>BVP CRM — Starter</strong></td><td>$25/mo</td>
+      <td><code>crm-starter</code></td>
+      <td><code>botvaultpro.gumroad.com/l/crm-starter</code></td>
+    </tr>
+    <tr>
+      <td><strong>BVP CRM — Pro</strong></td><td>$50/mo</td>
+      <td><code>crm-pro</code></td>
+      <td><code>botvaultpro.gumroad.com/l/crm-pro</code></td>
+    </tr>
+    <tr>
+      <td><strong>BVP CRM — Enterprise</strong></td><td>$200/mo</td>
+      <td><code>crm-enterprise</code></td>
+      <td><code>botvaultpro.gumroad.com/l/crm-enterprise</code></td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>Enable License Keys (required on every product)</h3>
+<p>In each product: <strong>Edit Product → Content tab → License Keys → Enable license key generation → Save</strong></p>
+<p>Gumroad auto-generates a unique key (<code>XXXX-XXXX-XXXX-XXXX</code>) on every purchase and includes it in the customer's receipt email.</p>
+
+<h3>Receipt Message Template</h3>
+<p>Add to <strong>Edit Product → Receipt tab</strong> for each product (adjust tier name):</p>
+<pre>Your license key is shown above.
+
+To activate your [Starter / Pro / Enterprise] plan:
+1. Go to https://botvaultpro.github.io/BVP-CRM
+2. Click Sign Up (or sign in if you already have an account)
+3. Paste your license key — your plan activates instantly
+
+Questions? Email support@botvaultpro.com</pre>
+
+<!-- 7. Customer Flows -->
+<h2><span class="section-num">7</span> Customer License Key Flows</h2>
+
+<h3>New customer (no account yet)</h3>
+<ol>
+  <li>Purchases on Gumroad → receives license key by email</li>
+  <li>Goes to the CRM → clicks Sign Up</li>
+  <li>Enters name, email, password, and pastes license key</li>
+  <li>Plan activates immediately — no manual steps</li>
+</ol>
+
+<h3>Existing free user upgrading</h3>
+<ol>
+  <li>Purchases on Gumroad → receives license key</li>
+  <li>Goes to CRM → Settings → pastes key in "Apply New License Key" field → clicks ACTIVATE</li>
+  <li>Plan upgrades instantly</li>
+</ol>
+
+<h3>Free signup (no license key)</h3>
+<ol>
+  <li>Goes to CRM → clicks Sign Up</li>
+  <li>Leaves license key blank → gets Free plan (5 clients)</li>
+  <li>Can upgrade later via Settings at any time</li>
+</ol>
+
+<!-- 8. Adding License Keys -->
+<h2><span class="section-num">8</span> Adding License Keys to Supabase</h2>
+<p>Every purchase needs a corresponding row in the <code>license_keys</code> table.</p>
+
+<h3>Manual (low volume / testing)</h3>
+<p>Go to <strong>Supabase → Table Editor → license_keys → Insert row</strong>:</p>
+<table>
+  <thead><tr><th>Field</th><th>Value</th></tr></thead>
+  <tbody>
+    <tr><td><code>license_key</code></td><td>The key from Gumroad</td></tr>
+    <tr><td><code>plan</code></td><td><code>starter</code> / <code>pro</code> / <code>enterprise</code></td></tr>
+    <tr><td><code>status</code></td><td><code>active</code></td></tr>
+    <tr><td><code>gumroad_sale_id</code></td><td>(optional — paste from Gumroad)</td></tr>
+  </tbody>
+</table>
+<p>Leave <code>user_id</code> and <code>activated_at</code> blank — they get filled when the customer activates.</p>
+
+<h3>Automated with Zapier (recommended at scale)</h3>
+<ol>
+  <li><strong>Gumroad → Settings → Advanced → Webhooks</strong> — add your webhook URL</li>
+  <li>In Zapier:
+    <ul>
+      <li>Trigger: <code>New Sale</code> in Gumroad</li>
+      <li>Action: <code>Insert Row</code> in Supabase → <code>license_keys</code> table</li>
+      <li>Map: <code>license_key</code> field, set <code>plan</code> based on product name, <code>status</code> = <code>active</code></li>
+    </ul>
+  </li>
+</ol>
+
+<!-- 9. Test Keys -->
+<h2><span class="section-num">9</span> Test License Keys</h2>
+<p>Pre-loaded in Supabase for testing. Each key can only be used once (single account activation).</p>
+
+<table class="key-table">
+  <thead><tr><th>Key</th><th>Plan</th><th>Status</th></tr></thead>
+  <tbody>
+    <tr><td>BVP-FREE-TEST-001</td><td><span class="badge badge-free">free</span></td><td><span class="badge badge-active">active</span></td></tr>
+    <tr><td>BVP-FREE-TEST-002</td><td><span class="badge badge-free">free</span></td><td><span class="badge badge-active">active</span></td></tr>
+    <tr><td>BVP-STARTER-TEST-001</td><td><span class="badge badge-starter">starter</span></td><td><span class="badge badge-active">active</span></td></tr>
+    <tr><td>BVP-STARTER-TEST-002</td><td><span class="badge badge-starter">starter</span></td><td><span class="badge badge-active">active</span></td></tr>
+    <tr><td>BVP-STARTER-TEST-003</td><td><span class="badge badge-starter">starter</span></td><td><span class="badge badge-active">active</span></td></tr>
+    <tr><td>BVP-PRO-TEST-001</td><td><span class="badge badge-pro">pro</span></td><td><span class="badge badge-active">active</span></td></tr>
+    <tr><td>BVP-PRO-TEST-002</td><td><span class="badge badge-pro">pro</span></td><td><span class="badge badge-active">active</span></td></tr>
+    <tr><td>BVP-PRO-TEST-003</td><td><span class="badge badge-pro">pro</span></td><td><span class="badge badge-active">active</span></td></tr>
+    <tr><td>BVP-ENT-TEST-001</td><td><span class="badge badge-ent">enterprise</span></td><td><span class="badge badge-active">active</span></td></tr>
+    <tr><td>BVP-ENT-TEST-002</td><td><span class="badge badge-ent">enterprise</span></td><td><span class="badge badge-active">active</span></td></tr>
+  </tbody>
+</table>
+
+<p>To add more test keys, run this SQL in <strong>Supabase → SQL Editor</strong>:</p>
+<pre>INSERT INTO license_keys (license_key, plan, status) VALUES
+  ('BVP-PRO-TEST-004', 'pro', 'active');</pre>
+
+<!-- 10. Auth Settings -->
+<h2><span class="section-num">10</span> Supabase Auth Settings</h2>
+<p>Turn off email confirmation — the Gumroad license key IS the verification:</p>
+<p><strong>Supabase Dashboard → Authentication → Settings → Email confirmations → OFF</strong></p>
+<p>This gives customers instant access after signup. If you keep email confirmation ON, the CRM handles it gracefully — it saves the license key to <code>localStorage</code> before the confirmation step and applies it automatically on first sign-in after confirmation.</p>
+
+<!-- 11. AI Setup -->
+<h2><span class="section-num">11</span> AI Generator Setup (Per User)</h2>
+<p>Each user must supply their own Anthropic API key:</p>
+<ol>
+  <li>User goes to <strong>Settings → AI API Key</strong></li>
+  <li>Pastes their key from <strong>console.anthropic.com</strong></li>
+  <li>Key is stored in <code>profiles.ai_api_key</code> — encrypted at rest by Supabase</li>
+</ol>
+<p>The CRM uses <code>claude-haiku-4-5-20251001</code> for generation (fast, cheap, ideal for emails).</p>
+<table>
+  <thead><tr><th>Plan</th><th>AI Access</th></tr></thead>
+  <tbody>
+    <tr><td>Free</td><td>Locked</td></tr>
+    <tr><td>Starter</td><td>15 generations/month (resets 1st of month)</td></tr>
+    <tr><td>Pro / Enterprise</td><td>Unlimited</td></tr>
+  </tbody>
+</table>
+
+<!-- 12. Industries -->
+<h2><span class="section-num">12</span> Supported Industries</h2>
+<p>HVAC · Electrical · Plumbing · Roofing · Real Estate · Barber/Salon · Photography · Freelancer · Restaurant · General Contractor · Landscaping · Law Firm</p>
+<p>Each industry has its own: client terminology, job types, pipeline stages, custom fields, and AI context.</p>
+
+<!-- 13. Operations -->
+<h2><span class="section-num">13</span> Ongoing Operations</h2>
+
+<h3>Customer cancels on Gumroad</h3>
+<p>Go to Supabase → <code>license_keys</code> table → find their key → set <code>status</code> = <code>cancelled</code>. On next login the app will sign them out with a reactivation message.</p>
+
+<h3>Customer upgrades (e.g. Starter → Pro)</h3>
+<p>Issue a new Pro license key (insert into <code>license_keys</code> with <code>plan: 'pro'</code>). They paste it in Settings → Activate. The old key stays in the table (harmless).</p>
+
+<h3>Useful SQL queries</h3>
+<p>Check who is on what plan:</p>
+<pre>SELECT email, plan, subscription_status, business_name, created_at
+FROM profiles
+ORDER BY created_at DESC;</pre>
+
+<p>Check active license keys:</p>
+<pre>SELECT license_key, plan, activated_at, user_id
+FROM license_keys
+WHERE status = 'active'
+ORDER BY activated_at DESC;</pre>
+
+</body>
+</html>
