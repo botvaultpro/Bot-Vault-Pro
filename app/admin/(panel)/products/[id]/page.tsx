@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { Loader2, Save, ArrowLeft } from 'lucide-react'
+import { Loader2, Save, ArrowLeft, Upload, FileText, Image as ImageIcon, X } from 'lucide-react'
 import Link from 'next/link'
 import { slugify } from '@/lib/cms-utils'
 import type { Product } from '@/types/cms'
@@ -27,6 +27,32 @@ export default function ProductEditPage() {
   const [loading, setLoading] = useState(!isNew)
   const [saving, setSaving] = useState(false)
   const [toast, setToast] = useState('')
+  const [uploadingFile, setUploadingFile] = useState(false)
+  const [uploadingThumb, setUploadingThumb] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const thumbInputRef = useRef<HTMLInputElement>(null)
+
+  async function handleUpload(file: File, bucket: 'product-files' | 'product-thumbnails', field: 'download_url' | 'thumbnail_url') {
+    const setter = field === 'download_url' ? setUploadingFile : setUploadingThumb
+    setter(true)
+    try {
+      const fd = new FormData()
+      fd.append('file', file)
+      fd.append('bucket', bucket)
+      const res = await fetch('/api/admin/upload', { method: 'POST', body: fd })
+      const json = await res.json()
+      if (res.ok && json.url) {
+        set(field, json.url)
+        setToast('File uploaded!')
+        setTimeout(() => setToast(''), 2000)
+      } else {
+        setToast(`Upload failed: ${json.error || 'unknown error'}`)
+        setTimeout(() => setToast(''), 4000)
+      }
+    } finally {
+      setter(false)
+    }
+  }
 
   const [form, setForm] = useState({
     name: '',
@@ -205,12 +231,73 @@ export default function ProductEditPage() {
 
           <div className="bg-surface border border-bvp-border rounded-lg p-6 flex flex-col gap-5">
             <h3 className="font-display text-sm uppercase tracking-wide text-text">Delivery & Links</h3>
-            <Field label="Thumbnail URL">
-              <input type="url" value={form.thumbnail_url} onChange={e => set('thumbnail_url', e.target.value)} placeholder="https://..." className={inputCls} />
+
+            {/* Thumbnail */}
+            <Field label="Thumbnail">
+              {form.thumbnail_url && (
+                <div className="relative mb-2 rounded overflow-hidden border border-bvp-border">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={form.thumbnail_url} alt="Thumbnail" className="w-full h-32 object-cover" />
+                  <button onClick={() => set('thumbnail_url', '')} className="absolute top-1 right-1 p-1 bg-bg/80 rounded hover:bg-bg transition-colors">
+                    <X size={12} className="text-text-faint" />
+                  </button>
+                </div>
+              )}
+              <input
+                ref={thumbInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                className="hidden"
+                onChange={e => {
+                  const f = e.target.files?.[0]
+                  if (f) handleUpload(f, 'product-thumbnails', 'thumbnail_url')
+                  e.target.value = ''
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => thumbInputRef.current?.click()}
+                disabled={uploadingThumb}
+                className="inline-flex items-center gap-2 min-h-[38px] px-4 py-2 bg-surface2 border border-bvp-border hover:border-orange text-text-muted hover:text-text font-body text-sm rounded transition-colors disabled:opacity-60 w-full justify-center"
+              >
+                {uploadingThumb ? <Loader2 size={14} className="animate-spin" /> : <ImageIcon size={14} />}
+                {uploadingThumb ? 'Uploading…' : 'Upload Thumbnail'}
+              </button>
+              <input type="url" value={form.thumbnail_url} onChange={e => set('thumbnail_url', e.target.value)} placeholder="or paste image URL" className={`${inputCls} mt-1`} />
             </Field>
-            <Field label="Download URL">
-              <input type="url" value={form.download_url} onChange={e => set('download_url', e.target.value)} placeholder="Direct link to file" className={inputCls} />
+
+            {/* Download file */}
+            <Field label="Download File">
+              {form.download_url && (
+                <div className="flex items-center gap-2 mb-2 p-2.5 bg-surface2 border border-bvp-border rounded text-sm">
+                  <FileText size={14} className="text-orange flex-shrink-0" />
+                  <span className="font-mono text-xs text-text-muted truncate flex-1">{form.download_url.split('/').pop()}</span>
+                  <button onClick={() => set('download_url', '')}><X size={12} className="text-text-faint hover:text-text" /></button>
+                </div>
+              )}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".pdf,.zip,.docx,.doc,.xlsx,.xls,.pptx,.txt,.csv"
+                className="hidden"
+                onChange={e => {
+                  const f = e.target.files?.[0]
+                  if (f) handleUpload(f, 'product-files', 'download_url')
+                  e.target.value = ''
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploadingFile}
+                className="inline-flex items-center gap-2 min-h-[38px] px-4 py-2 bg-surface2 border border-bvp-border hover:border-orange text-text-muted hover:text-text font-body text-sm rounded transition-colors disabled:opacity-60 w-full justify-center"
+              >
+                {uploadingFile ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
+                {uploadingFile ? 'Uploading…' : 'Upload File (PDF, ZIP, DOCX…)'}
+              </button>
+              <input type="url" value={form.download_url} onChange={e => set('download_url', e.target.value)} placeholder="or paste direct download URL" className={`${inputCls} mt-1`} />
             </Field>
+
             <Field label="Gumroad URL (optional)">
               <input type="url" value={form.gumroad_url} onChange={e => set('gumroad_url', e.target.value)} placeholder="https://gumroad.com/..." className={inputCls} />
             </Field>
