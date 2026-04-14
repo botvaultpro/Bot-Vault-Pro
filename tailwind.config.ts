@@ -9,6 +9,25 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        // BVP brand palette
+        bg:       '#050608',
+        surface:  '#0f0f11',
+        surface2: '#141416',
+        'bvp-border': '#1e1e24',
+        orange: {
+          DEFAULT: '#ff5e14',
+          hover:   '#e54d0a',
+          muted:   'rgba(255,94,20,0.12)',
+        },
+        amber:  '#f5a623',
+        green:  '#00e676',
+        blue:   '#1E90FF',
+        text: {
+          DEFAULT: '#f0ede8',
+          muted:   '#a8a49e',
+          faint:   '#52504e',
+        },
+        // Legacy vault colors (preserve for existing dashboard)
         vault: {
           bg:         "#0A0F1A",
           surface:    "#111827",
@@ -30,9 +49,17 @@ const config: Config = {
         },
       },
       fontFamily: {
-        display: ["'Syne'", "sans-serif"],
-        body:    ["'DM Sans'", "sans-serif"],
-        mono:    ["'JetBrains Mono'", "'DM Mono'", "monospace"],
+        display: ['"Bebas Neue"', 'sans-serif'],
+        body:    ['"Familjen Grotesk"', 'sans-serif'],
+        mono:    ['"JetBrains Mono"', 'monospace'],
+        // Legacy
+        syne:   ["'Syne'", "sans-serif"],
+        dmsans: ["'DM Sans'", "sans-serif"],
+      },
+      fontSize: {
+        display:    ['80px', { lineHeight: '0.92', letterSpacing: '-1px' }],
+        'display-md': ['56px', { lineHeight: '0.95' }],
+        'display-sm': ['40px', { lineHeight: '1.0' }],
       },
       backgroundImage: {
         "dot-grid":
@@ -85,6 +112,8 @@ const config: Config = {
       },
     },
   },
-  plugins: [],
+  plugins: [
+    require('@tailwindcss/typography'),
+  ],
 };
 export default config;

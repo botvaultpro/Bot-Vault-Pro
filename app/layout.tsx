@@ -1,53 +1,46 @@
 import type { Metadata } from "next";
-import { Syne, DM_Sans, JetBrains_Mono } from "next/font/google";
+import { Bebas_Neue, Familjen_Grotesk, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
-const syne = Syne({
+const bebasNeue = Bebas_Neue({
   subsets: ["latin"],
   variable: "--font-display",
-  weight: ["400", "600", "700", "800"],
+  weight: ["400"],
   display: "swap",
 });
 
-const dmSans = DM_Sans({
+const familjenGrotesk = Familjen_Grotesk({
   subsets: ["latin"],
   variable: "--font-body",
-  weight: ["300", "400", "500", "600"],
+  weight: ["400", "500", "600", "700"],
   display: "swap",
 });
 
 const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
   variable: "--font-mono",
-  weight: ["400"],
+  weight: ["400", "500"],
   display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "Bot Vault Pro — AI Automation Bots",
+  title: "BVP — AI Automation for Skilled Trades",
   description:
-    "Six AI bots that run the parts of your business you're handling manually right now. Stop prompting. Start automating.",
+    "Stop drowning in paperwork. Bot Vault Pro puts your estimating, follow-ups, and job management on autopilot.",
   metadataBase: new URL("https://botvaultpro.com"),
-  keywords: ["ai business automation", "ai tools for small business", "invoice automation", "contract review ai", "email ai", "business analytics"],
+  keywords: ["ai automation trades", "contractor automation", "plumber business software", "electrician tools", "hvac business automation"],
   openGraph: {
     type: "website",
     siteName: "Bot Vault Pro",
-    title: "Bot Vault Pro — AI Business Automation",
-    description: "6 AI bots that handle invoicing, email, contracts, analytics, reviews, and client acquisition. Set them up once. They run forever.",
+    title: "BVP — AI Automation for Skilled Trades",
+    description: "Stop drowning in paperwork. BVP puts your estimating, follow-ups, and job management on autopilot.",
     url: "https://botvaultpro.com",
-    images: [
-      {
-        url: "/og-image.png",
-        width: 1200,
-        height: 630,
-        alt: "Bot Vault Pro — AI Business Automation",
-      },
-    ],
+    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "Bot Vault Pro" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Bot Vault Pro — AI Business Automation",
-    description: "6 AI bots that handle invoicing, email, contracts, analytics, reviews, and client acquisition.",
+    title: "BVP — AI Automation for Skilled Trades",
+    description: "Stop drowning in paperwork. BVP puts your estimating, follow-ups, and job management on autopilot.",
     images: ["/og-image.png"],
   },
   robots: {
@@ -61,9 +54,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="en"
-      className={`${syne.variable} ${dmSans.variable} ${jetbrainsMono.variable}`}
+      className={`${bebasNeue.variable} ${familjenGrotesk.variable} ${jetbrainsMono.variable}`}
     >
-      <body className="bg-vault-bg text-vault-text font-body antialiased">
+      <body className="bg-bg text-text font-body antialiased">
         {children}
       </body>
     </html>
