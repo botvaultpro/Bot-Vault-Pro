@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Profit Leak Audit — Bot Vault Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#09090a;--bg2:#0f0f10;--surface:#141416;--surface2:#1c1c1f;
+  --border:#2a2a2f;--border2:#3a3a40;
+  --orange:#ff6b00;--orange2:#ff8c38;--amber:#ffb800;
+  --green:#00d97e;--red:#ff3b3b;--blue:#00b4ff;
+  --text:#f0ede8;--text2:#a8a49e;--text3:#666260;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(255,59,59,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(255,59,59,0.02) 1px,transparent 1px);background-size:50px 50px;pointer-events:none;z-index:0}
+.wrap{max-width:860px;margin:0 auto;padding:0 24px;position:relative;z-index:1}
+.topbar{background:rgba(9,9,10,0.9);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:16px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.logo{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:20px;letter-spacing:1px;text-transform:uppercase;display:flex;align-items:center;gap:8px}
+.logo-mark{width:28px;height:28px;background:var(--red);border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#fff}
+.doc-badge{font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);letter-spacing:2px;text-transform:uppercase}
+.version-toggle{display:flex;align-items:center;gap:0;background:var(--surface2);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin:40px auto 0;width:fit-content}
+.vtog-btn{padding:10px 28px;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;border:none;background:transparent;color:var(--text2);transition:all 0.2s}
+.vtog-btn.active{background:var(--red);color:#fff}
+.hero{text-align:center;padding:48px 0 40px}
+.eyebrow{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--red);margin-bottom:16px;display:block}
+.hero h1{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:clamp(48px,8vw,80px);line-height:0.9;text-transform:uppercase;letter-spacing:-1px;margin-bottom:16px}
+.hero h1 em{font-style:normal;color:var(--red)}
+.hero p{color:var(--text2);font-size:16px;max-width:540px;margin:0 auto;line-height:1.7}
+.leak-counter{display:inline-flex;align-items:center;gap:12px;background:rgba(255,59,59,0.08);border:1px solid rgba(255,59,59,0.25);border-radius:12px;padding:16px 24px;margin:24px auto 0;display:flex;justify-content:center;max-width:400px}
+.leak-amount{font-family:'Barlow Condensed',sans-serif;font-size:48px;font-weight:900;color:var(--red);line-height:1}
+.leak-label{font-size:13px;color:var(--text2);text-align:left;line-height:1.4}
+.progress-wrap{margin:32px 0 8px;background:var(--surface2);border-radius:100px;height:6px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--red),var(--amber));border-radius:100px;transition:width 0.4s ease;width:0%}
+.progress-label{font-family:'DM Mono',monospace;font-size:11px;color:var(--text3);text-align:right;margin-bottom:24px}
+.section-block{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:32px;margin-bottom:20px;position:relative;overflow:hidden}
+.section-block::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--red),var(--amber));opacity:0.7}
+.section-header{display:flex;align-items:center;gap:16px;margin-bottom:24px}
+.section-icon{width:48px;height:48px;border-radius:10px;background:rgba(255,59,59,0.1);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.section-title{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;text-transform:uppercase;letter-spacing:0.5px}
+.section-subtitle{font-size:13px;color:var(--text3);margin-top:2px;font-family:'DM Mono',monospace}
+.question{margin-bottom:24px;padding-bottom:24px;border-bottom:1px solid var(--border)}
+.question:last-child{margin-bottom:0;padding-bottom:0;border-bottom:none}
+.q-text{font-size:15px;font-weight:500;margin-bottom:14px;line-height:1.5}
+.q-sublabel{font-size:12px;color:var(--text3);font-family:'DM Mono',monospace;margin-bottom:12px;margin-top:-8px}
+.q-options{display:flex;flex-direction:column;gap:8px}
+.q-opt{display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;cursor:pointer;transition:all 0.2s;font-size:14px;color:var(--text2)}
+.q-opt:hover{border-color:var(--red);color:var(--text);background:rgba(255,59,59,0.05)}
+.q-opt.selected{border-color:var(--red);background:rgba(255,59,59,0.08);color:var(--text)}
+.q-dot{width:16px;height:16px;border-radius:50%;border:2px solid var(--border2);flex-shrink:0;transition:all 0.2s;display:flex;align-items:center;justify-content:center}
+.q-opt.selected .q-dot{border-color:var(--red);background:var(--red)}
+.q-opt.selected .q-dot::after{content:'';width:6px;height:6px;border-radius:50%;background:#fff}
+.q-leak-tag{margin-left:auto;font-family:'DM Mono',monospace;font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(255,59,59,0.15);color:var(--red);border:1px solid rgba(255,59,59,0.2);white-space:nowrap;flex-shrink:0}
+
+/* Results */
+.results{display:none}
+.results.show{display:block}
+.leak-hero{text-align:center;padding:48px 32px;background:var(--surface);border:1px solid rgba(255,59,59,0.3);border-radius:20px;margin-bottom:24px;position:relative;overflow:hidden}
+.leak-hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 50% at 50% 50%,rgba(255,59,59,0.07),transparent)}
+.total-leak{font-family:'Barlow Condensed',sans-serif;font-size:96px;font-weight:900;color:var(--red);line-height:1;text-shadow:0 0 60px rgba(255,59,59,0.3)}
+.leak-sublabel{font-family:'DM Mono',monospace;font-size:13px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px}
+.leak-grade-title{font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:800;text-transform:uppercase;margin-top:16px}
+.leak-grade-desc{font-size:15px;color:var(--text2);max-width:480px;margin:8px auto 0;line-height:1.7}
+.leak-breakdown{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:32px;margin-bottom:20px}
+.leak-breakdown h3{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;text-transform:uppercase;margin-bottom:24px}
+.leak-item{display:flex;align-items:center;gap:16px;padding:16px;background:var(--surface2);border:1px solid var(--border);border-radius:12px;margin-bottom:12px}
+.leak-item-icon{font-size:24px;flex-shrink:0}
+.leak-item-body{flex:1}
+.leak-item-title{font-weight:600;font-size:14px;margin-bottom:2px}
+.leak-item-desc{font-size:13px;color:var(--text2)}
+.leak-item-amount{font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:800;color:var(--red);flex-shrink:0;white-space:nowrap}
+.leak-item.recovered{border-color:rgba(0,217,126,0.3)}
+.leak-item.recovered .leak-item-amount{color:var(--green)}
+.suggestions{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:32px;margin-bottom:20px}
+.suggestions h3{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;text-transform:uppercase;margin-bottom:8px}
+.suggestions p{font-size:14px;color:var(--text2);margin-bottom:24px}
+.suggestion-item{display:flex;gap:16px;padding:16px;background:var(--surface2);border:1px solid var(--border);border-radius:12px;margin-bottom:12px}
+.sug-priority{font-family:'DM Mono',monospace;font-size:10px;padding:4px 10px;border-radius:100px;font-weight:500;flex-shrink:0;height:fit-content;margin-top:2px;letter-spacing:1px;text-transform:uppercase}
+.sug-priority.high{background:rgba(255,59,59,0.15);color:var(--red);border:1px solid rgba(255,59,59,0.3)}
+.sug-priority.med{background:rgba(255,184,0,0.15);color:var(--amber);border:1px solid rgba(255,184,0,0.3)}
+.sug-priority.low{background:rgba(0,217,126,0.15);color:var(--green);border:1px solid rgba(0,217,126,0.3)}
+.sug-title{font-weight:600;font-size:14px;margin-bottom:4px}
+.sug-desc{font-size:13px;color:var(--text2);line-height:1.6}
+.cta-block{background:linear-gradient(135deg,rgba(255,59,59,0.1),rgba(255,107,0,0.05));border:1px solid rgba(255,59,59,0.3);border-radius:16px;padding:40px;text-align:center;margin-bottom:40px}
+.cta-block h3{font-family:'Barlow Condensed',sans-serif;font-size:36px;font-weight:900;text-transform:uppercase;margin-bottom:12px}
+.cta-block p{color:var(--text2);font-size:15px;margin-bottom:28px;max-width:480px;margin-left:auto;margin-right:auto;line-height:1.7}
+.cta-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.btn-primary{background:var(--orange);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 32px;border-radius:10px;border:none;cursor:pointer;transition:all 0.2s;text-decoration:none;display:inline-block}
+.btn-primary:hover{background:var(--orange2);transform:translateY(-2px);box-shadow:0 8px 32px rgba(255,107,0,0.3)}
+.btn-secondary{background:var(--surface2);color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 32px;border-radius:10px;border:1px solid var(--border2);cursor:pointer;transition:all 0.2s;text-decoration:none;display:inline-block}
+.submit-btn{width:100%;background:var(--red);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;letter-spacing:2px;text-transform:uppercase;padding:18px;border-radius:12px;border:none;cursor:pointer;transition:all 0.2s;margin-top:32px}
+.submit-btn:hover{background:#ff5555;transform:translateY(-2px);box-shadow:0 8px 32px rgba(255,59,59,0.35)}
+.submit-btn:disabled{opacity:0.5;cursor:not-allowed;transform:none}
+.restart-btn{background:transparent;border:1px solid var(--border2);color:var(--text2);font-family:'DM Mono',monospace;font-size:12px;padding:10px 20px;border-radius:8px;cursor:pointer;transition:all 0.2s;margin-top:16px;display:block;margin-left:auto;margin-right:auto}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.fade-in{animation:fadeUp 0.5s ease both}
+@media(max-width:640px){.cta-btns{flex-direction:column}.q-leak-tag{display:none}}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="logo"><div class="logo-mark">$</div>Bot Vault Pro</div>
+  <div class="doc-badge">Profit Leak Audit</div>
+</div>
+<div class="wrap">
+  <div class="version-toggle">
+    <button class="vtog-btn active" onclick="setVersion('trades')">⚒️ Skilled Trades</button>
+    <button class="vtog-btn" onclick="setVersion('generic')">🏢 General Business</button>
+  </div>
+  <div class="hero">
+    <span class="eyebrow" id="eyebrow-text">Skilled Trades Edition</span>
+    <h1>Profit<br><em>Leak</em><br>Audit</h1>
+    <p id="hero-desc">Find out exactly where your business is hemorrhaging revenue. Most trades businesses lose $50,000–$200,000/year to preventable leaks. This audit identifies every one of them.</p>
+    <div class="leak-counter">
+      <div class="leak-amount" id="liveLeakAmount">$0</div>
+      <div class="leak-label">Estimated annual<br>profit being lost</div>
+    </div>
+  </div>
+  <div style="padding-top:16px">
+    <div class="progress-wrap"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-label" id="progressLabel">0 of 20 answered</div>
+  </div>
+  <div id="assessmentForm"></div>
+  <button class="submit-btn" id="submitBtn" onclick="showResults()" disabled>Show Me My Profit Leaks →</button>
+  <div class="results" id="results">
+    <div class="leak-hero fade-in">
+      <div class="leak-sublabel">Estimated Annual Revenue Being Lost</div>
+      <div class="total-leak" id="totalLeakDisplay">$0</div>
+      <div class="leak-grade-title" id="leakGradeTitle"></div>
+      <div class="leak-grade-desc" id="leakGradeDesc"></div>
+    </div>
+    <div class="leak-breakdown fade-in">
+      <h3>💸 Where Your Money Is Going</h3>
+      <div id="leakItems"></div>
+    </div>
+    <div class="suggestions fade-in">
+      <h3>🔧 How to Plug the Leaks</h3>
+      <p>Each fix below directly corresponds to a profit leak identified in your audit.</p>
+      <div id="suggestionList"></div>
+    </div>
+    <div class="cta-block fade-in">
+      <h3>Stop the Bleeding Today</h3>
+      <p id="ctaDesc">Bot Vault Pro has the tools to plug every leak identified in your audit. The Trades AI Tool alone recovers an average of $40K/year in lost revenue for contractors.</p>
+      <div class="cta-btns">
+        <a href="https://botvaultpro.com/#products" class="btn-primary">Get the Profit Toolkit →</a>
+        <a href="https://botvaultpro.com/#waitlist" class="btn-secondary">Join Bot Waitlist</a>
+      </div>
+    </div>
+    <button class="restart-btn" onclick="restart()">↩ Retake Audit</button>
+  </div>
+</div>
+<script>
+let currentVersion='trades';
+let answers={};
+let totalLeak=0;
+
+const data={
+  trades:{
+    eyebrow:'Skilled Trades Edition',
+    heroDesc:'Find out exactly where your business is hemorrhaging revenue. Most trades businesses lose $50,000–$200,000/year to preventable leaks. This audit identifies every one of them.',
+    ctaDesc:'Bot Vault Pro has the tools to plug every leak identified in your audit. The Trades AI Tool alone recovers an average of $40K/year in lost revenue for contractors.',
+    sections:[
+      {id:'estimating',icon:'📋',title:'Estimating & Closing Leaks',subtitle:'5 questions · Lost jobs and slow responses',questions:[
+        {id:'e1',text:'How many estimate requests do you receive per month?',sublabel:'This helps us calculate your revenue exposure',options:[{t:'1–5',v:0,leak:0},{t:'6–15',v:1,leak:8000},{t:'16–30',v:2,leak:20000},{t:'30+',v:3,leak:40000}],leakKey:'slow_response'},
+        {id:'e2',text:'How long does it take you to send an estimate after a site visit?',options:[{t:'Same day',v:0,leak:0},{t:'1–2 days',v:1,leak:5000},{t:'3–5 days',v:2,leak:15000},{t:'A week or more',v:3,leak:30000}],leakKey:'slow_estimate'},
+        {id:'e3',text:'What is your current estimate close rate?',options:[{t:'Above 60%',v:0,leak:0},{t:'40–60%',v:1,leak:5000},{t:'20–40%',v:2,leak:15000},{t:'Under 20%',v:3,leak:25000}],leakKey:'low_close'},
+        {id:'e4',text:'Do you follow up on estimates that haven\'t been accepted?',options:[{t:'Yes — structured follow-up sequence',v:0,leak:0},{t:'Sometimes — one follow-up call',v:1,leak:8000},{t:'Rarely',v:2,leak:18000},{t:'Never',v:3,leak:25000}],leakKey:'no_followup'},
+        {id:'e5',text:'How often do you underbid jobs (win but don\'t profit)?',options:[{t:'Rarely — pricing is tight',v:0,leak:0},{t:'Occasionally — maybe 1 in 5',v:1,leak:10000},{t:'Frequently — 1 in 3 or more',v:2,leak:25000},{t:'Almost always I\'m too cheap',v:3,leak:40000}],leakKey:'underbidding'},
+      ]},
+      {id:'invoicing',icon:'🧾',title:'Invoicing & Collections Leaks',subtitle:'5 questions · Slow payments and uncollected revenue',questions:[
+        {id:'i1',text:'What percentage of your invoices are paid within 30 days?',options:[{t:'90%+',v:0,leak:0},{t:'70–90%',v:1,leak:5000},{t:'50–70%',v:2,leak:15000},{t:'Under 50%',v:3,leak:30000}],leakKey:'late_payment'},
+        {id:'i2',text:'Do you currently have outstanding unpaid invoices older than 60 days?',options:[{t:'No or very few',v:0,leak:0},{t:'A few — under $5K',v:1,leak:5000},{t:'Several — $5K–$20K',v:2,leak:12500},{t:'Significant — over $20K',v:3,leak:25000}],leakKey:'outstanding_invoices'},
+        {id:'i3',text:'Do you send invoices the same day a job is completed?',options:[{t:'Always',v:0,leak:0},{t:'Within 3 days usually',v:1,leak:3000},{t:'Within a week',v:2,leak:8000},{t:'Longer or very inconsistent',v:3,leak:15000}],leakKey:'slow_invoicing'},
+        {id:'i4',text:'Do you charge late fees on overdue invoices?',options:[{t:'Yes — stated in contract',v:0,leak:0},{t:'Sometimes',v:1,leak:3000},{t:'Never',v:2,leak:8000}],leakKey:'no_late_fees'},
+        {id:'i5',text:'Do you collect a deposit before starting any job?',options:[{t:'Always — 30%+ upfront',v:0,leak:0},{t:'On bigger jobs',v:1,leak:5000},{t:'Rarely',v:2,leak:12000},{t:'Never',v:3,leak:20000}],leakKey:'no_deposit'},
+      ]},
+      {id:'marketing',icon:'📣',title:'Marketing & Lead Leaks',subtitle:'5 questions · Lost leads and missed referrals',questions:[
+        {id:'m1',text:'How many Google reviews does your business have?',options:[{t:'50+',v:0,leak:0},{t:'20–50',v:1,leak:8000},{t:'5–20',v:2,leak:20000},{t:'Under 5',v:3,leak:35000}],leakKey:'low_reviews'},
+        {id:'m2',text:'Do you have a system for asking every completed customer for a referral?',options:[{t:'Yes — I ask every time',v:0,leak:0},{t:'Sometimes',v:1,leak:10000},{t:'Rarely or never',v:2,leak:25000}],leakKey:'no_referral_system'},
+        {id:'m3',text:'Do past customers come back to you for repeat work?',options:[{t:'Yes — strong repeat business',v:0,leak:0},{t:'Some come back',v:1,leak:8000},{t:'Rarely or I don\'t track',v:2,leak:20000}],leakKey:'no_repeat_business'},
+        {id:'m4',text:'Do you lose leads because you respond too slowly?',options:[{t:'Never — I respond fast',v:0,leak:0},{t:'Occasionally',v:1,leak:8000},{t:'Often — I know I\'m losing jobs',v:2,leak:20000}],leakKey:'slow_lead_response'},
+        {id:'m5',text:'Do you have an active email list of past customers you market to?',options:[{t:'Yes — I send regular updates',v:0,leak:0},{t:'List exists, never used',v:1,leak:5000},{t:'No list at all',v:2,leak:12000}],leakKey:'no_email_marketing'},
+      ]},
+      {id:'operations',icon:'⚙️',title:'Operational Leaks',subtitle:'5 questions · Time waste and margin erosion',questions:[
+        {id:'o1',text:'How much time do you spend per week on admin (estimates, invoices, emails)?',options:[{t:'Under 5 hours',v:0,leak:0},{t:'5–10 hours',v:1,leak:10000},{t:'10–20 hours',v:2,leak:25000},{t:'Over 20 hours',v:3,leak:40000}],leakKey:'admin_time'},
+        {id:'o2',text:'How often do jobs run over budget due to poor planning or change order issues?',options:[{t:'Rarely',v:0,leak:0},{t:'1 in 5 jobs',v:1,leak:8000},{t:'1 in 3 jobs',v:2,leak:20000},{t:'Most jobs',v:3,leak:35000}],leakKey:'budget_overruns'},
+        {id:'o3',text:'Do you lose revenue by not capturing all billable hours or materials?',options:[{t:'No — everything gets billed',v:0,leak:0},{t:'Occasionally miss small items',v:1,leak:5000},{t:'Frequently — it\'s a real problem',v:2,leak:15000}],leakKey:'unbilled_work'},
+        {id:'o4',text:'Do you have written contracts and change order processes for every job?',options:[{t:'Yes — always',v:0,leak:0},{t:'For bigger jobs',v:1,leak:8000},{t:'Rarely — mostly verbal',v:2,leak:20000}],leakKey:'no_contracts'},
+        {id:'o5',text:'Do you track your actual profit margin per job after completion?',options:[{t:'Yes every job',v:0,leak:0},{t:'Occasionally',v:1,leak:5000},{t:'Never',v:2,leak:15000}],leakKey:'no_margin_tracking'},
+      ]},
+    ]
+  },
+  generic:{
+    eyebrow:'General Business Edition',
+    heroDesc:'Find out exactly where your business is losing revenue. Most small businesses lose $30,000–$150,000/year to completely preventable profit leaks. This audit finds every one of them.',
+    ctaDesc:'Bot Vault Pro has tools to plug every leak identified in your audit — from follow-up automation to AI-powered sales and marketing tools.',
+    sections:[
+      {id:'sales',icon:'📈',title:'Sales & Conversion Leaks',subtitle:'5 questions · Lost leads and poor close rates',questions:[
+        {id:'s1',text:'What is your average lead-to-customer conversion rate?',options:[{t:'Over 40%',v:0,leak:0},{t:'20–40%',v:1,leak:8000},{t:'10–20%',v:2,leak:18000},{t:'Under 10%',v:3,leak:30000}],leakKey:'low_conversion'},
+        {id:'s2',text:'What happens to leads that don\'t convert immediately?',options:[{t:'Automated nurture sequence',v:0,leak:0},{t:'Manual follow-up',v:1,leak:8000},{t:'They go cold',v:2,leak:20000}],leakKey:'no_nurture'},
+        {id:'s3',text:'Do you have a formal sales process your team follows?',options:[{t:'Yes — documented and consistent',v:0,leak:0},{t:'Informal but mostly consistent',v:1,leak:5000},{t:'No defined process',v:2,leak:15000}],leakKey:'no_sales_process'},
+        {id:'s4',text:'Do you track why you lose deals?',options:[{t:'Yes — we analyze lost deals',v:0,leak:0},{t:'Sometimes',v:1,leak:5000},{t:'Never',v:2,leak:12000}],leakKey:'no_lost_analysis'},
+        {id:'s5',text:'How effectively do you upsell or cross-sell to existing customers?',options:[{t:'Systematically',v:0,leak:0},{t:'Occasionally',v:1,leak:8000},{t:'Rarely or never',v:2,leak:18000}],leakKey:'no_upsell'},
+      ]},
+      {id:'billing',icon:'🧾',title:'Billing & Revenue Leaks',subtitle:'5 questions · Collection issues and pricing gaps',questions:[
+        {id:'b1',text:'What percentage of invoices are paid within agreed terms?',options:[{t:'90%+',v:0,leak:0},{t:'70–90%',v:1,leak:5000},{t:'50–70%',v:2,leak:12000},{t:'Under 50%',v:3,leak:25000}],leakKey:'late_payment'},
+        {id:'b2',text:'Do you have outstanding receivables older than 60 days?',options:[{t:'No',v:0,leak:0},{t:'Under $5K',v:1,leak:5000},{t:'$5K–$25K',v:2,leak:15000},{t:'Over $25K',v:3,leak:30000}],leakKey:'bad_receivables'},
+        {id:'b3',text:'When did you last raise your prices?',options:[{t:'Within the last year',v:0,leak:0},{t:'1–2 years ago',v:1,leak:8000},{t:'2–3 years ago',v:2,leak:18000},{t:'Never or over 3 years',v:3,leak:30000}],leakKey:'underpricing'},
+        {id:'b4',text:'Do customers ever receive your products/services without being properly billed?',options:[{t:'Never',v:0,leak:0},{t:'Occasionally',v:1,leak:5000},{t:'Frequently',v:2,leak:15000}],leakKey:'unbilled'},
+        {id:'b5',text:'Do you have a formal collections process for overdue accounts?',options:[{t:'Yes — automated reminders and escalation',v:0,leak:0},{t:'Manual follow-up',v:1,leak:5000},{t:'No formal process',v:2,leak:15000}],leakKey:'no_collections'},
+      ]},
+      {id:'marketing',icon:'📣',title:'Marketing & Retention Leaks',subtitle:'5 questions · Lost customers and brand gaps',questions:[
+        {id:'m1',text:'What is your customer retention rate year over year?',options:[{t:'Over 80%',v:0,leak:0},{t:'60–80%',v:1,leak:10000},{t:'40–60%',v:2,leak:22000},{t:'Under 40%',v:3,leak:35000}],leakKey:'poor_retention'},
+        {id:'m2',text:'Do you have a formal referral or affiliate program?',options:[{t:'Yes — active program',v:0,leak:0},{t:'Ask informally',v:1,leak:10000},{t:'No program',v:2,leak:22000}],leakKey:'no_referral'},
+        {id:'m3',text:'Do you have a segmented email marketing strategy?',options:[{t:'Yes — automated and segmented',v:0,leak:0},{t:'Basic email list, occasional sends',v:1,leak:8000},{t:'No email marketing',v:2,leak:18000}],leakKey:'no_email'},
+        {id:'m4',text:'How strong is your online presence and reputation?',options:[{t:'Strong — many positive reviews, good SEO',v:0,leak:0},{t:'Moderate',v:1,leak:8000},{t:'Weak or nonexistent',v:2,leak:20000}],leakKey:'weak_online'},
+        {id:'m5',text:'Do you consistently create content (blog, social, video)?',options:[{t:'Yes — weekly or more',v:0,leak:0},{t:'Monthly',v:1,leak:5000},{t:'Rarely or never',v:2,leak:12000}],leakKey:'no_content'},
+      ]},
+      {id:'operations',icon:'⚙️',title:'Operational Profit Drains',subtitle:'5 questions · Inefficiency and hidden costs',questions:[
+        {id:'o1',text:'How much owner/leadership time is spent on tasks that could be delegated or automated?',options:[{t:'Under 20% of my time',v:0,leak:0},{t:'20–40%',v:1,leak:10000},{t:'40–60%',v:2,leak:22000},{t:'Over 60%',v:3,leak:35000}],leakKey:'owner_bottleneck'},
+        {id:'o2',text:'How much money do you spend on tools, software, or services that overlap or go unused?',options:[{t:'Minimal — we audit regularly',v:0,leak:0},{t:'Some overlap',v:1,leak:3000},{t:'Significant waste',v:2,leak:8000}],leakKey:'tool_waste'},
+        {id:'o3',text:'Do you track your cost per customer acquisition?',options:[{t:'Yes precisely',v:0,leak:0},{t:'Rough estimate',v:1,leak:5000},{t:'No',v:2,leak:12000}],leakKey:'no_cac_tracking'},
+        {id:'o4',text:'How often do projects or deliverables go over budget or schedule?',options:[{t:'Rarely',v:0,leak:0},{t:'Occasionally',v:1,leak:8000},{t:'Frequently',v:2,leak:20000}],leakKey:'scope_creep'},
+        {id:'o5',text:'Do you have documented processes to ensure consistent delivery quality?',options:[{t:'Fully documented',v:0,leak:0},{t:'Partially',v:1,leak:5000},{t:'Nothing documented',v:2,leak:12000}],leakKey:'no_processes'},
+      ]},
+    ]
+  }
+};
+
+function setVersion(v){
+  currentVersion=v;answers={};totalLeak=0;
+  document.querySelectorAll('.vtog-btn').forEach((b,i)=>b.classList.toggle('active',(i===0&&v==='trades')||(i===1&&v==='generic')));
+  document.getElementById('eyebrow-text').textContent=data[v].eyebrow;
+  document.getElementById('hero-desc').textContent=data[v].heroDesc;
+  document.getElementById('liveLeakAmount').textContent='$0';
+  renderForm();
+  document.getElementById('results').classList.remove('show');
+  document.getElementById('assessmentForm').style.display='';
+  document.getElementById('submitBtn').style.display='';
+}
+
+function renderForm(){
+  const v=data[currentVersion];
+  const form=document.getElementById('assessmentForm');
+  form.innerHTML='';
+  v.sections.forEach(sec=>{
+    const div=document.createElement('div');
+    div.className='section-block';
+    let qHtml=sec.questions.map(q=>`
+      <div class="question">
+        <div class="q-text">${q.text}</div>
+        ${q.sublabel?`<div class="q-sublabel">${q.sublabel}</div>`:''}
+        <div class="q-options">
+          ${q.options.map(opt=>`
+            <label class="q-opt" id="opt-${q.id}-${opt.v}" onclick="selectOption('${q.id}',${opt.v},${opt.leak},this)">
+              <div class="q-dot"></div>
+              <span>${opt.t}</span>
+              ${opt.leak>0?`<span class="q-leak-tag">-$${(opt.leak/1000).toFixed(0)}K/yr</span>`:''}
+            </label>`).join('')}
+        </div>
+      </div>`).join('');
+    div.innerHTML=`<div class="section-header"><div class="section-icon">${sec.icon}</div><div><div class="section-title">${sec.title}</div><div class="section-subtitle">${sec.subtitle}</div></div></div>${qHtml}`;
+    form.appendChild(div);
+  });
+}
+
+function selectOption(qid,val,leak,el){
+  document.querySelectorAll(`[id^="opt-${qid}-"]`).forEach(e=>e.classList.remove('selected'));
+  el.classList.add('selected');
+  answers[qid]={val,leak};
+  updateProgress();
+  updateLiveLeak();
+}
+
+function updateProgress(){
+  const v=data[currentVersion];
+  const total=v.sections.reduce((a,s)=>a+s.questions.length,0);
+  const done=Object.keys(answers).length;
+  document.getElementById('progressFill').style.width=(done/total*100)+'%';
+  document.getElementById('progressLabel').textContent=`${done} of ${total} answered`;
+  document.getElementById('submitBtn').disabled=done<total;
+}
+
+function updateLiveLeak(){
+  totalLeak=Object.values(answers).reduce((a,v)=>a+v.leak,0);
+  document.getElementById('liveLeakAmount').textContent='$'+totalLeak.toLocaleString();
+}
+
+function showResults(){
+  const v=data[currentVersion];
+  totalLeak=Object.values(answers).reduce((a,r)=>a+r.leak,0);
+  document.getElementById('totalLeakDisplay').textContent='$'+totalLeak.toLocaleString();
+
+  let gradeTitle,gradeDesc;
+  if(totalLeak>100000){gradeTitle='Critical Revenue Hemorrhage';gradeDesc='Your business is losing over $100K annually to preventable issues. This is urgent. Fixing even 3 of these leaks this month will have an immediate impact on your bottom line.';}
+  else if(totalLeak>60000){gradeTitle='Serious Profit Leaks Detected';gradeDesc='Over $60K per year is leaving your business unnecessarily. The good news: these are all fixable with better systems and automation.';}
+  else if(totalLeak>30000){gradeTitle='Moderate Leaks — Act Now';gradeDesc='$30K+ per year in preventable losses. A few targeted fixes to your invoicing, follow-up, and marketing systems will recover most of this.';}
+  else if(totalLeak>10000){gradeTitle='Minor Leaks — Tighten Up';gradeDesc='Your business is reasonably tight. A few refinements to your collections and lead follow-up will put meaningful money back in your pocket.';}
+  else{gradeTitle='Strong Profit Management';gradeDesc='You\'re running a tight operation. Focus on scaling what\'s working and automating your strongest areas.';}
+  document.getElementById('leakGradeTitle').textContent=gradeTitle;
+  document.getElementById('leakGradeDesc').textContent=gradeDesc;
+
+  // Leak items
+  const leakItems=document.getElementById('leakItems');
+  leakItems.innerHTML='';
+  v.sections.forEach(sec=>{
+    sec.questions.forEach(q=>{
+      const ans=answers[q.id];
+      if(ans&&ans.leak>0){
+        const optLabel=q.options.find(o=>o.v===ans.val)?.t||'';
+        leakItems.innerHTML+=`<div class="leak-item"><div class="leak-item-icon">${sec.icon}</div><div class="leak-item-body"><div class="leak-item-title">${q.text.replace('?','')}</div><div class="leak-item-desc">${optLabel}</div></div><div class="leak-item-amount">-$${ans.leak.toLocaleString()}</div></div>`;
+      }
+    });
+  });
+  if(Object.values(answers).every(a=>a.leak===0)){
+    leakItems.innerHTML='<div class="leak-item recovered"><div class="leak-item-icon">✅</div><div class="leak-item-body"><div class="leak-item-title">No major leaks detected</div><div class="leak-item-desc">Your systems are tight. Focus on automation to scale what\'s working.</div></div><div class="leak-item-amount" style="color:var(--green)">+$0</div></div>';
+  }
+
+  // Suggestions
+  const sugs=buildSuggestions();
+  document.getElementById('suggestionList').innerHTML=sugs.map(s=>`<div class="suggestion-item"><div class="sug-priority ${s.priority}">${s.priority}</div><div><div class="sug-title">${s.title}</div><div class="sug-desc">${s.desc}</div></div></div>`).join('');
+
+  document.getElementById('assessmentForm').style.display='none';
+  document.getElementById('submitBtn').style.display='none';
+  document.getElementById('results').classList.add('show');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function buildSuggestions(){
+  const isTrades=currentVersion==='trades';
+  const sugs=[];
+  const highLeaks=Object.entries(answers).filter(([k,v])=>v.leak>=15000);
+  if(highLeaks.length>0){
+    sugs.push({priority:'high',title:isTrades?'Automate Your Invoice & Follow-Up System':'Automate Your Billing & Collections',desc:isTrades?'Same-day invoicing + automated payment reminders at day 1, 7, 14, and 30 will recover $15K–$30K in delayed or lost revenue per year on its own.':'Automated invoice reminders and a formal collections workflow recover the majority of late or forgotten payments without awkward calls.'});
+  }
+  if(answers['e3']?.val>=2||answers['s1']?.val>=2){
+    sugs.push({priority:'high',title:isTrades?'Build a Structured Estimate Follow-Up Sequence':'Build a Lead Nurture Sequence',desc:isTrades?'Most contractors follow up once. A 5-touch follow-up sequence after every estimate increases close rates by 30–40%. With the right tools, this runs automatically.':'Most leads need 5–7 touchpoints before buying. An automated nurture sequence keeps you top of mind and dramatically improves conversion without manual effort.'});
+  }
+  if(answers['m1']?.val>=2||answers['m2']?.val>=1){
+    sugs.push({priority:'high',title:'Build Your Referral & Review Engine',desc:isTrades?'Ask every completed customer for a Google review AND a referral. Do it with a simple automated message 48 hours after job completion. This is the highest ROI marketing activity in trades.':'A systematic ask for reviews and referrals after every closed deal is the single highest-ROI marketing activity for most small businesses. Automate it.'});
+  }
+  sugs.push({priority:'med',title:isTrades?'Use AI to Write Estimates 10x Faster':'Use AI to Automate Your Most Time-Consuming Tasks',desc:isTrades?'If you spend 10+ hours/week on estimates and admin, you\'re paying yourself $0/hr for that time. Bot Vault Pro\'s Trades AI Tool writes estimates, invoices, and customer emails in seconds.':'Bot Vault Pro\'s AI tools eliminate hours of weekly admin — proposals, emails, marketing content, and follow-up sequences — so you can focus on revenue-generating work.'});
+  sugs.push({priority:'low',title:'Track Profit Margin Per Job/Project',desc:isTrades?'If you\'re not tracking your actual margin per job, you\'re flying blind. Winning jobs that lose money is worse than not winning them at all. A simple tracking system tells you exactly where your money is going.':'If you can\'t measure it, you can\'t improve it. Tracking profit per client, project, or product line reveals where you\'re making money and where you\'re not.'});
+  return sugs;
+}
+
+function restart(){
+  answers={};totalLeak=0;
+  renderForm();
+  document.getElementById('results').classList.remove('show');
+  document.getElementById('assessmentForm').style.display='';
+  document.getElementById('submitBtn').style.display='';
+  document.getElementById('submitBtn').disabled=true;
+  document.getElementById('liveLeakAmount').textContent='$0';
+  updateProgress();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+renderForm();updateProgress();
+</script>
+</body>
+</html>

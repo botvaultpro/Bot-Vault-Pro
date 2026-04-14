@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Business Health Scorecard — Bot Vault Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#09090a;--bg2:#0f0f10;--surface:#141416;--surface2:#1c1c1f;
+  --border:#2a2a2f;--border2:#3a3a40;
+  --orange:#ff6b00;--orange2:#ff8c38;--amber:#ffb800;
+  --green:#00d97e;--red:#ff3b3b;--blue:#00b4ff;
+  --text:#f0ede8;--text2:#a8a49e;--text3:#666260;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(255,107,0,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,107,0,0.03) 1px,transparent 1px);background-size:50px 50px;pointer-events:none;z-index:0}
+
+.wrap{max-width:860px;margin:0 auto;padding:0 24px;position:relative;z-index:1}
+
+/* NAV */
+.topbar{background:rgba(9,9,10,0.9);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:16px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.logo{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:20px;letter-spacing:1px;text-transform:uppercase;display:flex;align-items:center;gap:8px}
+.logo-mark{width:28px;height:28px;background:var(--orange);border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#fff}
+.doc-badge{font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);letter-spacing:2px;text-transform:uppercase}
+
+/* VERSION TOGGLE */
+.version-toggle{display:flex;align-items:center;gap:0;background:var(--surface2);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin:40px auto 0;width:fit-content}
+.vtog-btn{padding:10px 28px;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;border:none;background:transparent;color:var(--text2);transition:all 0.2s}
+.vtog-btn.active{background:var(--orange);color:#fff}
+
+/* HERO */
+.hero{text-align:center;padding:48px 0 40px}
+.eyebrow{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--orange);margin-bottom:16px;display:block}
+.hero h1{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:clamp(48px,8vw,80px);line-height:0.9;text-transform:uppercase;letter-spacing:-1px;margin-bottom:16px}
+.hero h1 em{font-style:normal;color:var(--orange)}
+.hero p{color:var(--text2);font-size:16px;max-width:540px;margin:0 auto;line-height:1.7}
+
+/* PROGRESS BAR */
+.progress-wrap{margin:32px 0 8px;background:var(--surface2);border-radius:100px;height:6px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--orange),var(--amber));border-radius:100px;transition:width 0.4s ease;width:0%}
+.progress-label{font-family:'DM Mono',monospace;font-size:11px;color:var(--text3);text-align:right;margin-bottom:24px}
+
+/* SECTIONS */
+.section-block{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:32px;margin-bottom:20px;position:relative;overflow:hidden}
+.section-block::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--orange),var(--amber));opacity:0}
+.section-block.active::before{opacity:1}
+.section-header{display:flex;align-items:center;gap:16px;margin-bottom:24px}
+.section-icon{width:48px;height:48px;border-radius:10px;background:rgba(255,107,0,0.1);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.section-title{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;text-transform:uppercase;letter-spacing:0.5px}
+.section-subtitle{font-size:13px;color:var(--text3);margin-top:2px;font-family:'DM Mono',monospace}
+
+/* QUESTIONS */
+.question{margin-bottom:24px;padding-bottom:24px;border-bottom:1px solid var(--border)}
+.question:last-child{margin-bottom:0;padding-bottom:0;border-bottom:none}
+.q-text{font-size:15px;font-weight:500;margin-bottom:14px;line-height:1.5;color:var(--text)}
+.q-options{display:flex;flex-direction:column;gap:8px}
+.q-opt{display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;cursor:pointer;transition:all 0.2s;font-size:14px;color:var(--text2)}
+.q-opt:hover{border-color:var(--orange);color:var(--text);background:rgba(255,107,0,0.05)}
+.q-opt.selected{border-color:var(--orange);background:rgba(255,107,0,0.08);color:var(--text)}
+.q-opt input{display:none}
+.q-dot{width:16px;height:16px;border-radius:50%;border:2px solid var(--border2);flex-shrink:0;transition:all 0.2s;display:flex;align-items:center;justify-content:center}
+.q-opt.selected .q-dot{border-color:var(--orange);background:var(--orange)}
+.q-opt.selected .q-dot::after{content:'';width:6px;height:6px;border-radius:50%;background:#fff}
+
+/* SCORE METER (live) */
+.live-score{position:sticky;top:72px;z-index:50;background:rgba(9,9,10,0.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:12px 0;margin-bottom:0}
+.live-score-inner{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.ls-label{font-family:'DM Mono',monospace;font-size:11px;color:var(--text3);letter-spacing:2px;text-transform:uppercase}
+.ls-bars{display:flex;gap:4px;flex:1;max-width:400px}
+.ls-bar{flex:1;height:8px;background:var(--surface2);border-radius:100px;overflow:hidden}
+.ls-bar-fill{height:100%;border-radius:100px;width:0%;transition:width 0.4s ease}
+.ls-grade{font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;color:var(--orange);min-width:40px;text-align:right}
+
+/* RESULTS */
+.results{display:none}
+.results.show{display:block}
+.grade-hero{text-align:center;padding:60px 32px;background:var(--surface);border:1px solid var(--border);border-radius:20px;margin-bottom:24px;position:relative;overflow:hidden}
+.grade-hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 50% at 50% 50%,rgba(255,107,0,0.08),transparent)}
+.grade-circle{width:140px;height:140px;border-radius:50%;border:4px solid;display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 auto 24px;position:relative}
+.grade-letter{font-family:'Barlow Condensed',sans-serif;font-size:72px;font-weight:900;line-height:1}
+.grade-pct{font-family:'DM Mono',monospace;font-size:13px;margin-top:4px}
+.grade-title{font-family:'Barlow Condensed',sans-serif;font-size:36px;font-weight:800;text-transform:uppercase;margin-bottom:8px}
+.grade-desc{font-size:15px;color:var(--text2);max-width:480px;margin:0 auto;line-height:1.7}
+
+/* CATEGORY BARS */
+.cat-results{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:32px;margin-bottom:20px}
+.cat-results h3{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;text-transform:uppercase;margin-bottom:24px}
+.cat-bar-row{margin-bottom:20px}
+.cat-bar-label{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.cat-bar-name{font-size:14px;font-weight:500}
+.cat-bar-score{font-family:'DM Mono',monospace;font-size:12px;color:var(--text3)}
+.cat-bar-track{background:var(--surface2);border-radius:100px;height:10px;overflow:hidden}
+.cat-bar-fill{height:100%;border-radius:100px;transition:width 1s ease;width:0%}
+
+/* SUGGESTIONS */
+.suggestions{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:32px;margin-bottom:20px}
+.suggestions h3{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;text-transform:uppercase;margin-bottom:8px}
+.suggestions p{font-size:14px;color:var(--text2);margin-bottom:24px}
+.suggestion-item{display:flex;gap:16px;padding:16px;background:var(--surface2);border:1px solid var(--border);border-radius:12px;margin-bottom:12px}
+.sug-priority{font-family:'DM Mono',monospace;font-size:10px;padding:4px 10px;border-radius:100px;font-weight:500;flex-shrink:0;height:fit-content;margin-top:2px;letter-spacing:1px;text-transform:uppercase}
+.sug-priority.high{background:rgba(255,59,59,0.15);color:var(--red);border:1px solid rgba(255,59,59,0.3)}
+.sug-priority.med{background:rgba(255,184,0,0.15);color:var(--amber);border:1px solid rgba(255,184,0,0.3)}
+.sug-priority.low{background:rgba(0,217,126,0.15);color:var(--green);border:1px solid rgba(0,217,126,0.3)}
+.sug-title{font-weight:600;font-size:14px;margin-bottom:4px}
+.sug-desc{font-size:13px;color:var(--text2);line-height:1.6}
+
+/* CTA */
+.cta-block{background:linear-gradient(135deg,rgba(255,107,0,0.1),rgba(255,184,0,0.05));border:1px solid rgba(255,107,0,0.3);border-radius:16px;padding:40px;text-align:center;margin-bottom:40px}
+.cta-block h3{font-family:'Barlow Condensed',sans-serif;font-size:36px;font-weight:900;text-transform:uppercase;margin-bottom:12px}
+.cta-block p{color:var(--text2);font-size:15px;margin-bottom:28px;max-width:480px;margin-left:auto;margin-right:auto;line-height:1.7}
+.cta-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.btn-primary{background:var(--orange);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 32px;border-radius:10px;border:none;cursor:pointer;transition:all 0.2s;text-decoration:none;display:inline-block}
+.btn-primary:hover{background:var(--orange2);transform:translateY(-2px);box-shadow:0 8px 32px rgba(255,107,0,0.3)}
+.btn-secondary{background:var(--surface2);color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 32px;border-radius:10px;border:1px solid var(--border2);cursor:pointer;transition:all 0.2s;text-decoration:none;display:inline-block}
+.btn-secondary:hover{background:var(--surface);transform:translateY(-2px)}
+
+.submit-btn{width:100%;background:var(--orange);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;letter-spacing:2px;text-transform:uppercase;padding:18px;border-radius:12px;border:none;cursor:pointer;transition:all 0.2s;margin-top:32px}
+.submit-btn:hover{background:var(--orange2);transform:translateY(-2px);box-shadow:0 8px 32px rgba(255,107,0,0.35)}
+.submit-btn:disabled{opacity:0.5;cursor:not-allowed;transform:none}
+
+.restart-btn{background:transparent;border:1px solid var(--border2);color:var(--text2);font-family:'DM Mono',monospace;font-size:12px;padding:10px 20px;border-radius:8px;cursor:pointer;transition:all 0.2s;margin-top:16px;display:block;margin-left:auto;margin-right:auto}
+.restart-btn:hover{border-color:var(--text2);color:var(--text)}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.fade-in{animation:fadeUp 0.5s ease both}
+
+@media(max-width:640px){
+  .cta-btns{flex-direction:column}
+  .live-score-inner{flex-wrap:wrap}
+  .ls-bars{display:none}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo"><div class="logo-mark">BV</div>Bot Vault Pro</div>
+  <div class="doc-badge">Business Health Scorecard</div>
+</div>
+
+<div class="wrap">
+
+  <!-- VERSION TOGGLE -->
+  <div class="version-toggle">
+    <button class="vtog-btn active" onclick="setVersion('trades')">⚒️ Skilled Trades</button>
+    <button class="vtog-btn" onclick="setVersion('generic')">🏢 General Business</button>
+  </div>
+
+  <!-- HERO -->
+  <div class="hero">
+    <span class="eyebrow" id="eyebrow-text">Skilled Trades Edition</span>
+    <h1>Business<br><em>Health</em><br>Scorecard</h1>
+    <p id="hero-desc">Answer 25 questions about how your contracting business operates. Get a grade, see where you're leaking performance, and get a prioritized action plan.</p>
+  </div>
+
+  <!-- LIVE SCORE BAR -->
+  <div class="live-score">
+    <div class="live-score-inner wrap" style="padding-top:0;padding-bottom:0">
+      <div class="ls-label">Live Score</div>
+      <div class="ls-bars" id="lsBars"></div>
+      <div class="ls-grade" id="lsGrade">—</div>
+    </div>
+  </div>
+
+  <!-- PROGRESS -->
+  <div style="padding-top:24px">
+    <div class="progress-wrap"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-label" id="progressLabel">0 of 25 answered</div>
+  </div>
+
+  <!-- ASSESSMENT FORM -->
+  <div id="assessmentForm">
+    <!-- Sections injected by JS -->
+  </div>
+
+  <button class="submit-btn" id="submitBtn" onclick="showResults()" disabled>
+    Calculate My Score →
+  </button>
+
+  <!-- RESULTS -->
+  <div class="results" id="results">
+    <div class="grade-hero fade-in">
+      <div class="grade-circle" id="gradeCircle">
+        <div class="grade-letter" id="gradeLetter">—</div>
+        <div class="grade-pct" id="gradePct">0%</div>
+      </div>
+      <div class="grade-title" id="gradeTitle">Calculating...</div>
+      <div class="grade-desc" id="gradeDesc"></div>
+    </div>
+
+    <div class="cat-results fade-in">
+      <h3>📊 Score Breakdown by Category</h3>
+      <div id="catBars"></div>
+    </div>
+
+    <div class="suggestions fade-in">
+      <h3>🎯 Your Action Plan</h3>
+      <p>Based on your answers, here are your highest-impact improvements — ranked by priority.</p>
+      <div id="suggestionList"></div>
+    </div>
+
+    <div class="cta-block fade-in">
+      <h3>Ready to Fix This?</h3>
+      <p id="ctaDesc">Bot Vault Pro has the exact tools to address every weak area in your scorecard. Start automating today.</p>
+      <div class="cta-btns">
+        <a href="https://botvaultpro.com/#products" class="btn-primary">Get the Full Toolkit →</a>
+        <a href="https://botvaultpro.com/#waitlist" class="btn-secondary">Join Bot Waitlist</a>
+      </div>
+    </div>
+
+    <button class="restart-btn" onclick="restart()">↩ Retake Assessment</button>
+  </div>
+
+</div>
+
+<script>
+let currentVersion = 'trades';
+let answers = {};
+
+const data = {
+  trades: {
+    eyebrow: 'Skilled Trades Edition',
+    heroDesc: 'Answer 25 questions about how your contracting business operates. Get a grade, see where you\'re leaking performance, and get a prioritized action plan.',
+    sections: [
+      {
+        id: 'ops', icon: '⚙️', title: 'Operations & Workflow',
+        subtitle: '6 questions · How efficiently your business runs day-to-day',
+        questions: [
+          { id:'o1', text:'How long does it typically take you to send a quote after a customer inquiry?', options:[{t:'Same day',v:4},{t:'1–2 days',v:3},{t:'3–5 days',v:1},{t:'A week or more',v:0}] },
+          { id:'o2', text:'How do you track active jobs, schedules, and crew assignments?', options:[{t:'Dedicated software with full visibility',v:4},{t:'Spreadsheets or shared calendar',v:2},{t:'Texts, phone calls, and memory',v:1},{t:'No real system',v:0}] },
+          { id:'o3', text:'When a job is done, how quickly do you send the invoice?', options:[{t:'Same day the job ends',v:4},{t:'Within 3 days',v:3},{t:'Within a week',v:1},{t:'Longer than a week',v:0}] },
+          { id:'o4', text:'How documented are your business processes (estimating, hiring, onboarding)?', options:[{t:'Fully documented — anyone can follow them',v:4},{t:'Partially documented',v:2},{t:'Mostly in my head',v:1},{t:'Not documented at all',v:0}] },
+          { id:'o5', text:'How do you handle job site communication with your crew?', options:[{t:'Structured system with written instructions',v:4},{t:'Group text or app',v:3},{t:'Phone calls mostly',v:1},{t:'Show up and explain on the spot',v:0}] },
+          { id:'o6', text:'How often do jobs run over budget or over schedule?', options:[{t:'Rarely — we have tight controls',v:4},{t:'Sometimes — maybe 20% of jobs',v:2},{t:'Often — more than half',v:1},{t:'Almost every job',v:0}] },
+        ]
+      },
+      {
+        id: 'finance', icon: '💰', title: 'Financial Health',
+        subtitle: '5 questions · Cash flow, margins, and payment speed',
+        questions: [
+          { id:'f1', text:'Do you know your gross profit margin on an average job?', options:[{t:'Yes, I track it closely',v:4},{t:'Rough estimate',v:2},{t:'Not really',v:0}] },
+          { id:'f2', text:'What percentage of invoices get paid within 30 days?', options:[{t:'Over 90%',v:4},{t:'70–90%',v:3},{t:'50–70%',v:1},{t:'Under 50%',v:0}] },
+          { id:'f3', text:'How do you handle change orders on a job?', options:[{t:'Written approval before any extra work starts',v:4},{t:'Verbal agreement, invoice later',v:2},{t:'I just do the extra work and hope to collect',v:0}] },
+          { id:'f4', text:'Do you collect a deposit before starting work?', options:[{t:'Always — 30–50% upfront',v:4},{t:'Sometimes',v:2},{t:'Rarely or never',v:0}] },
+          { id:'f5', text:'How do you track outstanding invoices and follow up?', options:[{t:'Automated reminders + dedicated follow-up process',v:4},{t:'Manual tracking, I follow up inconsistently',v:2},{t:'I forget or avoid it',v:0}] },
+        ]
+      },
+      {
+        id: 'sales', icon: '📈', title: 'Sales & Lead Management',
+        subtitle: '5 questions · How well you convert inquiries into paying jobs',
+        questions: [
+          { id:'s1', text:'What percentage of estimates do you typically close?', options:[{t:'Over 60%',v:4},{t:'40–60%',v:3},{t:'20–40%',v:1},{t:'Under 20%',v:0}] },
+          { id:'s2', text:'What happens when a prospect doesn\'t respond to your estimate?', options:[{t:'Structured follow-up sequence (3+ touchpoints)',v:4},{t:'I send one follow-up',v:2},{t:'I move on',v:0}] },
+          { id:'s3', text:'How do most of your new customers find you?', options:[{t:'Mix of referrals, Google, and social',v:4},{t:'Mostly word of mouth',v:2},{t:'I\'m not sure',v:1},{t:'I struggle to get new leads',v:0}] },
+          { id:'s4', text:'Do you have a system for asking past customers for referrals?', options:[{t:'Yes — I ask every customer systematically',v:4},{t:'Sometimes when I remember',v:2},{t:'Rarely or never',v:0}] },
+          { id:'s5', text:'How professional do your estimates look compared to competitors?', options:[{t:'Very professional — branded and detailed',v:4},{t:'Decent — typed but basic',v:2},{t:'Handwritten or rough',v:0}] },
+        ]
+      },
+      {
+        id: 'marketing', icon: '📣', title: 'Marketing & Reputation',
+        subtitle: '5 questions · Your online presence and lead generation',
+        questions: [
+          { id:'m1', text:'How many Google reviews does your business have?', options:[{t:'50+',v:4},{t:'20–50',v:3},{t:'5–20',v:1},{t:'Under 5',v:0}] },
+          { id:'m2', text:'Do you have an active Google Business Profile?', options:[{t:'Yes, fully optimized with photos and posts',v:4},{t:'Basic listing only',v:2},{t:'Not set up',v:0}] },
+          { id:'m3', text:'How often do you post content online (social media, photos, etc.)?', options:[{t:'Weekly or more',v:4},{t:'Monthly',v:2},{t:'Rarely',v:1},{t:'Never',v:0}] },
+          { id:'m4', text:'Do you have a professional website that generates leads?', options:[{t:'Yes, with contact form and SEO',v:4},{t:'Basic website',v:2},{t:'Facebook page only',v:1},{t:'No online presence',v:0}] },
+          { id:'m5', text:'After completing a job, do you ask customers for reviews?', options:[{t:'Every time — with a system',v:4},{t:'Sometimes',v:2},{t:'Almost never',v:0}] },
+        ]
+      },
+      {
+        id: 'team', icon: '👥', title: 'Team & Growth',
+        subtitle: '4 questions · Your ability to scale and build a team',
+        questions: [
+          { id:'t1', text:'If you were out sick for a week, could your business run without you?', options:[{t:'Yes — systems and people handle it',v:4},{t:'Partially',v:2},{t:'No — everything stops',v:0}] },
+          { id:'t2', text:'Do you have documented training materials for new hires?', options:[{t:'Yes — full onboarding process',v:4},{t:'Some notes',v:2},{t:'Nothing documented',v:0}] },
+          { id:'t3', text:'How do you currently handle administrative tasks (scheduling, paperwork)?', options:[{t:'Delegated or automated',v:4},{t:'Shared with someone',v:2},{t:'I do everything myself',v:0}] },
+          { id:'t4', text:'Do you have a clear goal for where your business will be in 12 months?', options:[{t:'Yes, with a written plan and targets',v:4},{t:'General idea, nothing written',v:2},{t:'I\'m just trying to survive',v:0}] },
+        ]
+      }
+    ]
+  },
+  generic: {
+    eyebrow: 'General Business Edition',
+    heroDesc: 'Answer 25 questions about how your business operates. Get an overall health grade, identify your weakest areas, and receive a prioritized improvement plan.',
+    sections: [
+      {
+        id: 'ops', icon: '⚙️', title: 'Operations & Systems',
+        subtitle: '6 questions · How efficiently your business runs',
+        questions: [
+          { id:'o1', text:'How quickly do you respond to new customer or client inquiries?', options:[{t:'Within the hour',v:4},{t:'Same day',v:3},{t:'1–2 days',v:1},{t:'3+ days or inconsistently',v:0}] },
+          { id:'o2', text:'How do you manage projects, tasks, and deadlines across your team?', options:[{t:'Dedicated project management tool (ClickUp, Asana, etc.)',v:4},{t:'Shared spreadsheets or calendar',v:2},{t:'Email and messages',v:1},{t:'No real system',v:0}] },
+          { id:'o3', text:'How documented are your core business processes?', options:[{t:'Fully documented — SOPs for everything',v:4},{t:'Key processes documented',v:2},{t:'Mostly undocumented',v:1},{t:'Nothing written down',v:0}] },
+          { id:'o4', text:'How consistently do you deliver your product or service on time?', options:[{t:'Almost always on time',v:4},{t:'Usually — occasional delays',v:3},{t:'Frequently delayed',v:1},{t:'Consistently behind',v:0}] },
+          { id:'o5', text:'How do you handle customer complaints or issues?', options:[{t:'Defined process, quick resolution',v:4},{t:'Case by case, usually resolved',v:2},{t:'Reactive, inconsistent',v:0}] },
+          { id:'o6', text:'Can your business operate for a week without you personally involved?', options:[{t:'Yes fully',v:4},{t:'Mostly, with some check-ins',v:2},{t:'No — it depends on me',v:0}] },
+        ]
+      },
+      {
+        id: 'finance', icon: '💰', title: 'Financial Health',
+        subtitle: '5 questions · Cash flow, margins, and financial visibility',
+        questions: [
+          { id:'f1', text:'Do you know your gross profit margin right now?', options:[{t:'Yes, I track it monthly',v:4},{t:'Rough idea',v:2},{t:'Not really',v:0}] },
+          { id:'f2', text:'How would you describe your current cash flow?', options:[{t:'Predictable and positive',v:4},{t:'Generally okay, occasional gaps',v:2},{t:'Frequently tight or unpredictable',v:0}] },
+          { id:'f3', text:'How quickly do customers typically pay you?', options:[{t:'Most pay within 30 days',v:4},{t:'30–60 days on average',v:2},{t:'60+ days or very inconsistent',v:0}] },
+          { id:'f4', text:'Do you have a formal invoicing and follow-up process?', options:[{t:'Automated reminders and structured follow-up',v:4},{t:'Manual but consistent',v:2},{t:'Inconsistent or informal',v:0}] },
+          { id:'f5', text:'Do you review your financials (P&L, cash flow) regularly?', options:[{t:'Monthly at minimum',v:4},{t:'Quarterly',v:2},{t:'Rarely or never',v:0}] },
+        ]
+      },
+      {
+        id: 'sales', icon: '📈', title: 'Sales & Revenue Growth',
+        subtitle: '5 questions · How well you convert and grow revenue',
+        questions: [
+          { id:'s1', text:'How would you rate your sales conversion rate?', options:[{t:'Strong — we close most qualified leads',v:4},{t:'Average for our industry',v:2},{t:'Below where it should be',v:0}] },
+          { id:'s2', text:'Do you have a documented sales process or pipeline?', options:[{t:'Yes — defined stages, tracked in a CRM',v:4},{t:'Informal but consistent',v:2},{t:'No defined process',v:0}] },
+          { id:'s3', text:'What happens to leads that don\'t convert immediately?', options:[{t:'Automated nurture sequence',v:4},{t:'Manual follow-up when I remember',v:2},{t:'They go cold — no follow-up',v:0}] },
+          { id:'s4', text:'How diversified are your revenue streams?', options:[{t:'Multiple channels and revenue types',v:4},{t:'2–3 sources',v:2},{t:'Largely dependent on one source',v:0}] },
+          { id:'s5', text:'Do you have a referral program or systematic way to get referrals?', options:[{t:'Yes — I ask every customer',v:4},{t:'Sometimes',v:2},{t:'No formal approach',v:0}] },
+        ]
+      },
+      {
+        id: 'marketing', icon: '📣', title: 'Marketing & Online Presence',
+        subtitle: '5 questions · Visibility, reach, and reputation',
+        questions: [
+          { id:'m1', text:'How would you describe your online presence?', options:[{t:'Strong — website, SEO, active social',v:4},{t:'Decent — website and basic social',v:2},{t:'Minimal',v:1},{t:'Essentially none',v:0}] },
+          { id:'m2', text:'How often do you consistently create or distribute marketing content?', options:[{t:'Weekly',v:4},{t:'Monthly',v:2},{t:'Occasionally',v:1},{t:'Rarely',v:0}] },
+          { id:'m3', text:'Do you have an email list and do you use it?', options:[{t:'Yes — active list with regular sends',v:4},{t:'List exists, rarely used',v:2},{t:'No email list',v:0}] },
+          { id:'m4', text:'How strong is your online reputation (reviews, ratings)?', options:[{t:'Many positive reviews, well-rated',v:4},{t:'Some reviews, decent',v:2},{t:'Few or mixed reviews',v:1},{t:'Essentially no reviews',v:0}] },
+          { id:'m5', text:'How do most new customers find your business?', options:[{t:'Mix of channels (SEO, social, referrals, paid)',v:4},{t:'Primarily one channel',v:2},{t:'Word of mouth only',v:1},{t:'I\'m not sure',v:0}] },
+        ]
+      },
+      {
+        id: 'team', icon: '👥', title: 'Team & Scalability',
+        subtitle: '4 questions · Your people, culture, and ability to grow',
+        questions: [
+          { id:'t1', text:'How would you describe your team\'s productivity and engagement?', options:[{t:'High — people are motivated and effective',v:4},{t:'Generally good',v:2},{t:'Mixed or declining',v:0}] },
+          { id:'t2', text:'Do you have defined roles, responsibilities, and performance metrics?', options:[{t:'Yes for all roles',v:4},{t:'For some roles',v:2},{t:'Not really defined',v:0}] },
+          { id:'t3', text:'How much time do you personally spend on tasks others could do?', options:[{t:'Very little — I focus on high-value work',v:4},{t:'Some — I\'m working on delegating',v:2},{t:'A lot — I\'m doing everything',v:0}] },
+          { id:'t4', text:'Do you have a clear plan for growing or scaling in the next 12 months?', options:[{t:'Yes — written plan with metrics',v:4},{t:'General direction, no formal plan',v:2},{t:'No clear plan',v:0}] },
+        ]
+      }
+    ]
+  }
+};
+
+const gradeConfig = [
+  { min:85, letter:'A', color:'#00d97e', title:'High Performer', desc:'Your business is running well above average. You have strong systems, healthy margins, and a clear path forward. Focus on automation to free up even more of your time and scale without adding headcount.' },
+  { min:70, letter:'B', color:'#00b4ff', title:'Solid Foundation', desc:'You\'ve built something real. A few key areas are holding you back from top-tier performance. The gaps are fixable — most can be addressed with better systems and automation in the next 60 days.' },
+  { min:55, letter:'C', color:'#ffb800', title:'Needs Attention', desc:'Your business works but it\'s costing you time and money you don\'t realize. Multiple areas are leaking revenue and efficiency. The good news: fixing even 2–3 of these will have an immediate financial impact.' },
+  { min:40, letter:'D', color:'#ff8c38', title:'Significant Gaps', desc:'You\'re working hard but the lack of systems is creating serious drag on your business. Revenue, margins, and growth are all being impacted. This is urgent — start with finance and operations first.' },
+  { min:0, letter:'F', color:'#ff3b3b', title:'Critical Issues', desc:'Your business needs immediate structural attention. Without systems, documentation, and financial controls, growth is impossible and sustainability is at risk. We can help you fix this fast.' },
+];
+
+function setVersion(v) {
+  currentVersion = v;
+  answers = {};
+  document.querySelectorAll('.vtog-btn').forEach((b,i) => b.classList.toggle('active', (i===0&&v==='trades')||(i===1&&v==='generic')));
+  document.getElementById('eyebrow-text').textContent = data[v].eyebrow;
+  document.getElementById('hero-desc').textContent = data[v].heroDesc;
+  renderForm();
+  document.getElementById('results').classList.remove('show');
+  document.getElementById('assessmentForm').style.display = '';
+  document.getElementById('submitBtn').style.display = '';
+  updateLiveScore();
+}
+
+function renderForm() {
+  const v = data[currentVersion];
+  const form = document.getElementById('assessmentForm');
+  form.innerHTML = '';
+  v.sections.forEach(sec => {
+    const div = document.createElement('div');
+    div.className = 'section-block';
+    div.id = 'sec-' + sec.id;
+    let qHtml = sec.questions.map(q => `
+      <div class="question">
+        <div class="q-text">${q.text}</div>
+        <div class="q-options">
+          ${q.options.map(opt => `
+            <label class="q-opt" id="opt-${q.id}-${opt.v}" onclick="selectOption('${q.id}',${opt.v},this)">
+              <div class="q-dot"></div>
+              <span>${opt.t}</span>
+            </label>`).join('')}
+        </div>
+      </div>`).join('');
+    div.innerHTML = `
+      <div class="section-header">
+        <div class="section-icon">${sec.icon}</div>
+        <div>
+          <div class="section-title">${sec.title}</div>
+          <div class="section-subtitle">${sec.subtitle}</div>
+        </div>
+      </div>
+      ${qHtml}`;
+    form.appendChild(div);
+  });
+
+  // Build live score bars
+  const bars = document.getElementById('lsBars');
+  bars.innerHTML = v.sections.map(s => `<div class="ls-bar" title="${s.title}"><div class="ls-bar-fill" id="lsb-${s.id}" style="background:var(--orange)"></div></div>`).join('');
+}
+
+function selectOption(qid, val, el) {
+  // Deselect all in this question
+  document.querySelectorAll(`[id^="opt-${qid}-"]`).forEach(e => e.classList.remove('selected'));
+  el.classList.add('selected');
+  answers[qid] = val;
+  updateProgress();
+  updateLiveScore();
+}
+
+function updateProgress() {
+  const v = data[currentVersion];
+  const total = v.sections.reduce((a,s) => a + s.questions.length, 0);
+  const done = Object.keys(answers).length;
+  document.getElementById('progressFill').style.width = (done/total*100)+'%';
+  document.getElementById('progressLabel').textContent = `${done} of ${total} answered`;
+  document.getElementById('submitBtn').disabled = done < total;
+}
+
+function updateLiveScore() {
+  const v = data[currentVersion];
+  let totalScore = 0, totalMax = 0;
+  v.sections.forEach(sec => {
+    let secScore = 0, secMax = 0;
+    sec.questions.forEach(q => {
+      const maxV = Math.max(...q.options.map(o=>o.v));
+      secMax += maxV;
+      if(answers[q.id] !== undefined) secScore += answers[q.id];
+    });
+    totalScore += secScore;
+    totalMax += secMax;
+    const pct = secMax > 0 ? (secScore/secMax)*100 : 0;
+    const bar = document.getElementById('lsb-'+sec.id);
+    if(bar) { bar.style.width = pct+'%'; bar.style.background = pct>70?'var(--green)':pct>40?'var(--amber)':'var(--orange)'; }
+  });
+  const pct = totalMax > 0 ? Math.round((totalScore/totalMax)*100) : 0;
+  const g = gradeConfig.find(g => pct >= g.min);
+  const gradeEl = document.getElementById('lsGrade');
+  if(gradeEl && g) { gradeEl.textContent = g.letter; gradeEl.style.color = g.color; }
+}
+
+function showResults() {
+  const v = data[currentVersion];
+  let totalScore = 0, totalMax = 0;
+  const catScores = {};
+
+  v.sections.forEach(sec => {
+    let secScore = 0, secMax = 0;
+    sec.questions.forEach(q => {
+      const maxV = Math.max(...q.options.map(o=>o.v));
+      secMax += maxV;
+      if(answers[q.id] !== undefined) secScore += answers[q.id];
+    });
+    catScores[sec.id] = { score: secScore, max: secMax, label: sec.title, icon: sec.icon };
+    totalScore += secScore;
+    totalMax += secMax;
+  });
+
+  const pct = Math.round((totalScore/totalMax)*100);
+  const g = gradeConfig.find(gc => pct >= gc.min);
+
+  // Grade circle
+  document.getElementById('gradeLetter').textContent = g.letter;
+  document.getElementById('gradePct').textContent = pct + '%';
+  document.getElementById('gradeTitle').textContent = g.title;
+  document.getElementById('gradeDesc').textContent = g.desc;
+  const circle = document.getElementById('gradeCircle');
+  circle.style.borderColor = g.color;
+  circle.style.boxShadow = `0 0 40px ${g.color}40`;
+  document.getElementById('gradeLetter').style.color = g.color;
+
+  // Category bars
+  const catBarsEl = document.getElementById('catBars');
+  catBarsEl.innerHTML = '';
+  Object.entries(catScores).forEach(([id, cat]) => {
+    const catPct = Math.round((cat.score/cat.max)*100);
+    const color = catPct > 70 ? '#00d97e' : catPct > 45 ? '#ffb800' : '#ff3b3b';
+    catBarsEl.innerHTML += `
+      <div class="cat-bar-row">
+        <div class="cat-bar-label">
+          <div class="cat-bar-name">${cat.icon} ${cat.label}</div>
+          <div class="cat-bar-score">${cat.score}/${cat.max} pts · ${catPct}%</div>
+        </div>
+        <div class="cat-bar-track">
+          <div class="cat-bar-fill" style="width:${catPct}%;background:${color}" data-pct="${catPct}"></div>
+        </div>
+      </div>`;
+  });
+
+  // Suggestions
+  const suggestions = buildSuggestions(catScores, answers, currentVersion);
+  const sugList = document.getElementById('suggestionList');
+  sugList.innerHTML = suggestions.map(s => `
+    <div class="suggestion-item">
+      <div class="sug-priority ${s.priority}">${s.priority}</div>
+      <div>
+        <div class="sug-title">${s.title}</div>
+        <div class="sug-desc">${s.desc}</div>
+      </div>
+    </div>`).join('');
+
+  // Show results
+  document.getElementById('assessmentForm').style.display = 'none';
+  document.getElementById('submitBtn').style.display = 'none';
+  document.getElementById('results').classList.add('show');
+  window.scrollTo({top:0,behavior:'smooth'});
+
+  // Animate bars
+  setTimeout(() => {
+    document.querySelectorAll('.cat-bar-fill').forEach(b => { const p = b.dataset.pct; b.style.width = p+'%'; });
+  }, 300);
+}
+
+function buildSuggestions(catScores, answers, version) {
+  const sugs = [];
+  const isTrades = version === 'trades';
+
+  Object.entries(catScores).forEach(([id, cat]) => {
+    const pct = (cat.score/cat.max)*100;
+    if(id === 'finance' && pct < 60) {
+      sugs.push({ priority:'high', title: isTrades ? 'Fix Your Invoice & Collections Process' : 'Improve Your Cash Flow Management', desc: isTrades ? 'You\'re leaving money on the table. Start collecting deposits on every job, send invoices same-day, and automate your payment reminders. This is the fastest way to increase cash flow without winning a single new job.' : 'Cash flow gaps are typically a billing and collections problem. Implement net-30 terms, automate invoice reminders, and review your pricing margins monthly.' });
+    }
+    if(id === 'ops' && pct < 60) {
+      sugs.push({ priority:'high', title: isTrades ? 'Build an Estimating System' : 'Document Your Core Processes', desc: isTrades ? 'Slow estimates lose jobs. Build a template-based estimating system so you can respond to inquiries the same day. Every hour of delay costs you jobs to faster competitors.' : 'Undocumented processes mean inconsistent delivery and an inability to scale. Start by documenting your top 3 recurring workflows this week.' });
+    }
+    if(id === 'sales' && pct < 60) {
+      sugs.push({ priority:'high', title: isTrades ? 'Add a Follow-Up Sequence to Every Estimate' : 'Build a Lead Nurture Process', desc: isTrades ? 'Most contractors follow up once or not at all. A 3–5 touch follow-up sequence after every estimate can increase your close rate by 30–40%. Automate this so it happens without thinking.' : 'Leads rarely buy on first contact. A structured 5-touch nurture sequence keeps you top of mind until they\'re ready to buy. Automate this with email.' });
+    }
+    if(id === 'marketing' && pct < 60) {
+      sugs.push({ priority:'med', title: isTrades ? 'Build Your Google Review Engine' : 'Fix Your Online Reputation', desc: isTrades ? 'More Google reviews = more inbound leads. Ask every completed customer for a review using a simple text or email with a direct link. This is free and compounds over time.' : 'Most buying decisions start with online research. 50+ positive reviews, an optimized Google Business Profile, and a consistent social presence will generate inbound leads on autopilot.' });
+    }
+    if(id === 'team' && pct < 60) {
+      sugs.push({ priority:'med', title: isTrades ? 'Start Documenting Your Business' : 'Build a Scalable Team Structure', desc: isTrades ? 'If your business can\'t run without you, you don\'t have a business — you have a job. Start by documenting your estimating and onboarding process this week. This makes hiring, training, and delegation possible.' : 'Delegation requires documentation. Without clear SOPs, role definitions, and performance metrics, you\'ll always be the bottleneck.' });
+    }
+    if(pct >= 75) {
+      sugs.push({ priority:'low', title: `${cat.icon} ${cat.label}: Strong — Focus on Automation`, desc: `This area is working well. The next step is to automate it completely so it runs without your manual input — freeing your time for higher-value work.` });
+    }
+  });
+
+  sugs.push({ priority:'low', title: 'Use AI to Eliminate Your Admin Backlog', desc: isTrades ? 'Bot Vault Pro\'s Trades AI Tool can write estimates, invoices, customer emails, and follow-up sequences in seconds. Subscribers save an average of 2–3 hours per day on admin tasks.' : 'Bot Vault Pro\'s AI tools can write proposals, emails, marketing content, and follow-up sequences in seconds — eliminating hours of weekly admin work.' });
+
+  return sugs.sort((a,b) => {const o={high:0,med:1,low:2}; return o[a.priority]-o[b.priority];}).slice(0,7);
+}
+
+function restart() {
+  answers = {};
+  renderForm();
+  document.getElementById('results').classList.remove('show');
+  document.getElementById('assessmentForm').style.display = '';
+  document.getElementById('submitBtn').style.display = '';
+  document.getElementById('submitBtn').disabled = true;
+  updateProgress();
+  updateLiveScore();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// Init
+renderForm();
+updateProgress();
+</script>
+</body>
+</html>

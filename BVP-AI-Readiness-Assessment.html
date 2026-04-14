@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Readiness Assessment — Bot Vault Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#09090a;--bg2:#0f0f10;--surface:#141416;--surface2:#1c1c1f;--border:#2a2a2f;--border2:#3a3a40;--blue:#00b4ff;--blue2:#38c8ff;--green:#00d97e;--orange:#ff6b00;--amber:#ffb800;--red:#ff3b3b;--text:#f0ede8;--text2:#a8a49e;--text3:#666260;}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,180,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,180,255,0.03) 1px,transparent 1px);background-size:50px 50px;pointer-events:none;z-index:0}
+.wrap{max-width:860px;margin:0 auto;padding:0 24px;position:relative;z-index:1}
+.topbar{background:rgba(9,9,10,0.9);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:16px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.logo{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:20px;letter-spacing:1px;text-transform:uppercase;display:flex;align-items:center;gap:8px}
+.logo-mark{width:28px;height:28px;background:var(--blue);border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#fff}
+.doc-badge{font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);letter-spacing:2px;text-transform:uppercase}
+.version-toggle{display:flex;align-items:center;gap:0;background:var(--surface2);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin:40px auto 0;width:fit-content}
+.vtog-btn{padding:10px 28px;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;border:none;background:transparent;color:var(--text2);transition:all 0.2s}
+.vtog-btn.active{background:var(--blue);color:#fff}
+.hero{text-align:center;padding:48px 0 40px}
+.eyebrow{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--blue);margin-bottom:16px;display:block}
+.hero h1{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:clamp(48px,8vw,80px);line-height:0.9;text-transform:uppercase;letter-spacing:-1px;margin-bottom:16px}
+.hero h1 em{font-style:normal;color:var(--blue)}
+.hero p{color:var(--text2);font-size:16px;max-width:540px;margin:0 auto;line-height:1.7}
+.readiness-meter{display:flex;align-items:center;gap:16px;background:rgba(0,180,255,0.06);border:1px solid rgba(0,180,255,0.2);border-radius:12px;padding:20px 24px;margin:24px auto 0;max-width:460px}
+.rm-score{font-family:'Barlow Condensed',sans-serif;font-size:56px;font-weight:900;color:var(--blue);line-height:1;min-width:80px;text-align:center}
+.rm-label{font-size:13px;color:var(--text2);line-height:1.5}
+.rm-label strong{color:var(--text);display:block;font-family:'Barlow Condensed',sans-serif;font-size:18px;text-transform:uppercase}
+.progress-wrap{margin:32px 0 8px;background:var(--surface2);border-radius:100px;height:6px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--blue),var(--green));border-radius:100px;transition:width 0.4s ease;width:0%}
+.progress-label{font-family:'DM Mono',monospace;font-size:11px;color:var(--text3);text-align:right;margin-bottom:24px}
+.section-block{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:32px;margin-bottom:20px;position:relative;overflow:hidden}
+.section-block::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--blue),var(--green));opacity:0.6}
+.section-header{display:flex;align-items:center;gap:16px;margin-bottom:24px}
+.section-icon{width:48px;height:48px;border-radius:10px;background:rgba(0,180,255,0.1);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.section-title{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;text-transform:uppercase;letter-spacing:0.5px}
+.section-subtitle{font-size:13px;color:var(--text3);margin-top:2px;font-family:'DM Mono',monospace}
+.question{margin-bottom:24px;padding-bottom:24px;border-bottom:1px solid var(--border)}
+.question:last-child{margin-bottom:0;padding-bottom:0;border-bottom:none}
+.q-text{font-size:15px;font-weight:500;margin-bottom:14px;line-height:1.5}
+.q-options{display:flex;flex-direction:column;gap:8px}
+.q-opt{display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;cursor:pointer;transition:all 0.2s;font-size:14px;color:var(--text2)}
+.q-opt:hover{border-color:var(--blue);color:var(--text);background:rgba(0,180,255,0.05)}
+.q-opt.selected{border-color:var(--blue);background:rgba(0,180,255,0.08);color:var(--text)}
+.q-dot{width:16px;height:16px;border-radius:50%;border:2px solid var(--border2);flex-shrink:0;transition:all 0.2s;display:flex;align-items:center;justify-content:center}
+.q-opt.selected .q-dot{border-color:var(--blue);background:var(--blue)}
+.q-opt.selected .q-dot::after{content:'';width:6px;height:6px;border-radius:50%;background:#fff}
+/* Results */
+.results{display:none}.results.show{display:block}
+.readiness-hero{text-align:center;padding:48px 32px;background:var(--surface);border:1px solid rgba(0,180,255,0.2);border-radius:20px;margin-bottom:24px;position:relative;overflow:hidden}
+.readiness-hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 50% at 50% 50%,rgba(0,180,255,0.07),transparent)}
+.readiness-level{font-family:'Barlow Condensed',sans-serif;font-size:13px;letter-spacing:4px;text-transform:uppercase;color:var(--text3);margin-bottom:12px}
+.readiness-big-score{font-family:'Barlow Condensed',sans-serif;font-size:100px;font-weight:900;line-height:1;color:var(--blue)}
+.readiness-big-label{font-family:'Barlow Condensed',sans-serif;font-size:36px;font-weight:800;text-transform:uppercase;margin-bottom:8px}
+.readiness-big-desc{font-size:15px;color:var(--text2);max-width:480px;margin:0 auto;line-height:1.7}
+.tier-badges{display:flex;justify-content:center;gap:8px;margin:20px 0 0;flex-wrap:wrap}
+.tier-badge{font-family:'DM Mono',monospace;font-size:11px;padding:6px 14px;border-radius:100px;border:1px solid;letter-spacing:1px;text-transform:uppercase}
+.cat-results{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:32px;margin-bottom:20px}
+.cat-results h3{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;text-transform:uppercase;margin-bottom:24px}
+.cat-bar-row{margin-bottom:20px}
+.cat-bar-label{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.cat-bar-name{font-size:14px;font-weight:500}
+.cat-bar-score{font-family:'DM Mono',monospace;font-size:12px;color:var(--text3)}
+.cat-bar-track{background:var(--surface2);border-radius:100px;height:10px;overflow:hidden}
+.cat-bar-fill{height:100%;border-radius:100px;transition:width 1s ease;width:0%}
+.bot-recommendations{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:32px;margin-bottom:20px}
+.bot-recommendations h3{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;text-transform:uppercase;margin-bottom:8px}
+.bot-recommendations p{font-size:14px;color:var(--text2);margin-bottom:24px}
+.bot-card{display:flex;gap:16px;padding:16px;background:var(--surface2);border:1px solid var(--border);border-radius:12px;margin-bottom:12px}
+.bot-icon{font-size:28px;flex-shrink:0}
+.bot-title{font-weight:600;font-size:15px;margin-bottom:4px}
+.bot-desc{font-size:13px;color:var(--text2);line-height:1.5}
+.bot-tag{font-family:'DM Mono',monospace;font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(0,180,255,0.12);color:var(--blue);border:1px solid rgba(0,180,255,0.25);margin-top:8px;display:inline-block;letter-spacing:1px}
+.suggestions{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:32px;margin-bottom:20px}
+.suggestions h3{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;text-transform:uppercase;margin-bottom:8px}
+.suggestions p{font-size:14px;color:var(--text2);margin-bottom:24px}
+.suggestion-item{display:flex;gap:16px;padding:16px;background:var(--surface2);border:1px solid var(--border);border-radius:12px;margin-bottom:12px}
+.sug-priority{font-family:'DM Mono',monospace;font-size:10px;padding:4px 10px;border-radius:100px;font-weight:500;flex-shrink:0;height:fit-content;margin-top:2px;letter-spacing:1px;text-transform:uppercase}
+.sug-priority.high{background:rgba(255,59,59,0.15);color:var(--red);border:1px solid rgba(255,59,59,0.3)}
+.sug-priority.med{background:rgba(255,184,0,0.15);color:var(--amber);border:1px solid rgba(255,184,0,0.3)}
+.sug-priority.low{background:rgba(0,180,255,0.15);color:var(--blue);border:1px solid rgba(0,180,255,0.3)}
+.sug-title{font-weight:600;font-size:14px;margin-bottom:4px}
+.sug-desc{font-size:13px;color:var(--text2);line-height:1.6}
+.cta-block{background:linear-gradient(135deg,rgba(0,180,255,0.1),rgba(0,217,126,0.05));border:1px solid rgba(0,180,255,0.3);border-radius:16px;padding:40px;text-align:center;margin-bottom:40px}
+.cta-block h3{font-family:'Barlow Condensed',sans-serif;font-size:36px;font-weight:900;text-transform:uppercase;margin-bottom:12px}
+.cta-block p{color:var(--text2);font-size:15px;margin-bottom:28px;max-width:480px;margin-left:auto;margin-right:auto;line-height:1.7}
+.cta-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.btn-primary{background:var(--orange);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 32px;border-radius:10px;border:none;cursor:pointer;transition:all 0.2s;text-decoration:none;display:inline-block}
+.btn-primary:hover{background:#ff8c38;transform:translateY(-2px);box-shadow:0 8px 32px rgba(255,107,0,0.3)}
+.btn-secondary{background:var(--surface2);color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 32px;border-radius:10px;border:1px solid var(--border2);cursor:pointer;transition:all 0.2s;text-decoration:none;display:inline-block}
+.submit-btn{width:100%;background:var(--blue);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;letter-spacing:2px;text-transform:uppercase;padding:18px;border-radius:12px;border:none;cursor:pointer;transition:all 0.2s;margin-top:32px}
+.submit-btn:hover{background:var(--blue2);transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,180,255,0.35)}
+.submit-btn:disabled{opacity:0.5;cursor:not-allowed;transform:none}
+.restart-btn{background:transparent;border:1px solid var(--border2);color:var(--text2);font-family:'DM Mono',monospace;font-size:12px;padding:10px 20px;border-radius:8px;cursor:pointer;transition:all 0.2s;margin-top:16px;display:block;margin-left:auto;margin-right:auto}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.fade-in{animation:fadeUp 0.5s ease both}
+@media(max-width:640px){.cta-btns{flex-direction:column}.readiness-big-score{font-size:72px}}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="logo"><div class="logo-mark">AI</div>Bot Vault Pro</div>
+  <div class="doc-badge">AI Readiness Assessment</div>
+</div>
+<div class="wrap">
+  <div class="version-toggle">
+    <button class="vtog-btn active" onclick="setVersion('trades')">⚒️ Skilled Trades</button>
+    <button class="vtog-btn" onclick="setVersion('generic')">🏢 General Business</button>
+  </div>
+  <div class="hero">
+    <span class="eyebrow" id="eyebrow-text">Skilled Trades Edition</span>
+    <h1>AI<br><em>Readiness</em><br>Assessment</h1>
+    <p id="hero-desc">Find out exactly which AI tools your business is ready for right now — and which ones to build toward. Get a personalized automation roadmap in minutes.</p>
+    <div class="readiness-meter">
+      <div class="rm-score" id="rmScore">0%</div>
+      <div class="rm-label"><strong id="rmLabel">Not Started</strong>Your real-time readiness score</div>
+    </div>
+  </div>
+  <div style="padding-top:16px">
+    <div class="progress-wrap"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-label" id="progressLabel">0 of 20 answered</div>
+  </div>
+  <div id="assessmentForm"></div>
+  <button class="submit-btn" id="submitBtn" onclick="showResults()" disabled>Build My AI Roadmap →</button>
+  <div class="results" id="results">
+    <div class="readiness-hero fade-in">
+      <div class="readiness-level">AI Readiness Score</div>
+      <div class="readiness-big-score" id="bigScore">0%</div>
+      <div class="readiness-big-label" id="bigLabel"></div>
+      <div class="readiness-big-desc" id="bigDesc"></div>
+      <div class="tier-badges" id="tierBadges"></div>
+    </div>
+    <div class="cat-results fade-in">
+      <h3>📊 Readiness by Category</h3>
+      <div id="catBars"></div>
+    </div>
+    <div class="bot-recommendations fade-in">
+      <h3>🤖 Your AI Automation Roadmap</h3>
+      <p>Based on your current setup, here are the AI tools you should deploy — in order.</p>
+      <div id="botRecs"></div>
+    </div>
+    <div class="suggestions fade-in">
+      <h3>🧱 Prerequisites to Build First</h3>
+      <p>These foundational improvements will maximize the impact of any AI tool you deploy.</p>
+      <div id="suggestionList"></div>
+    </div>
+    <div class="cta-block fade-in">
+      <h3>Start Your AI Journey</h3>
+      <p id="ctaDesc">Bot Vault Pro has the exact tools your assessment recommends. No technical knowledge required. Start with the prompt pack, upgrade to the full AI tool subscription.</p>
+      <div class="cta-btns">
+        <a href="https://botvaultpro.com/#tools" class="btn-primary">Get the AI Tools →</a>
+        <a href="https://botvaultpro.com/#waitlist" class="btn-secondary">Join Bot Waitlist</a>
+      </div>
+    </div>
+    <button class="restart-btn" onclick="restart()">↩ Retake Assessment</button>
+  </div>
+</div>
+<script>
+let currentVersion='trades',answers={};
+
+const data={
+  trades:{
+    eyebrow:'Skilled Trades Edition',
+    heroDesc:'Find out exactly which AI tools your contracting business is ready for right now — and get a personalized automation roadmap.',
+    sections:[
+      {id:'tech',icon:'💻',title:'Current Tech & Tools',subtitle:'5 questions · What you already use',questions:[
+        {id:'t1',text:'How do you currently create estimates and invoices?',options:[{t:'Dedicated software (Jobber, QuickBooks, etc.)',v:4},{t:'Excel or Google Sheets',v:3},{t:'Word docs or PDF templates',v:2},{t:'Handwritten or nothing formal',v:0}]},
+        {id:'t2',text:'Do you use any CRM or customer tracking software?',options:[{t:'Yes — dedicated CRM',v:4},{t:'Spreadsheet-based tracking',v:3},{t:'Phone contacts and memory',v:1},{t:'No tracking at all',v:0}]},
+        {id:'t3',text:'How do you communicate with customers day-to-day?',options:[{t:'Email + text + documented records',v:4},{t:'Mostly email',v:3},{t:'Mostly phone/text, no records',v:1},{t:'Phone only',v:0}]},
+        {id:'t4',text:'Do you use any scheduling or project management tools?',options:[{t:'Yes — dedicated app',v:4},{t:'Shared calendar',v:3},{t:'Whiteboard or paper',v:1},{t:'Keep it all in my head',v:0}]},
+        {id:'t5',text:'Have you ever used AI tools like ChatGPT or Claude?',options:[{t:'Yes — regularly for business tasks',v:4},{t:'Tried it a few times',v:2},{t:'Heard of it, never tried',v:1},{t:'Not familiar with it',v:0}]},
+      ]},
+      {id:'data',icon:'📊',title:'Data & Documentation',subtitle:'5 questions · How organized your information is',questions:[
+        {id:'d1',text:'Do you have a digital list of all your past customers with contact info?',options:[{t:'Yes — complete and organized',v:4},{t:'Partial list',v:2},{t:'Phone contacts only',v:1},{t:'No organized list',v:0}]},
+        {id:'d2',text:'Do you have written templates for common business documents (estimates, contracts)?',options:[{t:'Yes — polished templates',v:4},{t:'Basic templates',v:2},{t:'Start from scratch each time',v:0}]},
+        {id:'d3',text:'Are your business processes written down anywhere?',options:[{t:'Yes — documented SOPs',v:4},{t:'Some notes exist',v:2},{t:'All in my head',v:0}]},
+        {id:'d4',text:'Do you have records of which jobs were most profitable?',options:[{t:'Yes — tracked per job',v:4},{t:'General sense but not tracked',v:2},{t:'No',v:0}]},
+        {id:'d5',text:'Do you have a business email address (not personal Gmail)?',options:[{t:'Yes — professional domain email',v:4},{t:'Yes but it\'s Gmail/Yahoo',v:2},{t:'Use personal email for everything',v:0}]},
+      ]},
+      {id:'process',icon:'⚙️',title:'Process Repeatability',subtitle:'5 questions · How consistent your workflows are',questions:[
+        {id:'p1',text:'How consistent is your estimating process job to job?',options:[{t:'Very consistent — same format every time',v:4},{t:'Mostly consistent',v:2},{t:'Changes every time',v:0}]},
+        {id:'p2',text:'Do you send the same types of customer emails repeatedly?',options:[{t:'Yes — confirmation, updates, follow-ups',v:4},{t:'Some recurring email types',v:2},{t:'Every email is unique',v:1}]},
+        {id:'p3',text:'Do you have a standard process for onboarding a new job?',options:[{t:'Yes — defined checklist',v:4},{t:'General routine',v:2},{t:'Wing it each time',v:0}]},
+        {id:'p4',text:'How many of your weekly tasks are repetitive (same thing every week)?',options:[{t:'Most of them',v:4},{t:'About half',v:3},{t:'Some',v:2},{t:'Very few',v:0}]},
+        {id:'p5',text:'Do customers regularly ask you the same questions?',options:[{t:'Yes — same questions constantly',v:4},{t:'Some recurring questions',v:2},{t:'Every customer is very different',v:1}]},
+      ]},
+      {id:'goals',icon:'🎯',title:'AI Goals & Capacity',subtitle:'5 questions · What you want to automate',questions:[
+        {id:'g1',text:'What is your biggest time drain each week?',options:[{t:'Writing estimates and proposals',v:4},{t:'Customer emails and follow-ups',v:4},{t:'Invoicing and chasing payments',v:4},{t:'Scheduling and job management',v:3}]},
+        {id:'g2',text:'How much time could you commit to learning a new AI tool?',options:[{t:'2+ hours to set it up right',v:4},{t:'1 hour max',v:3},{t:'30 minutes',v:2},{t:'I need it to just work immediately',v:1}]},
+        {id:'g3',text:'What would make the biggest financial impact for your business right now?',options:[{t:'Closing more estimates',v:4},{t:'Getting paid faster',v:4},{t:'Generating more leads',v:3},{t:'Saving admin time',v:3}]},
+        {id:'g4',text:'Are you open to changing how you currently do things if a better method exists?',options:[{t:'Yes — completely open',v:4},{t:'Mostly — with good reason',v:3},{t:'Somewhat resistant to change',v:1},{t:'I prefer my current methods',v:0}]},
+        {id:'g5',text:'Do you have a budget for tools that save you time and make you money?',options:[{t:'Yes — $100+/month if it pays off',v:4},{t:'$50–100/month',v:3},{t:'Under $50/month',v:2},{t:'No budget for new tools',v:0}]},
+      ]},
+    ]
+  },
+  generic:{
+    eyebrow:'General Business Edition',
+    heroDesc:'Find out exactly which AI tools your business is ready to deploy right now — and get a step-by-step automation roadmap tailored to your current setup.',
+    sections:[
+      {id:'tech',icon:'💻',title:'Current Technology Stack',subtitle:'5 questions · What tools you already have',questions:[
+        {id:'t1',text:'What CRM or customer management tool do you use?',options:[{t:'Dedicated CRM (HubSpot, Salesforce, etc.)',v:4},{t:'Spreadsheet-based',v:3},{t:'Email folders and contacts',v:1},{t:'No formal system',v:0}]},
+        {id:'t2',text:'Do you have marketing automation in place?',options:[{t:'Yes — automated email flows and sequences',v:4},{t:'Basic email list with manual sends',v:2},{t:'No email marketing',v:0}]},
+        {id:'t3',text:'How do you manage projects and tasks?',options:[{t:'Dedicated PM tool (ClickUp, Asana, etc.)',v:4},{t:'Spreadsheets or basic tool',v:2},{t:'Email and verbal',v:1},{t:'No system',v:0}]},
+        {id:'t4',text:'Do you have a business phone system separate from personal?',options:[{t:'Yes — dedicated business line or VoIP',v:4},{t:'I use my cell for business',v:2},{t:'No defined system',v:0}]},
+        {id:'t5',text:'Have you used AI tools for business tasks?',options:[{t:'Yes — regularly',v:4},{t:'Experimented a few times',v:2},{t:'Never tried',v:0}]},
+      ]},
+      {id:'data',icon:'📊',title:'Data Organization',subtitle:'5 questions · How clean and accessible your data is',questions:[
+        {id:'d1',text:'Is your customer data centralized and up to date?',options:[{t:'Yes — clean, centralized database',v:4},{t:'Scattered but mostly there',v:2},{t:'Not really organized',v:0}]},
+        {id:'d2',text:'Do you have documented templates for proposals, emails, contracts?',options:[{t:'Yes — complete template library',v:4},{t:'A few templates',v:2},{t:'Start from scratch each time',v:0}]},
+        {id:'d3',text:'Are your business processes documented?',options:[{t:'Full SOPs for all key processes',v:4},{t:'Some documented',v:2},{t:'Mostly undocumented',v:0}]},
+        {id:'d4',text:'Do you have historical data on what content, channels, or offers perform best?',options:[{t:'Yes — tracked and analyzed',v:4},{t:'Some data but not fully analyzed',v:2},{t:'No tracking',v:0}]},
+        {id:'d5',text:'How clean is your email list?',options:[{t:'Clean, segmented, regularly maintained',v:4},{t:'Exists but not maintained',v:2},{t:'No email list',v:0}]},
+      ]},
+      {id:'process',icon:'⚙️',title:'Process Automation Potential',subtitle:'5 questions · How repeatable your work is',questions:[
+        {id:'p1',text:'How repetitive is most of your communication with customers?',options:[{t:'Very — same messages constantly',v:4},{t:'Somewhat repetitive',v:2},{t:'Very customized each time',v:1}]},
+        {id:'p2',text:'Do you have recurring content needs (social, email, blogs)?',options:[{t:'Yes — weekly or more',v:4},{t:'Monthly',v:2},{t:'Rarely',v:0}]},
+        {id:'p3',text:'How standardized is your sales process?',options:[{t:'Fully documented, same every time',v:4},{t:'Mostly consistent',v:2},{t:'Each deal is very different',v:1}]},
+        {id:'p4',text:'Do you send similar proposals or quotes repeatedly?',options:[{t:'Yes — very similar each time',v:4},{t:'With some customization',v:2},{t:'Completely custom every time',v:0}]},
+        {id:'p5',text:'Do customers ask the same questions repeatedly?',options:[{t:'Constantly — same FAQs',v:4},{t:'Some recurring questions',v:2},{t:'Very varied',v:1}]},
+      ]},
+      {id:'goals',icon:'🎯',title:'Goals & Investment Capacity',subtitle:'5 questions · What you want to achieve',questions:[
+        {id:'g1',text:'What is your primary AI automation goal?',options:[{t:'Save time on content and writing',v:4},{t:'Automate customer communications',v:4},{t:'Improve sales and lead follow-up',v:4},{t:'Reduce operational admin',v:3}]},
+        {id:'g2',text:'How much time can you invest in setup?',options:[{t:'2+ hours',v:4},{t:'About 1 hour',v:3},{t:'30 minutes max',v:2},{t:'Zero — needs to work out of the box',v:1}]},
+        {id:'g3',text:'What outcome matters most in the next 90 days?',options:[{t:'More revenue',v:4},{t:'More time back',v:4},{t:'Better customer experience',v:3},{t:'Lower costs',v:3}]},
+        {id:'g4',text:'How open is your team to adopting new tools?',options:[{t:'Very open — we adopt quickly',v:4},{t:'Mostly open',v:3},{t:'Some resistance',v:1},{t:'Very resistant to change',v:0}]},
+        {id:'g5',text:'What\'s your monthly budget for AI tools?',options:[{t:'$200+/month',v:4},{t:'$100–200/month',v:3},{t:'Under $100/month',v:2},{t:'No budget allocated',v:0}]},
+      ]},
+    ]
+  }
+};
+
+const levels=[
+  {min:85,label:'AI-Ready — Deploy Now',desc:'You have the foundation to start automating immediately. Your data, processes, and openness to change are all aligned. Deploy your first AI tool this week.',color:'#00d97e'},
+  {min:65,label:'Mostly Ready',desc:'You\'re close. A few small prep steps will unlock significant automation potential. Most of these take less than a week to address.',color:'#00b4ff'},
+  {min:45,label:'Getting There',desc:'You have the basics but need to clean up your data and document your processes before automation delivers real value. Give it 2–4 weeks of prep.',color:'#ffb800'},
+  {min:0,label:'Foundation First',desc:'Before AI tools will help, you need to build some basic systems. Start by organizing your customer data and writing down your core processes. Then come back.',color:'#ff8c38'},
+];
+
+function setVersion(v){
+  currentVersion=v;answers={};
+  document.querySelectorAll('.vtog-btn').forEach((b,i)=>b.classList.toggle('active',(i===0&&v==='trades')||(i===1&&v==='generic')));
+  document.getElementById('eyebrow-text').textContent=data[v].eyebrow;
+  document.getElementById('hero-desc').textContent=data[v].heroDesc;
+  renderForm();
+  document.getElementById('results').classList.remove('show');
+  document.getElementById('assessmentForm').style.display='';
+  document.getElementById('submitBtn').style.display='';
+  updateLive();
+}
+
+function renderForm(){
+  const v=data[currentVersion];
+  const form=document.getElementById('assessmentForm');
+  form.innerHTML='';
+  v.sections.forEach(sec=>{
+    const div=document.createElement('div');div.className='section-block';
+    let qHtml=sec.questions.map(q=>`<div class="question"><div class="q-text">${q.text}</div><div class="q-options">${q.options.map(opt=>`<label class="q-opt" id="opt-${q.id}-${opt.v}" onclick="selectOption('${q.id}',${opt.v},this)"><div class="q-dot"></div><span>${opt.t}</span></label>`).join('')}</div></div>`).join('');
+    div.innerHTML=`<div class="section-header"><div class="section-icon">${sec.icon}</div><div><div class="section-title">${sec.title}</div><div class="section-subtitle">${sec.subtitle}</div></div></div>${qHtml}`;
+    form.appendChild(div);
+  });
+}
+
+function selectOption(qid,val,el){
+  document.querySelectorAll(`[id^="opt-${qid}-"]`).forEach(e=>e.classList.remove('selected'));
+  el.classList.add('selected');
+  answers[qid]=val;
+  updateProgress();updateLive();
+}
+
+function updateProgress(){
+  const v=data[currentVersion];
+  const total=v.sections.reduce((a,s)=>a+s.questions.length,0);
+  const done=Object.keys(answers).length;
+  document.getElementById('progressFill').style.width=(done/total*100)+'%';
+  document.getElementById('progressLabel').textContent=`${done} of ${total} answered`;
+  document.getElementById('submitBtn').disabled=done<total;
+}
+
+function updateLive(){
+  const v=data[currentVersion];
+  let score=0,max=0;
+  v.sections.forEach(sec=>sec.questions.forEach(q=>{
+    max+=4;if(answers[q.id]!==undefined)score+=answers[q.id];
+  }));
+  const pct=max>0?Math.round(score/max*100):0;
+  const lv=levels.find(l=>pct>=l.min);
+  document.getElementById('rmScore').textContent=pct+'%';
+  document.getElementById('rmLabel').textContent=lv?lv.label:'Not Started';
+}
+
+function showResults(){
+  const v=data[currentVersion];
+  let totalScore=0,totalMax=0;
+  const catScores={};
+  v.sections.forEach(sec=>{
+    let ss=0,sm=0;
+    sec.questions.forEach(q=>{sm+=4;if(answers[q.id]!==undefined)ss+=answers[q.id];});
+    catScores[sec.id]={score:ss,max:sm,label:sec.title,icon:sec.icon};
+    totalScore+=ss;totalMax+=sm;
+  });
+  const pct=Math.round(totalScore/totalMax*100);
+  const lv=levels.find(l=>pct>=lv.min)||levels[levels.length-1];
+
+  document.getElementById('bigScore').textContent=pct+'%';
+  document.getElementById('bigScore').style.color=lv.color;
+  document.getElementById('bigLabel').textContent=lv.label;
+  document.getElementById('bigDesc').textContent=lv.desc;
+
+  // Tier badges
+  const isTrades=currentVersion==='trades';
+  const badges=[];
+  if(answers['t5']>=2)badges.push({t:'AI Experience',c:'#00d97e'});
+  if(answers['d1']>=3)badges.push({t:'Clean Data',c:'#00b4ff'});
+  if(answers['p4']>=3)badges.push({t:'High Repeatability',c:'#ffb800'});
+  if(answers['g5']>=3)badges.push({t:'Budget Ready',c:'#ff6b00'});
+  document.getElementById('tierBadges').innerHTML=badges.map(b=>`<div class="tier-badge" style="color:${b.c};border-color:${b.c}40;background:${b.c}15">${b.t}</div>`).join('');
+
+  // Cat bars
+  const catBarsEl=document.getElementById('catBars');
+  catBarsEl.innerHTML='';
+  Object.entries(catScores).forEach(([id,cat])=>{
+    const cp=Math.round(cat.score/cat.max*100);
+    const color=cp>70?'#00d97e':cp>45?'#00b4ff':'#ffb800';
+    catBarsEl.innerHTML+=`<div class="cat-bar-row"><div class="cat-bar-label"><div class="cat-bar-name">${cat.icon} ${cat.label}</div><div class="cat-bar-score">${cp}% ready</div></div><div class="cat-bar-track"><div class="cat-bar-fill" style="background:${color}" data-pct="${cp}"></div></div></div>`;
+  });
+
+  // Bot recommendations
+  const botRecs=buildBotRecs(pct,catScores,isTrades);
+  document.getElementById('botRecs').innerHTML=botRecs.map(b=>`<div class="bot-card"><div class="bot-icon">${b.icon}</div><div><div class="bot-title">${b.title}</div><div class="bot-desc">${b.desc}</div><div class="bot-tag">${b.tag}</div></div></div>`).join('');
+
+  // Suggestions
+  const sugs=buildSuggestions(catScores,isTrades);
+  document.getElementById('suggestionList').innerHTML=sugs.map(s=>`<div class="suggestion-item"><div class="sug-priority ${s.priority}">${s.priority}</div><div><div class="sug-title">${s.title}</div><div class="sug-desc">${s.desc}</div></div></div>`).join('');
+
+  document.getElementById('assessmentForm').style.display='none';
+  document.getElementById('submitBtn').style.display='none';
+  document.getElementById('results').classList.add('show');
+  window.scrollTo({top:0,behavior:'smooth'});
+  setTimeout(()=>document.querySelectorAll('.cat-bar-fill').forEach(b=>{b.style.width=b.dataset.pct+'%'}),300);
+}
+
+function buildBotRecs(pct,catScores,isTrades){
+  const recs=[];
+  if(pct>=65){
+    recs.push({icon:'⚡',title:isTrades?'Trades AI Tool — Start This Week':'Business AI Tool — Start This Week',desc:isTrades?'You\'re ready to use a custom AI tool for estimates, invoices, and customer communications. This is your highest-impact first step.':'Your foundation is solid enough to start using AI for proposals, emails, and content creation immediately.',tag:'Ready Now'});
+  }
+  recs.push({icon:'📋',title:isTrades?'Trades Pro Prompt Pack':'Business Prompt Pack',desc:isTrades?'Even before a full subscription, start with the prompt pack. 150+ ready-to-use prompts that work in ChatGPT or Claude today — zero setup required.':'Start with a prompt pack that gives you 100+ proven business prompts for every common task. Works immediately in any AI tool.',tag:'Start Here — No Setup'});
+  if(pct>=50){
+    recs.push({icon:'🤖',title:isTrades?'Trades Bot (Waitlist)':'Industry Bot (Waitlist)',desc:isTrades?'Based on your score, you\'ll be ready for the fully autonomous Trades Bot when it launches. Join the waitlist now to lock in founding member pricing.':'Based on your readiness, you\'ll be a strong candidate for the autonomous bot when your industry version launches.',tag:'Coming Soon — Join Waitlist'});
+  }
+  recs.push({icon:'📖',title:isTrades?'Trades Automation Playbook':'Business Automation Playbook',desc:isTrades?'The step-by-step guide to setting up AI automation in your contracting business. Even if you\'re not fully ready today, this shows you exactly what to build.':'The complete guide to setting up AI automation in your specific business. Practical, non-technical, and actionable.',tag:'Recommended Foundation'});
+  return recs;
+}
+
+function buildSuggestions(catScores,isTrades){
+  const sugs=[];
+  if(catScores['data']?.score/catScores['data']?.max<0.5){
+    sugs.push({priority:'high',title:isTrades?'Organize Your Customer Database First':'Clean and Centralize Your Customer Data',desc:isTrades?'Before any AI tool delivers full value, you need a digital list of your customers with email, phone, and job history. Start with a simple Google Sheet this week.':'AI tools are only as good as the data you feed them. A clean, organized customer database is the single most important foundation you can build.'});
+  }
+  if(catScores['process']?.score/catScores['process']?.max<0.5){
+    sugs.push({priority:'high',title:'Document Your Most Repeated Tasks',desc:isTrades?'Write down your estimating process, your job start routine, and your invoice process. Even 2-page documents are enough for AI to learn from and automate.':'Identify your top 5 most repetitive tasks and write out the steps. This documentation is what makes AI automation possible and effective.'});
+  }
+  if(catScores['tech']?.score/catScores['tech']?.max<0.5){
+    sugs.push({priority:'med',title:isTrades?'Set Up a Business Email Address':'Set Up Core Business Tools',desc:isTrades?'A professional email (you@yourcompany.com) is the foundation of all digital communication and automation. Takes 15 minutes to set up with Google Workspace.':'A few basic tools — proper email, a simple CRM, and a project tracker — are the minimum foundation for any AI automation to work reliably.'});
+  }
+  sugs.push({priority:'low',title:'Start With Prompts Before Full Automation',desc:isTrades?'The fastest path to AI ROI is the Trades Pro Prompt Pack. Use it in ChatGPT today. Once you see the time savings, upgrading to the full AI tool is an easy decision.':'The fastest way to build AI habits and see ROI is starting with a prompt pack. Use it daily for 2 weeks and you\'ll naturally be ready for the next level.'});
+  return sugs;
+}
+
+function restart(){
+  answers={};
+  renderForm();
+  document.getElementById('results').classList.remove('show');
+  document.getElementById('assessmentForm').style.display='';
+  document.getElementById('submitBtn').style.display='';
+  document.getElementById('submitBtn').disabled=true;
+  updateProgress();updateLive();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+renderForm();updateProgress();
+</script>
+</body>
+</html>

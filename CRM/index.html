@@ -9,6 +9,16 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{--bg:#09090a;--bg2:#0d0d0f;--bg3:#111113;--bg4:#18181b;--border:#27272a;--border2:#1f1f23;--text:#e4e4e7;--muted:#a1a1aa;--dim:#71717a;--faint:#52525b;--fainter:#3f3f46;--accent:#ff6b00;--green:#4ade80;--red:#f87171;--yellow:#ffc107}
+[data-theme="medium"] {
+  --bg:#1a1a2e;--bg2:#16213e;--bg3:#0f3460;--bg4:#1a1a3e;
+  --border:#2a2a5e;--border2:#1f1f4e;
+  --text:#e2e2f0;--muted:#9090b8;--dim:#6060a0;--faint:#404070;--fainter:#303060;
+}
+[data-theme="light"] {
+  --bg:#f0f2f5;--bg2:#ffffff;--bg3:#ffffff;--bg4:#f8f9fa;
+  --border:#e0e0e8;--border2:#ebebf0;
+  --text:#1a1a2e;--muted:#555577;--dim:#888899;--faint:#aaaacc;--fainter:#ccccdd;
+}
 body{font-family:'DM Sans','Helvetica Neue',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
 ::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
 input,select,textarea{font-family:inherit;background:var(--bg4);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-size:13px;outline:none;width:100%}
@@ -46,7 +56,7 @@ button{cursor:pointer;font-family:inherit}
 .topbar-left{display:flex;align-items:center;gap:14px}
 .topbar-logo{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:17px;color:var(--accent);letter-spacing:.08em}
 .topbar-divider{width:1px;height:18px;background:var(--border)}
-.topbar-biz{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px}
+.topbar-biz{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .topbar-right{display:flex;gap:10px;align-items:center}
 .badge{border-radius:6px;padding:3px 10px;font-size:11px;font-weight:700;letter-spacing:.06em}
 .btn-add{border:none;border-radius:8px;padding:7px 16px;color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;letter-spacing:.06em;transition:opacity .15s}
@@ -138,18 +148,40 @@ button{cursor:pointer;font-family:inherit}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
 @keyframes cursor-blink{0%,100%{opacity:1}50%{opacity:0}}
 .cursor{animation:cursor-blink .5s infinite}
+/* Pipeline drag-and-drop */
+.pipeline-card { cursor: grab; transition: opacity .15s, transform .15s; }
+.pipeline-card:active { cursor: grabbing; }
+.pipeline-card.dragging { opacity: .4; }
+.pipeline-col.drag-over { outline: 2px dashed var(--accent); outline-offset: -4px; background: rgba(255,107,0,.04); }
+/* Bottom nav */
+.bnav-btn { background:transparent; border:none; color:var(--dim); display:flex; flex-direction:column; align-items:center; gap:2px; font-size:10px; font-weight:600; cursor:pointer; padding:4px 8px; letter-spacing:.04em; }
+.bnav-btn.active { color: var(--accent); }
 /* Responsive */
 @media(max-width:640px){
+  #shell { flex-direction: column; }
+  #sidebar { display: none; }
+  #main { padding: 12px; padding-bottom: 80px; }
+  #bottom-nav { display: flex !important; }
+  .form-grid { grid-template-columns: 1fr !important; }
+  .pipeline-cols { grid-auto-columns: 80vw; overflow-x: auto; }
+  .pipeline-col { min-width: 80vw; }
+  .detail-grid { grid-template-columns: 1fr !important; }
+  .modal-box { margin: 0; border-radius: 16px 16px 0 0; position: fixed; bottom: 0; left: 0; right: 0; max-width: 100% !important; max-height: 90vh; overflow-y: auto; }
+  .modal-overlay { align-items: flex-end; }
+  #topbar { padding: 0 10px; height: 48px; }
+  .topbar-logo { display: none; }
+  .topbar-divider { display: none; }
+  .topbar-biz { max-width: 140px; font-size: 13px; }
+  .topbar-right button:not(.btn-add) { display: none; }
+  .btn-add { padding: 6px 12px; font-size: 12px; }
+  .ind-grid { grid-template-columns: repeat(2, 1fr) !important; }
   .stat-grid{grid-template-columns:1fr 1fr}
   .two-col{grid-template-columns:1fr}
   .detail-grid{grid-template-columns:1fr}
   .ai-actions-grid{grid-template-columns:repeat(2,1fr)}
-  #sidebar{width:52px}
-  .nav-btn span:not(.nav-icon){display:none}
-  .nav-btn{justify-content:center;padding:10px}
-  .sidebar-stat,.sidebar-footer,.sidebar-divider{display:none}
   .tbl-header,.tbl-row{grid-template-columns:1fr 80px 90px !important}
   .tbl-col-actions,.tbl-cell-actions,.tbl-col-type,.tbl-cell-type{display:none}
+  h2[style*="font-size:24px"] { font-size: 20px !important; }
 }
 </style>
 </head>
@@ -298,6 +330,7 @@ button{cursor:pointer;font-family:inherit}
       <span class="topbar-logo">BVP</span>
       <span class="topbar-divider"></span>
       <span class="topbar-biz" id="topbar-biz">—</span>
+      <button onclick="showCompanySwitcher()" title="Switch company" style="background:transparent;border:1px solid var(--border);border-radius:6px;padding:3px 8px;color:var(--dim);font-size:11px;cursor:pointer;margin-left:4px">▾</button>
     </div>
     <div class="topbar-right">
       <span class="badge" id="topbar-badge">—</span>
@@ -327,6 +360,9 @@ button{cursor:pointer;font-family:inherit}
       <button class="nav-btn" data-view="settings" onclick="setView('settings')">
         <span class="nav-icon">⚙</span><span>Settings</span>
       </button>
+      <button class="nav-btn hidden" id="admin-nav-btn" data-view="admin" onclick="setView('admin')">
+        <span class="nav-icon">⚙</span><span>Admin</span>
+      </button>
 
       <div class="sidebar-divider"></div>
       <div class="sidebar-stat"><span class="sidebar-stat-label">Total</span><span class="sidebar-stat-val" id="stat-total" style="color:var(--muted)">0</span></div>
@@ -349,6 +385,7 @@ button{cursor:pointer;font-family:inherit}
       <div id="view-reminders" class="hidden"></div>
       <div id="view-report" class="hidden"></div>
       <div id="view-settings" class="hidden"></div>
+      <div id="view-admin" class="view-panel hidden"></div>
     </div>
   </div>
 </div>
@@ -571,6 +608,19 @@ button{cursor:pointer;font-family:inherit}
   </div>
 </div>
 
+<div id="company-switcher-modal" class="modal-overlay hidden">
+  <div class="modal-box" style="max-width:420px">
+    <div class="modal-header">
+      <span class="modal-title">Your Companies</span>
+      <button class="modal-close" onclick="document.getElementById('company-switcher-modal').classList.add('hidden')">✕</button>
+    </div>
+    <div class="modal-body" id="company-switcher-list"></div>
+    <div style="padding:0 20px 20px">
+      <button onclick="showAddCompany()" style="width:100%;background:var(--accent);border:none;border-radius:8px;padding:11px;color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:.06em">+ ADD COMPANY →</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ═══════════════════════════════════════════════════════
 // SUPABASE INIT
@@ -596,6 +646,14 @@ const INDUSTRIES = {
   landscaping:{label:"Landscaping",icon:"🌿",color:"#4ade80",colorDim:"rgba(74,222,128,0.12)",clientWord:"Customer",projectWord:"Job",jobTypes:["Lawn Maintenance","Landscape Design","Irrigation","Tree Service","Hardscape/Pavers","Sod Install","Seasonal Cleanup","Snow Removal"],stages:["New Lead","Site Visit","Estimate Sent","Scheduled","In Progress","Completed","Invoice Sent","Paid","Recurring"],customFields:[{key:"lot_size",label:"Lot Size (sqft)"},{key:"irrigation",label:"Irrigation System?"},{key:"contract_type",label:"One-Time/Recurring"},{key:"season",label:"Primary Season"}],aiContext:"landscaping company"},
   lawfirm:{label:"Law Firm",icon:"⚖️",color:"#c4b5fd",colorDim:"rgba(196,181,253,0.12)",clientWord:"Client",projectWord:"Case",jobTypes:["Personal Injury","Business Law","Real Estate Law","Family Law","Estate Planning","Criminal Defense","Immigration","Contract Review","Consultation"],stages:["Inquiry","Consultation","Retained","Discovery","Active","Negotiation","Settlement","Closed","Follow-Up"],customFields:[{key:"case_type",label:"Case Type"},{key:"retainer_amt",label:"Retainer ($)"},{key:"opposing_party",label:"Opposing Party"},{key:"court_date",label:"Court Date"}],aiContext:"law firm / attorney"},
 };
+
+const ADMIN_EMAIL = 'botvaultpro@outlook.com';
+
+function getStages() {
+  return (STATE.company?.custom_stages && STATE.company.custom_stages.length > 0)
+    ? STATE.company.custom_stages
+    : (STATE.cfg?.stages || []);
+}
 
 const STAGE_COLORS={"New Lead":"#00d4ff","Inquiry":"#00d4ff","New Client":"#00d4ff","Estimate Sent":"#ffc107","Proposal Sent":"#ffc107","Quoted":"#ffc107","In Progress":"#ff6b00","Active":"#ff6b00","Editing":"#ff6b00","Completed":"#4ade80","Paid":"#4ade80","Closed":"#4ade80","Final Payment":"#4ade80","Invoice Sent":"#fbbf24","Follow-Up":"#94a3b8","Lapsed":"#ef4444","Scheduled":"#a78bfa","Booked":"#a78bfa","Confirmed":"#a78bfa","Contract Signed":"#a78bfa","Deposit Paid":"#34d399","Retained":"#34d399"};
 const stageColor=s=>STAGE_COLORS[s]||"#71717a";
@@ -628,6 +686,8 @@ let STATE = {
   user: null,
   profile: null,
   cfg: null,
+  company: null,
+  companies: [],
   clients: [],
   reminders: [],
   currentView: 'dashboard',
@@ -640,6 +700,7 @@ let STATE = {
   searchQ: '',
   stageFilter: 'All',
   sortBy: 'created_at',
+  reminderBannerDismissed: false,
 };
 
 // ═══════════════════════════════════════════════════════
@@ -802,6 +863,12 @@ async function loadProfileAndStart() {
     STATE.profile.plan = 'free';
   }
 
+  // Load admin_config industries override
+  const { data: adminCfg } = await sb.from('admin_config').select('value').eq('key', 'industries').maybeSingle();
+  if (adminCfg?.value && typeof adminCfg.value === 'object') {
+    Object.assign(INDUSTRIES, adminCfg.value);
+  }
+
   // If no industry set, go to setup
   if (!STATE.profile.industry) {
     document.getElementById('auth-screen').classList.add('hidden');
@@ -810,7 +877,33 @@ async function loadProfileAndStart() {
     return;
   }
 
-  STATE.cfg = INDUSTRIES[STATE.profile.industry];
+  // Load companies
+  const { data: companies } = await sb.from('companies').select('*').eq('user_id', STATE.user.id).order('created_at');
+  if (!companies || companies.length === 0) {
+    // First login: create company from profile
+    const { data: newCo } = await sb.from('companies').insert({
+      user_id: STATE.user.id,
+      industry: STATE.profile.industry,
+      name: STATE.profile.business_name || 'My Business',
+      owner_name: STATE.profile.owner_name || '',
+      city: STATE.profile.city || '',
+    }).select().single();
+    if (newCo) {
+      // Backfill existing customers
+      await sb.from('customers').update({ company_id: newCo.id }).eq('user_id', STATE.user.id).is('company_id', null);
+      await sb.from('profiles').update({ active_company_id: newCo.id }).eq('id', STATE.user.id);
+      STATE.profile.active_company_id = newCo.id;
+      STATE.companies = [newCo];
+      STATE.company = newCo;
+    }
+  } else {
+    STATE.companies = companies;
+    const activeId = STATE.profile.active_company_id;
+    STATE.company = companies.find(c => c.id === activeId) || companies[0];
+  }
+
+  STATE.cfg = INDUSTRIES[STATE.company.industry] || Object.values(INDUSTRIES)[0];
+  applyColorScheme(STATE.profile.color_scheme || 'dark');
   await startApp();
 }
 
@@ -820,6 +913,9 @@ async function startApp() {
   document.getElementById('app').style.display = 'flex';
 
   applyTheme();
+  if (STATE.user?.email === ADMIN_EMAIL) {
+    document.getElementById('admin-nav-btn').classList.remove('hidden');
+  }
   await loadClients();
   await loadReminders();
   setView('dashboard');
@@ -832,8 +928,9 @@ function applyTheme() {
   root.style.setProperty('--c', cfg.color);
   root.style.setProperty('--cd', cfg.colorDim);
 
+  const bizName = STATE.company?.name || STATE.profile?.business_name || 'My Business';
   document.getElementById('topbar-biz').style.color = cfg.color;
-  document.getElementById('topbar-biz').textContent = `${cfg.icon} ${STATE.profile.business_name || 'My Business'}`.toUpperCase();
+  document.getElementById('topbar-biz').textContent = `${cfg.icon} ${bizName}`.toUpperCase();
   document.getElementById('topbar-badge').textContent = cfg.label.toUpperCase();
   document.getElementById('topbar-badge').style.cssText = `background:${cfg.colorDim};color:${cfg.color};border:1px solid ${cfg.color}44;border-radius:6px;padding:3px 10px;font-size:11px;font-weight:700;letter-spacing:.06em`;
 
@@ -970,6 +1067,8 @@ function industryChangeBack() {
   document.getElementById('ic-save-btn').classList.add('hidden');
 }
 
+let addingNewCompany = false;
+
 async function saveIndustryChange() {
   const bizName = document.getElementById('ic-bizname').value.trim();
   const ownerName = document.getElementById('ic-owner').value.trim();
@@ -980,20 +1079,248 @@ async function saveIndustryChange() {
   btn.disabled = true;
   btn.textContent = 'SAVING...';
 
-  await sb.from('profiles').update({
-    industry: selectedIndustryChange,
-    business_name: bizName,
-    owner_name: ownerName,
-    city,
-  }).eq('id', STATE.user.id);
+  if (addingNewCompany) {
+    const { data: newCo } = await sb.from('companies').insert({
+      user_id: STATE.user.id,
+      industry: selectedIndustryChange,
+      name: bizName,
+      owner_name: ownerName,
+      city,
+    }).select().single();
+    STATE.companies.push(newCo);
+    addingNewCompany = false;
+    document.getElementById('industry-change-modal').classList.add('hidden');
+    btn.disabled = false;
+    btn.textContent = 'SAVE CHANGES →';
+    await switchCompany(newCo.id);
+  } else {
+    await sb.from('profiles').update({
+      industry: selectedIndustryChange,
+      business_name: bizName,
+      owner_name: ownerName,
+      city,
+    }).eq('id', STATE.user.id);
+    await sb.from('companies').update({
+      industry: selectedIndustryChange,
+      name: bizName,
+      owner_name: ownerName,
+      city,
+    }).eq('id', STATE.company.id);
 
-  STATE.profile = { ...STATE.profile, industry: selectedIndustryChange, business_name: bizName, owner_name: ownerName, city };
-  STATE.cfg = INDUSTRIES[selectedIndustryChange];
+    STATE.company = { ...STATE.company, industry: selectedIndustryChange, name: bizName, owner_name: ownerName, city };
+    STATE.companies = STATE.companies.map(c => c.id === STATE.company.id ? STATE.company : c);
+    STATE.profile = { ...STATE.profile, industry: selectedIndustryChange, business_name: bizName, owner_name: ownerName, city };
+    STATE.cfg = INDUSTRIES[selectedIndustryChange];
 
-  document.getElementById('industry-change-modal').classList.add('hidden');
+    document.getElementById('industry-change-modal').classList.add('hidden');
+    btn.disabled = false;
+    btn.textContent = 'SAVE CHANGES →';
+    applyTheme();
+    await loadClients();
+    setView('dashboard');
+    renderSettings();
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// MULTI-COMPANY
+// ═══════════════════════════════════════════════════════
+async function switchCompany(id) {
+  const co = STATE.companies.find(c => c.id === id);
+  if (!co) return;
+  STATE.company = co;
+  STATE.cfg = INDUSTRIES[co.industry] || Object.values(INDUSTRIES)[0];
+  await sb.from('profiles').update({ active_company_id: id }).eq('id', STATE.user.id);
+  STATE.profile.active_company_id = id;
+  document.getElementById('company-switcher-modal').classList.add('hidden');
   applyTheme();
   await loadClients();
+  await loadReminders();
   setView('dashboard');
+}
+
+function showCompanySwitcher() {
+  const list = document.getElementById('company-switcher-list');
+  list.innerHTML = STATE.companies.map(co => {
+    const cfg = INDUSTRIES[co.industry] || {};
+    const isActive = co.id === STATE.company.id;
+    return `<div onclick="switchCompany('${co.id}')" style="display:flex;align-items:center;gap:12px;padding:12px 20px;cursor:pointer;background:${isActive ? 'rgba(255,107,0,.08)' : 'transparent'};border-left:3px solid ${isActive ? 'var(--accent)' : 'transparent'}">
+      <span style="font-size:22px">${cfg.icon || '🏢'}</span>
+      <div style="flex:1">
+        <div style="font-weight:600;font-size:14px">${co.name}</div>
+        <div style="font-size:12px;color:var(--dim)">${cfg.label || co.industry} · ${co.city || ''}</div>
+      </div>
+      ${isActive ? '<span style="color:var(--accent);font-size:12px;font-weight:700">ACTIVE</span>' : ''}
+    </div>`;
+  }).join('') || '<div style="padding:20px;color:var(--dim);font-size:13px">No companies yet.</div>';
+  document.getElementById('company-switcher-modal').classList.remove('hidden');
+}
+
+function showAddCompany() {
+  addingNewCompany = true;
+  document.getElementById('company-switcher-modal').classList.add('hidden');
+  showIndustryChange();
+}
+
+// ═══════════════════════════════════════════════════════
+// CUSTOM PIPELINE STAGES
+// ═══════════════════════════════════════════════════════
+let editableStages = [];
+
+function addStage() {
+  editableStages = getStages().slice();
+  editableStages.push('New Stage');
+  saveStages(editableStages);
+}
+
+function removeStage(i) {
+  editableStages = getStages().slice();
+  editableStages.splice(i, 1);
+  saveStages(editableStages);
+}
+
+function updateStageName(i, val) {
+  editableStages = getStages().slice();
+  editableStages[i] = val;
+}
+
+async function saveStages(stages) {
+  const toSave = stages || editableStages.slice();
+  if (toSave.length === 0) { alert('Need at least one stage.'); return; }
+  await sb.from('companies').update({ custom_stages: toSave }).eq('id', STATE.company.id);
+  STATE.company.custom_stages = toSave;
+  STATE.companies = STATE.companies.map(c => c.id === STATE.company.id ? STATE.company : c);
+  renderSettings();
+}
+
+async function resetStages() {
+  if (!confirm('Reset to industry defaults? Your custom stages will be lost.')) return;
+  await sb.from('companies').update({ custom_stages: null }).eq('id', STATE.company.id);
+  STATE.company.custom_stages = null;
+  STATE.companies = STATE.companies.map(c => c.id === STATE.company.id ? STATE.company : c);
+  renderSettings();
+}
+
+// ═══════════════════════════════════════════════════════
+// AI REPORT SUGGESTIONS
+// ═══════════════════════════════════════════════════════
+async function generateReportSuggestions() {
+  const btn = document.querySelector('#ai-suggestions-output button');
+  if (btn) { btn.disabled = true; btn.textContent = 'Generating...'; }
+
+  const cfg = STATE.cfg;
+  const clients = STATE.clients;
+  const needsFollowUp = clients.filter(c=>['Estimate Sent','Proposal Sent','Quoted','New Lead','Inquiry'].includes(c.stage)).length;
+  const awaitingPayment = clients.filter(c=>['Invoice Sent','Completed','Gallery Delivered'].includes(c.stage)).length;
+  const totalPipeline = clients.reduce((s,c)=>s+Number(c.pipeline_value||0),0);
+  const stageBreakdown = Object.entries(clients.reduce((acc,c)=>{acc[c.stage]=(acc[c.stage]||0)+1;return acc;},{})).map(([s,n])=>`${s}: ${n}`).join(', ');
+
+  const prompt = `You are a business advisor for a ${cfg.aiContext} using a CRM. Today's snapshot:
+- Total clients: ${clients.length}
+- Pipeline value: $${totalPipeline.toLocaleString()}
+- Needs follow-up: ${needsFollowUp}
+- Awaiting payment: ${awaitingPayment}
+- Stage breakdown: ${stageBreakdown || 'none'}
+
+Give exactly 4 short, specific, actionable suggestions to grow this business today. Focus on: converting leads, collecting payments, generating new referrals, and one proactive growth move. Each suggestion max 2 sentences. Format as a numbered list 1-4.`;
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': STATE.profile.ai_api_key,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-client-side-api-key-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 600,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    const json = await resp.json();
+    const text = json.content?.[0]?.text || 'No suggestions returned.';
+    document.getElementById('ai-suggestions-output').innerHTML =
+      `<div style="line-height:1.8;font-size:13px;color:var(--text);white-space:pre-wrap">${text}</div>
+       <button onclick="generateReportSuggestions()" style="margin-top:12px;background:rgba(167,139,250,.1);border:1px solid rgba(167,139,250,.3);border-radius:8px;padding:7px 14px;color:#a78bfa;font-size:12px;font-weight:600">↻ Regenerate</button>`;
+  } catch(e) {
+    document.getElementById('ai-suggestions-output').innerHTML =
+      `<div style="color:#f87171;font-size:13px">Error: ${e.message}</div>
+       <button onclick="generateReportSuggestions()" style="margin-top:8px;background:transparent;border:1px solid var(--border);border-radius:6px;padding:6px 12px;color:var(--dim);font-size:12px">Retry</button>`;
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// ADMIN PANEL
+// ═══════════════════════════════════════════════════════
+function renderAdmin() {
+  const industries = Object.entries(INDUSTRIES);
+  document.getElementById('view-admin').innerHTML = `
+    <h2 style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:24px;margin-bottom:6px">⚙ Admin Panel</h2>
+    <p style="color:var(--dim);font-size:13px;margin-bottom:20px">Changes here affect all users. Industries are loaded from the database.</p>
+
+    <div class="settings-section">
+      <div class="settings-title">Industry Management</div>
+      <div id="admin-industries-list">
+        ${industries.map(([key, ind]) => `
+          <div style="border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:10px" id="admin-ind-${key}">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+              <input id="ai-icon-${key}" value="${ind.icon}" style="width:50px;font-size:20px;text-align:center"/>
+              <input id="ai-label-${key}" value="${ind.label}" style="flex:1;font-weight:600"/>
+              <button onclick="saveIndustryEdit('${key}')" style="background:var(--accent);border:none;border-radius:6px;padding:7px 14px;color:#fff;font-size:12px;font-weight:700;white-space:nowrap">SAVE</button>
+              <button onclick="deleteIndustry('${key}')" style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:6px;padding:7px 10px;color:#f87171;font-size:12px">✕</button>
+            </div>
+            <label class="field-label">Default Stages (comma-separated)</label>
+            <input id="ai-stages-${key}" value="${ind.stages.join(', ')}" style="font-size:12px;margin-top:4px"/>
+          </div>`).join('')}
+      </div>
+      <button onclick="addNewIndustry()" style="width:100%;background:var(--bg4);border:1px solid var(--border);border-radius:8px;padding:11px;color:var(--muted);font-size:13px;font-weight:600;margin-top:4px">+ Add Industry</button>
+      <button onclick="saveAllIndustriesToDB()" style="width:100%;background:#a78bfa;border:none;border-radius:8px;padding:12px;color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;letter-spacing:.06em;margin-top:10px">PUBLISH ALL CHANGES →</button>
+    </div>`;
+}
+
+async function saveIndustryEdit(key) {
+  const icon = document.getElementById(`ai-icon-${key}`).value.trim();
+  const label = document.getElementById(`ai-label-${key}`).value.trim();
+  const stages = document.getElementById(`ai-stages-${key}`).value.split(',').map(s=>s.trim()).filter(Boolean);
+  INDUSTRIES[key] = { ...INDUSTRIES[key], icon, label, stages };
+  alert(`✅ ${label} updated. Click "Publish All Changes" to save for all users.`);
+}
+
+function addNewIndustry() {
+  const key = 'custom_' + Date.now();
+  INDUSTRIES[key] = { label:'New Industry', icon:'🏢', color:'#a78bfa', colorDim:'rgba(167,139,250,0.12)', clientWord:'Client', projectWord:'Project', jobTypes:['Service'], stages:['New Lead','In Progress','Completed','Paid'], customFields:[], aiContext:'business' };
+  renderAdmin();
+}
+
+function deleteIndustry(key) {
+  if (!confirm(`Delete "${INDUSTRIES[key]?.label}"? Users with this industry will not be affected.`)) return;
+  delete INDUSTRIES[key];
+  renderAdmin();
+}
+
+async function saveAllIndustriesToDB() {
+  const btn = event.target;
+  btn.disabled = true; btn.textContent = 'SAVING...';
+  const { error } = await sb.from('admin_config')
+    .upsert({ key: 'industries', value: INDUSTRIES, updated_at: new Date().toISOString() }, { onConflict: 'key' });
+  btn.disabled = false; btn.textContent = 'PUBLISH ALL CHANGES →';
+  if (error) { alert('Error saving: ' + error.message); return; }
+  alert('✅ Industry config published! All users will see the updated industries on next login.');
+}
+
+// ═══════════════════════════════════════════════════════
+// COLOR THEMES
+// ═══════════════════════════════════════════════════════
+function applyColorScheme(scheme) {
+  document.documentElement.setAttribute('data-theme', scheme || 'dark');
+  STATE.profile.color_scheme = scheme;
+}
+
+async function changeColorScheme(scheme) {
+  applyColorScheme(scheme);
+  await sb.from('profiles').update({ color_scheme: scheme }).eq('id', STATE.user.id);
   renderSettings();
 }
 
@@ -1001,7 +1328,9 @@ async function saveIndustryChange() {
 // DATA LOADING
 // ═══════════════════════════════════════════════════════
 async function loadClients() {
-  const { data } = await sb.from('customers').select('*').eq('user_id', STATE.user.id).order('created_at', { ascending: false });
+  let query = sb.from('customers').select('*').eq('user_id', STATE.user.id);
+  if (STATE.company?.id) query = query.eq('company_id', STATE.company.id);
+  const { data } = await query.order('created_at', { ascending: false });
   STATE.clients = data || [];
   updateSidebarStats();
 }
@@ -1009,6 +1338,7 @@ async function loadClients() {
 async function loadReminders() {
   const { data } = await sb.from('reminders').select('*, customers(full_name)').eq('user_id', STATE.user.id).eq('is_completed', false).order('remind_at', { ascending: true });
   STATE.reminders = data || [];
+  STATE.reminderBannerDismissed = false;
 }
 
 function updateSidebarStats() {
@@ -1043,12 +1373,17 @@ function setView(name) {
     const isActive = btn.dataset.view === name;
     btn.classList.toggle('active', isActive);
   });
-
-  ['dashboard','clients','pipeline','reminders','report','settings'].forEach(v => {
-    document.getElementById(`view-${v}`).classList.toggle('hidden', v !== name);
+  document.querySelectorAll('.bnav-btn').forEach(btn => {
+    const bId = btn.id?.replace('bnav-','');
+    btn.classList.toggle('active', bId === name);
   });
 
-  const renders = { dashboard: renderDashboard, clients: renderClients, pipeline: renderPipeline, reminders: renderRemindersView, report: renderReport, settings: renderSettings };
+  ['dashboard','clients','pipeline','reminders','report','settings','admin'].forEach(v => {
+    const el = document.getElementById(`view-${v}`);
+    if (el) el.classList.toggle('hidden', v !== name);
+  });
+
+  const renders = { dashboard: renderDashboard, clients: renderClients, pipeline: renderPipeline, reminders: renderRemindersView, report: renderReport, settings: renderSettings, admin: renderAdmin };
   if (renders[name]) renders[name]();
 }
 
@@ -1072,10 +1407,11 @@ function renderDashboard() {
   el.innerHTML = `
     <div>
       <h2 style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:26px;margin-bottom:2px">Hey, ${profile.owner_name || 'there'} 👋</h2>
-      <p style="color:var(--dim);font-size:13px">${profile.business_name || ''} · ${profile.city || ''}</p>
+      <p style="color:var(--dim);font-size:13px">${STATE.company?.name || profile.business_name || ''} · ${STATE.company?.city || profile.city || ''}</p>
     </div>
 
-    ${todayReminders.length ? `<div style="background:rgba(255,193,7,.08);border:1px solid rgba(255,193,7,.3);border-radius:10px;padding:14px 18px">
+    ${todayReminders.length && !STATE.reminderBannerDismissed ? `<div id="reminder-banner" style="background:rgba(255,193,7,.08);border:1px solid rgba(255,193,7,.3);border-radius:10px;padding:14px 18px;position:relative">
+      <button onclick="STATE.reminderBannerDismissed=true;document.getElementById('reminder-banner').remove()" style="position:absolute;top:10px;right:10px;background:transparent;border:none;color:var(--dim);font-size:16px;cursor:pointer;line-height:1;padding:2px 6px">✕</button>
       <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;color:#ffc107;margin-bottom:8px">🔔 ${todayReminders.length} REMINDER${todayReminders.length>1?'S':''} DUE TODAY</div>
       ${todayReminders.slice(0,3).map(r=>`<div style="font-size:13px;color:var(--text);margin-bottom:4px">· <strong>${r.customers?.full_name||'Client'}</strong> — ${r.title} <span style="color:var(--dim)">${formatDue(r.remind_at)}</span></div>`).join('')}
       ${todayReminders.length>3?`<div style="font-size:12px;color:var(--dim);margin-top:4px">+${todayReminders.length-3} more — <a href="#" onclick="setView('reminders');return false" style="color:${cfg.color}">View all</a></div>`:''}
@@ -1112,7 +1448,7 @@ function renderDashboard() {
     <div class="card card-pad">
       <div class="card-header" style="color:var(--muted)">PIPELINE BREAKDOWN</div>
       <div style="display:flex;flex-wrap:wrap;gap:8px">
-        ${cfg.stages.map(stage=>{
+        ${getStages().map(stage=>{
           const count = clients.filter(c=>c.stage===stage).length;
           const sc = stageColor(stage);
           return `<div onclick="filterByStage('${stage}')" style="background:${sc}12;border:1px solid ${sc}33;border-radius:8px;padding:8px 12px;cursor:pointer">
@@ -1132,6 +1468,7 @@ function filterByStage(stage) {
 function openClientDetail(id) {
   STATE.selectedClient = STATE.clients.find(c=>c.id===id);
   setView('clients');
+  setTimeout(() => renderActivityFeed(id), 0);
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1148,7 +1485,7 @@ function renderClients() {
       <input class="toolbar-search" placeholder="Search ${cfg.clientWord.toLowerCase()}s..." value="${STATE.searchQ}" oninput="STATE.searchQ=this.value;renderClients()"/>
       <select onchange="STATE.stageFilter=this.value;renderClients()" style="width:auto;min-width:130px">
         <option value="All" ${STATE.stageFilter==='All'?'selected':''}>All Stages</option>
-        ${cfg.stages.map(s=>`<option value="${s}" ${STATE.stageFilter===s?'selected':''}>${s}</option>`).join('')}
+        ${getStages().map(s=>`<option value="${s}" ${STATE.stageFilter===s?'selected':''}>${s}</option>`).join('')}
       </select>
       <select onchange="STATE.sortBy=this.value;renderClients()" style="width:auto;min-width:130px">
         <option value="created_at" ${STATE.sortBy==='created_at'?'selected':''}>Sort: Recent</option>
@@ -1213,6 +1550,7 @@ function getFilteredClients() {
 function selectClient(id) {
   STATE.selectedClient = STATE.selectedClient?.id === id ? null : STATE.clients.find(c=>c.id===id);
   renderClients();
+  if (STATE.selectedClient) setTimeout(() => renderActivityFeed(STATE.selectedClient.id), 0);
 }
 
 function renderClientDetail() {
@@ -1231,11 +1569,11 @@ function renderClientDetail() {
           ${c.pipeline_value>0?`<span class="stage-badge" style="background:rgba(74,222,128,.1);color:#4ade80;border:1px solid rgba(74,222,128,.3)">$${Number(c.pipeline_value).toLocaleString()}</span>`:''}
         </div>
       </div>
-      <div style="display:flex;gap:8px">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
         <button onclick="openEditClient('${c.id}')" style="background:var(--bg4);border:1px solid var(--border);border-radius:7px;padding:7px 14px;color:var(--muted);font-size:12px">Edit</button>
         <button onclick="openReminderModal('${c.id}')" style="background:rgba(255,193,7,.1);border:1px solid rgba(255,193,7,.3);border-radius:7px;padding:7px 14px;color:#ffc107;font-size:12px">🔔 Reminder</button>
-        <button onclick="deleteClient('${c.id}')" style="background:rgba(255,68,68,.1);border:1px solid rgba(255,68,68,.3);border-radius:7px;padding:7px 14px;color:#f87171;font-size:12px">Delete</button>
-        <button onclick="STATE.selectedClient=null;renderClients()" style="background:transparent;border:none;color:var(--dim);font-size:18px;padding:4px 8px">✕</button>
+        <button onclick="deleteClient('${c.id}')" style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:7px;padding:7px 14px;color:#f87171;font-size:12px;font-weight:600">🗑 Delete</button>
+        <button onclick="STATE.selectedClient=null;renderClients()" style="background:transparent;border:none;color:var(--dim);font-size:18px;padding:4px 8px;margin-left:auto">✕</button>
       </div>
     </div>
 
@@ -1254,7 +1592,7 @@ function renderClientDetail() {
       <div>
         <div class="detail-section-label">Update Stage</div>
         <select onchange="quickUpdateStage('${c.id}',this.value)" style="width:100%;background:var(--bg4);border:1px solid var(--border);border-radius:7px;padding:9px 10px;color:#fff;font-size:13px;cursor:pointer">
-          ${cfg.stages.map(s=>`<option value="${s}" ${c.stage===s?'selected':''}>${s}</option>`).join('')}
+          ${getStages().map(s=>`<option value="${s}" ${c.stage===s?'selected':''}>${s}</option>`).join('')}
         </select>
       </div>
     </div>
@@ -1269,6 +1607,15 @@ function renderClientDetail() {
       </div>
       <p style="font-size:11px;color:var(--faint);margin-top:10px">AI writes it. You copy it. You send it.</p>
     </div>
+
+    <div style="margin-top:18px">
+      <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">Activity Log</div>
+      <div id="activity-log-feed" style="max-height:200px;overflow-y:auto;margin-bottom:10px"></div>
+      <div style="display:flex;gap:8px">
+        <input id="activity-note-input" placeholder="Add a note..." style="flex:1;font-size:13px" onkeydown="if(event.key==='Enter')addActivityNote('${c.id}')"/>
+        <button onclick="addActivityNote('${c.id}')" style="background:var(--accent);border:none;border-radius:8px;padding:9px 16px;color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;white-space:nowrap">ADD</button>
+      </div>
+    </div>
   </div>`;
 }
 
@@ -1278,6 +1625,10 @@ async function quickUpdateStage(id, stage) {
   if (idx>=0) STATE.clients[idx].stage = stage;
   if (STATE.selectedClient?.id===id) STATE.selectedClient.stage = stage;
   updateSidebarStats();
+  const notes = getActivityLog(id);
+  notes.push({ text: `Stage changed to "${stage}"`, ts: new Date().toISOString() });
+  saveActivityLog(id, notes);
+  renderActivityFeed(id);
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1296,18 +1647,18 @@ function renderPipeline() {
       </div>
     </div>
     <div class="pipeline-cols">
-      ${cfg.stages.map(stage=>{
+      ${getStages().map(stage=>{
         const col = clients.filter(c=>c.stage===stage);
         const sv = col.reduce((s,c)=>s+Number(c.pipeline_value||0),0);
         const sc = stageColor(stage);
-        return `<div class="pipeline-col">
+        return `<div class="pipeline-col" ondragover="pipeDragOver(event)" ondragleave="pipeDragLeave(event)" ondrop="pipeDrop(event,'${stage}')">
           <div class="pipeline-col-head">
             <span style="font-size:11px;font-weight:700;color:${sc};text-transform:uppercase;letter-spacing:.06em">${stage}</span>
             <span style="background:${sc}18;color:${sc};border:1px solid ${sc}33;border-radius:4px;padding:1px 6px;font-size:10px;font-weight:700">${col.length}</span>
           </div>
           ${sv>0?`<div style="font-size:11px;color:var(--faint);margin-bottom:8px">$${sv.toLocaleString()}</div>`:''}
           ${col.length===0?`<div style="color:var(--fainter);font-size:12px;text-align:center;padding:16px 0">—</div>`:
-            col.map(c=>`<div class="pipeline-card" style="background:var(--bg3);border-left:3px solid ${sc};border-top:1px solid var(--border2);border-right:1px solid var(--border2);border-bottom:1px solid var(--border2)" onclick="openClientDetail('${c.id}')">
+            col.map(c=>`<div class="pipeline-card" draggable="true" ondragstart="pipeDragStart(event,'${c.id}')" ondragend="pipeDragEnd(event)" onclick="openClientDetail('${c.id}')" style="background:var(--bg3);border-left:3px solid ${sc};border-top:1px solid var(--border2);border-right:1px solid var(--border2);border-bottom:1px solid var(--border2)">
               <div style="font-weight:600;font-size:13px;margin-bottom:3px">${c.full_name}</div>
               <div style="font-size:11px;color:var(--dim)">${c.job_type||''}</div>
               ${c.pipeline_value>0?`<div style="font-size:12px;font-weight:700;color:#4ade80;margin-top:6px">$${Number(c.pipeline_value).toLocaleString()}</div>`:''}
@@ -1458,6 +1809,16 @@ function renderReport() {
           <div><div style="font-size:13px;font-weight:600">${c.full_name}</div><div style="font-size:11px;color:var(--dim)">${c.job_type||''}</div></div>
           <span class="stage-badge" style="background:${stageColor(c.stage)}18;color:${stageColor(c.stage)};border:1px solid ${stageColor(c.stage)}33">${c.stage}</span>
         </div>`).join('')}
+    </div>
+
+    <div class="report-section" id="ai-suggestions-section">
+      <div class="report-section-title" style="color:#a78bfa">🤖 AI BUSINESS SUGGESTIONS</div>
+      ${STATE.profile.ai_api_key
+        ? `<div id="ai-suggestions-output" style="color:var(--muted);font-size:13px;line-height:1.7">
+            <button onclick="generateReportSuggestions()" style="background:rgba(167,139,250,.1);border:1px solid rgba(167,139,250,.3);border-radius:8px;padding:9px 18px;color:#a78bfa;font-size:13px;font-weight:600">✨ Generate Today's Suggestions</button>
+           </div>`
+        : `<div style="font-size:13px;color:var(--faint)">Add your Claude API key in Settings to enable AI suggestions.</div>`
+      }
     </div>`;
 }
 
@@ -1529,6 +1890,21 @@ function renderSettings() {
     </div>
 
     <div class="settings-section">
+      <div class="settings-title">Pipeline Stages</div>
+      <p style="color:var(--dim);font-size:13px;margin-bottom:14px">Customize stages for <strong>${STATE.company?.name || 'this company'}</strong>. Changes only affect this company.</p>
+      <div id="stages-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">
+        ${getStages().map((s,i) => `
+          <div style="display:flex;align-items:center;gap:8px">
+            <input value="${s}" onchange="updateStageName(${i}, this.value)" style="flex:1;font-size:13px"/>
+            <button onclick="removeStage(${i})" style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:6px;padding:6px 10px;color:#f87171;font-size:12px">✕</button>
+          </div>`).join('')}
+      </div>
+      <button onclick="addStage()" style="background:var(--bg4);border:1px solid var(--border);border-radius:8px;padding:9px 16px;color:var(--muted);font-size:13px;font-weight:600;width:100%">+ Add Stage</button>
+      <button onclick="saveStages()" style="margin-top:10px;background:${STATE.cfg.color};border:none;border-radius:8px;padding:10px 20px;color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:.06em">SAVE STAGES</button>
+      ${STATE.company?.custom_stages?.length ? `<button onclick="resetStages()" style="margin-top:8px;background:transparent;border:none;color:var(--dim);font-size:12px;cursor:pointer;text-decoration:underline">Reset to industry defaults</button>` : ''}
+    </div>
+
+    <div class="settings-section">
       <div class="settings-title">AI API Key (Claude / Anthropic)</div>
       <p style="color:var(--dim);font-size:13px;margin-bottom:12px">Your key is used to generate emails & content. Stored securely in your profile — never shared.</p>
       ${!planCan('reminders')?`<div style="background:rgba(255,193,7,.08);border:1px solid rgba(255,193,7,.3);border-radius:8px;padding:10px 14px;font-size:12px;color:#ffc107;margin-bottom:12px">🔒 AI Generator requires Starter or above. <a href="#" onclick="showUpgrade('ai');return false" style="color:#ffc107;font-weight:700">Upgrade →</a></div>`:''}
@@ -1566,6 +1942,16 @@ function renderSettings() {
     </div>
 
     <div class="settings-section">
+      <div class="settings-title">Color Theme</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        ${['dark','medium','light'].map(t => `
+          <button onclick="changeColorScheme('${t}')" style="flex:1;min-width:80px;padding:12px 8px;border-radius:8px;border:2px solid ${(STATE.profile.color_scheme||'dark')===t?'var(--accent)':'var(--border)'};background:var(--bg4);color:var(--text);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;cursor:pointer;letter-spacing:.05em">
+            ${t==='dark'?'🌑':t==='medium'?'🌓':'☀️'} ${t.toUpperCase()}
+          </button>`).join('')}
+      </div>
+    </div>
+
+    <div class="settings-section">
       <div class="settings-title">PIN Lock</div>
       <p style="color:var(--dim);font-size:13px;margin-bottom:14px">Lock your CRM with a 4-digit PIN. Use the 🔒 button in the top bar to lock instantly.</p>
       ${p.pin_hash
@@ -1583,9 +1969,15 @@ function renderSettings() {
 }
 
 async function saveProfile() {
-  const updates = { business_name: document.getElementById('s-bizname').value.trim(), owner_name: document.getElementById('s-owner').value.trim(), city: document.getElementById('s-city').value.trim() };
+  const updates = {
+    business_name: document.getElementById('s-bizname').value.trim(),
+    owner_name: document.getElementById('s-owner').value.trim(),
+    city: document.getElementById('s-city').value.trim()
+  };
   await sb.from('profiles').update(updates).eq('id', STATE.user.id);
+  await sb.from('companies').update({ name: updates.business_name, owner_name: updates.owner_name, city: updates.city }).eq('id', STATE.company.id);
   STATE.profile = { ...STATE.profile, ...updates };
+  STATE.company = { ...STATE.company, name: updates.business_name, owner_name: updates.owner_name, city: updates.city };
   document.getElementById('topbar-biz').textContent = `${STATE.cfg.icon} ${updates.business_name.toUpperCase()}`;
   alert('Profile saved!');
 }
@@ -1641,7 +2033,7 @@ function populateClientForm(c) {
   jt.innerHTML = cfg.jobTypes.map(j=>`<option ${c?.job_type===j?'selected':''}>${j}</option>`).join('');
 
   const st = document.getElementById('cm-stage');
-  st.innerHTML = cfg.stages.map(s=>`<option ${c?.stage===s?'selected':''}>${s}</option>`).join('');
+  st.innerHTML = getStages().map(s=>`<option ${c?.stage===s?'selected':''}>${s}</option>`).join('');
 
   const cf = c?.custom_fields || {};
   document.getElementById('cm-custom-fields').innerHTML = cfg.customFields.map(f=>`
@@ -1663,6 +2055,7 @@ async function saveClient() {
 
   const data = {
     user_id: STATE.user.id,
+    company_id: STATE.company?.id || null,
     full_name: name,
     phone: document.getElementById('cm-phone').value.trim(),
     email: document.getElementById('cm-email').value.trim(),
@@ -2094,6 +2487,92 @@ async function changePassword() {
 }
 
 // ═══════════════════════════════════════════════════════
+// ACTIVITY LOG (localStorage)
+// ═══════════════════════════════════════════════════════
+function getActivityLog(clientId) {
+  try { return JSON.parse(localStorage.getItem(`bvp_notes_${clientId}`) || '[]'); } catch(e) { return []; }
+}
+
+function saveActivityLog(clientId, notes) {
+  localStorage.setItem(`bvp_notes_${clientId}`, JSON.stringify(notes));
+}
+
+function renderActivityFeed(clientId) {
+  const el = document.getElementById('activity-log-feed');
+  if (!el) return;
+  const notes = getActivityLog(clientId);
+  if (notes.length === 0) {
+    el.innerHTML = '<div style="color:var(--faint);font-size:12px;font-style:italic">No notes yet.</div>';
+    return;
+  }
+  el.innerHTML = notes.slice().reverse().map(n => `
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;padding:8px 10px;background:var(--bg2);border-radius:7px;margin-bottom:6px;gap:10px">
+      <div style="font-size:12px;color:var(--text);line-height:1.5;flex:1">${n.text}</div>
+      <div style="font-size:10px;color:var(--faint);white-space:nowrap">${new Date(n.ts).toLocaleDateString([], {month:'short',day:'numeric'})}<br/>${new Date(n.ts).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</div>
+    </div>`).join('');
+  el.scrollTop = 0;
+}
+
+function addActivityNote(clientId) {
+  const input = document.getElementById('activity-note-input');
+  const text = input?.value?.trim();
+  if (!text) return;
+  const notes = getActivityLog(clientId);
+  notes.push({ text, ts: new Date().toISOString() });
+  saveActivityLog(clientId, notes);
+  input.value = '';
+  renderActivityFeed(clientId);
+}
+
+// ═══════════════════════════════════════════════════════
+// PIPELINE DRAG-AND-DROP
+// ═══════════════════════════════════════════════════════
+let _dragClientId = null;
+
+function pipeDragStart(e, clientId) {
+  _dragClientId = clientId;
+  e.currentTarget.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+}
+
+function pipeDragEnd(e) {
+  e.currentTarget.classList.remove('dragging');
+  document.querySelectorAll('.pipeline-col').forEach(c => c.classList.remove('drag-over'));
+}
+
+function pipeDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  e.currentTarget.closest('.pipeline-col')?.classList.add('drag-over');
+}
+
+function pipeDragLeave(e) {
+  if (!e.currentTarget.contains(e.relatedTarget)) {
+    e.currentTarget.classList.remove('drag-over');
+  }
+}
+
+async function pipeDrop(e, stage) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('drag-over');
+  if (!_dragClientId) return;
+  const id = _dragClientId;
+  _dragClientId = null;
+  const client = STATE.clients.find(c => c.id === id);
+  if (!client || client.stage === stage) return;
+  // Optimistic update
+  client.stage = stage;
+  renderPipeline();
+  // Log the stage change
+  const notes = getActivityLog(id);
+  notes.push({ text: `Stage changed to "${stage}"`, ts: new Date().toISOString() });
+  saveActivityLog(id, notes);
+  // DB update
+  await sb.from('customers').update({ stage, updated_at: new Date().toISOString() }).eq('id', id);
+  updateSidebarStats();
+}
+
+// ═══════════════════════════════════════════════════════
 // INIT — CHECK SESSION
 // ═══════════════════════════════════════════════════════
 (async () => {
@@ -2158,13 +2637,12 @@ async function unlockApp() {
 function pinPress(val) {
   const ctx = document.getElementById('lock-screen').classList.contains('hidden') ? 'setup' : 'lock';
   if (ctx === 'lock') {
-    if (val === '⌫') { pinBuffer = pinBuffer.slice(0,-1); }
+    if (val === 'back') { pinBuffer = pinBuffer.slice(0,-1); }
     else if (pinBuffer.length < 4) { pinBuffer += val; }
     updatePinDots('lock-dots');
     if (pinBuffer.length === 4) unlockApp();
   } else {
-    // setup flow handled separately
-    if (val === '⌫') { setupPinBuffer = setupPinBuffer.slice(0,-1); }
+    if (val === 'back') { setupPinBuffer = setupPinBuffer.slice(0,-1); }
     else if (setupPinBuffer.length < 4) { setupPinBuffer += val; }
     updatePinDots('setup-dots');
     document.getElementById('setup-pin-confirm-btn').disabled = setupPinBuffer.length < 4;
@@ -2208,6 +2686,25 @@ async function removePin() {
 </script>
 
 <!-- ═══════════════════════════════════════
+     BOTTOM NAV (mobile)
+═══════════════════════════════════════ -->
+<nav id="bottom-nav" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:500;background:var(--bg2);border-top:1px solid var(--border);padding:8px 0 max(8px,env(safe-area-inset-bottom));justify-content:space-around;align-items:center">
+  <button onclick="setView('dashboard')" class="bnav-btn" id="bnav-dashboard">
+    <span style="font-size:20px">◈</span><span>Home</span>
+  </button>
+  <button onclick="setView('clients')" class="bnav-btn" id="bnav-clients">
+    <span style="font-size:20px">⊕</span><span>Clients</span>
+  </button>
+  <button onclick="openAddClient()" style="background:var(--accent);border:none;border-radius:50%;width:48px;height:48px;font-size:22px;color:#fff;cursor:pointer;box-shadow:0 4px 12px rgba(255,107,0,.4);margin-bottom:4px">+</button>
+  <button onclick="setView('pipeline')" class="bnav-btn" id="bnav-pipeline">
+    <span style="font-size:20px">▦</span><span>Pipeline</span>
+  </button>
+  <button onclick="setView('settings')" class="bnav-btn" id="bnav-settings">
+    <span style="font-size:20px">⚙</span><span>Settings</span>
+  </button>
+</nav>
+
+<!-- ═══════════════════════════════════════
      LOCK SCREEN
 ═══════════════════════════════════════ -->
 <div id="lock-screen" class="hidden" style="position:fixed;inset:0;z-index:9999;background:#09090a;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px">
@@ -2218,7 +2715,18 @@ async function removePin() {
   <div class="pin-dots" id="lock-dots" style="display:flex;gap:14px;margin-bottom:4px"></div>
   <div id="lock-error" class="hidden" style="font-size:12px;color:var(--red)">Incorrect PIN. Try again.</div>
   <div style="display:grid;grid-template-columns:repeat(3,64px);gap:10px">
-    ${[1,2,3,4,5,6,7,8,9,'','0','⌫'].map(k => k==='' ? '<div></div>' : `<button onclick="pinPress('${k}')" style="height:64px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:22px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--text);cursor:pointer">${k}</button>`).join('')}
+    <button onclick="pinPress('1')" class="pin-btn">1</button>
+    <button onclick="pinPress('2')" class="pin-btn">2</button>
+    <button onclick="pinPress('3')" class="pin-btn">3</button>
+    <button onclick="pinPress('4')" class="pin-btn">4</button>
+    <button onclick="pinPress('5')" class="pin-btn">5</button>
+    <button onclick="pinPress('6')" class="pin-btn">6</button>
+    <button onclick="pinPress('7')" class="pin-btn">7</button>
+    <button onclick="pinPress('8')" class="pin-btn">8</button>
+    <button onclick="pinPress('9')" class="pin-btn">9</button>
+    <div></div>
+    <button onclick="pinPress('0')" class="pin-btn">0</button>
+    <button onclick="pinPress('back')" class="pin-btn" style="font-size:18px">&#9003;</button>
   </div>
 </div>
 
@@ -2235,7 +2743,18 @@ async function removePin() {
       <p style="color:var(--muted);font-size:13px">Choose a 4-digit PIN to lock your account.</p>
       <div class="pin-dots" id="setup-dots" style="display:flex;gap:14px;margin:8px 0"></div>
       <div style="display:grid;grid-template-columns:repeat(3,64px);gap:10px;margin-bottom:8px">
-        ${[1,2,3,4,5,6,7,8,9,'','0','⌫'].map(k => k==='' ? '<div></div>' : `<button onclick="pinPress('${k}')" style="height:64px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:22px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--text);cursor:pointer">${k}</button>`).join('')}
+        <button onclick="pinPress('1')" class="pin-btn">1</button>
+        <button onclick="pinPress('2')" class="pin-btn">2</button>
+        <button onclick="pinPress('3')" class="pin-btn">3</button>
+        <button onclick="pinPress('4')" class="pin-btn">4</button>
+        <button onclick="pinPress('5')" class="pin-btn">5</button>
+        <button onclick="pinPress('6')" class="pin-btn">6</button>
+        <button onclick="pinPress('7')" class="pin-btn">7</button>
+        <button onclick="pinPress('8')" class="pin-btn">8</button>
+        <button onclick="pinPress('9')" class="pin-btn">9</button>
+        <div></div>
+        <button onclick="pinPress('0')" class="pin-btn">0</button>
+        <button onclick="pinPress('back')" class="pin-btn" style="font-size:18px">&#9003;</button>
       </div>
       <button id="setup-pin-confirm-btn" onclick="confirmPinSetup()" disabled style="width:100%;background:var(--accent);border:none;border-radius:8px;padding:12px;color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;letter-spacing:.06em">SET PIN →</button>
     </div>
@@ -2243,6 +2762,8 @@ async function removePin() {
 </div>
 
 <style>
+.pin-btn{height:64px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:22px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--text);cursor:pointer;transition:background .1s}
+.pin-btn:active{background:var(--bg4)}
 @keyframes pin-shake {
   0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}
 }
